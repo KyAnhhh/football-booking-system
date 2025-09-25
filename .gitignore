@@ -1,0 +1,27 @@
+# ========================
+# Backend (Spring Boot)
+# ========================
+back-end/target/
+back-end/.idea/
+back-end/.vscode/
+back-end/*.iml
+
+# ========================
+# Frontend (React)
+# ========================
+front-end/node_modules/
+front-end/build/
+front-end/.env
+front-end/.next/
+front-end/dist/
+
+# ========================
+# System files
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Logs
+# ========================
+*.log
