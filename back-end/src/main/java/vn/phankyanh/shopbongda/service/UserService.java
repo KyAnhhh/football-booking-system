@@ -1,13 +1,12 @@
 package vn.phankyanh.shopbongda.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import vn.phankyanh.shopbongda.domain.User;
+import vn.phankyanh.shopbongda.exception.UserNotFoundException;
 import vn.phankyanh.shopbongda.repository.UserRepository;
-
 
 @Service
 public class UserService {
@@ -21,28 +20,30 @@ public class UserService {
         return this.userRepository.save(user);
     }
 
-    public List<User> handleGetAllUser(){
+    public List<User> handleGetAllUsers(){
         return this.userRepository.findAll();
     }
 
-    public Optional<User> handleGetUserById(Long id){
-        return this.userRepository.findById(id);
+    public User handleGetUserById(Long id){
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     public User handleUpdateUser(Long id, User userUpdate){
-        Optional<User> userOptional = userRepository.findById(id);
-        if(userOptional.isPresent()){
-            User user = userOptional.get();
-            user.setUsername(userUpdate.getUsername());
-            user.setEmail(userUpdate.getEmail());
-            user.setPassword(userUpdate.getPassword());
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
 
-            return userRepository.save(user);
-        }
-        return null;
+        user.setUsername(userUpdate.getUsername());
+        user.setEmail(userUpdate.getEmail());
+        user.setPassword(userUpdate.getPassword());
+
+        return userRepository.save(user);
     }
     
-     public void handleDeleteUserById(Long id){
-        this.userRepository.deleteById(id);
+    public void handleDeleteUserById(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException(id);
+        }
+        userRepository.deleteById(id);
     }
 }
