@@ -24,11 +24,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/")
-    public String hello() {
-        return "Hello world";
-    }
-
     @PostMapping("/users")
     public ResponseEntity<User> createUser(@RequestBody User user ){
         User createdUser = this.userService.handleCreateUser(user);
