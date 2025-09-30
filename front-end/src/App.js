@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import UsersPage from "./pages/admin/UserPage";
+import ProductPage from "./pages/admin/ProductPage";
 
 function App() {
   return (
@@ -11,8 +12,8 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="users" element={<UsersPage />} />
-          {/* <Route path="products" element={<ProductPage />} />
-          <Route path="orders" element={<OrderPage />} /> */}
+          <Route path="products" element={<ProductPage />} />
+          {/* <Route path="orders" element={<OrderPage />} /> */}
         </Route>
       </Routes>
     </BrowserRouter>
