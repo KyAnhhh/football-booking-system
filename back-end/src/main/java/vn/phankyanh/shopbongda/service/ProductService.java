@@ -16,13 +16,14 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-     public Product handleCreateProduct(Product product){
+    public Product handleCreateProduct(Product product){
         return this.productRepository.save(product);
     }
 
     public List<Product> handleGetAllProduct(){
         return this.productRepository.findAll();
     }
+
     public Product handleGetProductById(Long id){
         return this.productRepository.findById(id)
         .orElseThrow(() -> new ProductNotFoundException(id));
