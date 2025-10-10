@@ -23,8 +23,8 @@ import lombok.*;
 @Entity
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor // parameterless constructor
+@AllArgsConstructor // constructor
 @Table(name = "users")
 public class User implements UserDetails {
 

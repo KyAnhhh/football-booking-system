@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
+import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
 import vn.phankyanh.shopbongda.service.JwtService;
 
 import javax.crypto.SecretKey;
@@ -26,6 +27,7 @@ public class JwtDecoderConfiguration implements JwtDecoder {
 
     @Value("${jwt.secret-key}")
     private String secretKey;
+
 
     private final JwtService jwtService;
     private NimbusJwtDecoder nimbusJwtDecoder = null;

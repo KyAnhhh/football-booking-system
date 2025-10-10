@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
 public class SecurityConfiguration {
     //public api
     private static final String[] WHILE_LIST = {
-             "/auth/login"
+             "/users", "/auth/login"
     };
 
     private final UserDetailsService userDetailsService;
