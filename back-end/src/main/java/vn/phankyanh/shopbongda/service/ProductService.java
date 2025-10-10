@@ -2,6 +2,7 @@ package vn.phankyanh.shopbongda.service;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import vn.phankyanh.shopbongda.domain.Product;
@@ -9,12 +10,9 @@ import vn.phankyanh.shopbongda.exception.ProductNotFoundException;
 import vn.phankyanh.shopbongda.repository.ProductRepository;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
-
-    public ProductService( ProductRepository productRepository){
-        this.productRepository = productRepository;
-    }
 
     public Product handleCreateProduct(Product product){
         return this.productRepository.save(product);

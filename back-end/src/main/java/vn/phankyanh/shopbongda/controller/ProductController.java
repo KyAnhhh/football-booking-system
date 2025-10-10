@@ -2,6 +2,7 @@ package vn.phankyanh.shopbongda.controller;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,13 +17,10 @@ import vn.phankyanh.shopbongda.domain.Product;
 import vn.phankyanh.shopbongda.service.ProductService;
 
 @RestController
+@RequiredArgsConstructor // inject dependency
 public class ProductController {
     private final ProductService productService;
 
-    public ProductController(ProductService productService){
-        this.productService = productService;
-    }
-    
     @PostMapping("/products")
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
         Product createdProduct = this.productService.handleCreateProduct(product);

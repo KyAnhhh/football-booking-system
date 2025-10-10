@@ -2,6 +2,7 @@ package vn.phankyanh.shopbongda.controller;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,27 +15,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import vn.phankyanh.shopbongda.domain.User;
+import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;
+import vn.phankyanh.shopbongda.dto.response.UserCreateResponse;
 import vn.phankyanh.shopbongda.service.UserService;
 
 @RestController
+@RequiredArgsConstructor
 public class UserController {
     
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserService userService, PasswordEncoder passwordEncoder){
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
-    }
-
     @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody User user ){
-        String hashedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(hashedPassword);
-
-        User createdUser = this.userService.handleCreateUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    public UserCreateResponse createUser(@RequestBody UserCreateRequest userCreateRequest ){
+        return userService.handleCreateUser(userCreateRequest);
     }
+
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -56,6 +52,6 @@ public class UserController {
     @DeleteMapping("/users/{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable("id") Long id) {
         this.userService.handleDeleteUserById(id);
-        return ResponseEntity.ok("Deleted with id: " + id);
+        return ResponseEntity.noContent().build();
     }
 }

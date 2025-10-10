@@ -21,3 +21,5 @@ spring:
       enabled: true
     livereload:
       enabled: true
+jwt:
+  secret-key: JrmOiDklKneqbBb3cN1KTIJnGd1tCVl9Vx62B7K/Z8WC7x+jyywBcyjGWxFXKK/GJD9/is6SKaZqb94WVCQQz0IcshLjck73mJL3jVwWIuU=
