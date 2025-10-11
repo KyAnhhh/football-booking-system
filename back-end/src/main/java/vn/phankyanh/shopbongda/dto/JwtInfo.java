@@ -13,4 +13,5 @@ public class JwtInfo {
     private String jwtId;
     private Date issueTime;
     private Date expiredTime;
+    private String role;
 }

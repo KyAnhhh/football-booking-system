@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Comment;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -18,6 +19,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.List;
 import java.util.Objects;
 
 @Component
@@ -45,10 +47,22 @@ public class JwtDecoderConfiguration implements JwtDecoder {
                         .macAlgorithm(MacAlgorithm.HS512)
                         .build();
             }
+            Jwt jwt = nimbusJwtDecoder.decode(token);
+
+            // Lấy role từ claim
+            String role = jwt.getClaimAsString("role");
+            if (role == null) role = "ROLE_CLIENT"; // default nếu không có role
+
+            // Gắn authorities cho Spring Security
+            return Jwt.withTokenValue(jwt.getTokenValue())
+                    .headers(h -> h.putAll(jwt.getHeaders()))
+                    .claims(c -> c.putAll(jwt.getClaims()))
+                    .claim("authorities", List.of(new SimpleGrantedAuthority(role)))
+                    .build();
         } catch (ParseException | JOSEException e) {
             throw new RuntimeException(e);
         }
-        return nimbusJwtDecoder.decode(token);
+//        return nimbusJwtDecoder.decode(token);
     }
 
 }

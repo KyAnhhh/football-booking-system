@@ -8,6 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import vn.phankyanh.shopbongda.domain.Role;
 import vn.phankyanh.shopbongda.domain.User;
 import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;
 import vn.phankyanh.shopbongda.dto.response.UserCreateResponse;
@@ -24,10 +25,12 @@ public class UserService {
     if(userRepository.existsByEmail(request.getEmail()))
         throw new RuntimeException("Email already exists");
 
+    Role role = (request.getRole() != null) ? request.getRole() : Role.ROLE_CLIENT;
     User user = User.builder()
             .username(request.getUsername())
             .email(request.getEmail())
             .password(passwordEncoder.encode(request.getPassword()))
+            .role(role)
             .createdAt(LocalDateTime.now())
             .updatedAt(LocalDateTime.now())
             .build();

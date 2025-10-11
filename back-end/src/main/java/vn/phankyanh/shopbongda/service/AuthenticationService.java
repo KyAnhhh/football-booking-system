@@ -31,13 +31,14 @@ public class AuthenticationService {
         User user =  (User) authenticate.getPrincipal();
 
         String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateAccessToken(user);
-        log.info("Login success");
+        String refreshToken = jwtService.generateRefreshToken(user);
+        log.info("Login success", user.getEmail());
 
         //Return token
         return  LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .role(user.getRole().name()) // ROLE_ADMIN hoặc ROLE_CLIENT
                 .build();
 
     }

@@ -34,11 +34,14 @@ public class JwtService {
 
         Date issueTime = new Date();
         Date expireTime = Date.from(issueTime.toInstant().plus(30, ChronoUnit.MINUTES));
+
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
                 .issueTime(issueTime)
                 .expirationTime(expireTime)
                 .jwtID(UUID.randomUUID().toString())
+                // Thêm role vào token
+                .claim("role", user.getRole().name())
                 .build();
 
         Payload payload = new Payload(claimsSet.toJSONObject());
@@ -96,10 +99,13 @@ public class JwtService {
         Date issueTime = signedJWT.getJWTClaimsSet().getIssueTime();
         Date expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
+        String role = signedJWT.getJWTClaimsSet().getStringClaim("role");
+
         return JwtInfo.builder()
                 .jwtId(JwtId)
                 .issueTime(issueTime)
                 .expiredTime(expiredTime)
+                .role(role)
                 .build();
 
     }
