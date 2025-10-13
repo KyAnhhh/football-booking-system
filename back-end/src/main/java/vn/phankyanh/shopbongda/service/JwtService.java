@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import vn.phankyanh.shopbongda.domain.RedisToken;
 import vn.phankyanh.shopbongda.domain.User;
 import vn.phankyanh.shopbongda.dto.JwtInfo;
+import vn.phankyanh.shopbongda.dto.TokenPayload;
 import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
 
 import javax.xml.crypto.Data;
@@ -29,17 +30,19 @@ public class JwtService {
 
     private final RedisTokenRepository redisTokenRepository;
 
-    public String generateAccessToken(User user){
+    public TokenPayload generateAccessToken(User user){
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         Date issueTime = new Date();
         Date expireTime = Date.from(issueTime.toInstant().plus(30, ChronoUnit.MINUTES));
 
+        String jwtId = UUID.randomUUID().toString();
+
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
                 .issueTime(issueTime)
                 .expirationTime(expireTime)
-                .jwtID(UUID.randomUUID().toString())
+                .jwtID(jwtId)
                 // Thêm role vào token
                 .claim("role", user.getRole().name())
                 .build();
@@ -52,19 +55,28 @@ public class JwtService {
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
-        return jwsObject.serialize();
+        String token = jwsObject.serialize();
+        return TokenPayload.builder()
+                .token(token)
+                .jwtId(jwtId)
+                .expiredTime(expireTime)
+                .build();
+
     }
 
-    public String generateRefreshToken(User user){
+    public TokenPayload generateRefreshToken(User user){
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         Date issueTime = new Date();
         Date expireTime = Date.from(issueTime.toInstant().plus(14, ChronoUnit.DAYS));
+
+        String jwtId = UUID.randomUUID().toString();
+
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
                 .issueTime(issueTime)
                 .expirationTime(expireTime)
-                .jwtID(UUID.randomUUID().toString())
+                .jwtID(jwtId)
                 .build();
 
         Payload payload = new Payload(claimsSet.toJSONObject());
@@ -75,7 +87,13 @@ public class JwtService {
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
-        return jwsObject.serialize();
+        String token = jwsObject.serialize();
+
+        return TokenPayload.builder()
+                .token(token)
+                .jwtId(jwtId)
+                .expiredTime(expireTime)
+                .build();
     }
 
     public boolean verifyToken(String token) throws ParseException, JOSEException {

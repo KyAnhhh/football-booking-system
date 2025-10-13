@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import vn.phankyanh.shopbongda.domain.RedisToken;
 import vn.phankyanh.shopbongda.domain.User;
 import vn.phankyanh.shopbongda.dto.JwtInfo;
+import vn.phankyanh.shopbongda.dto.TokenPayload;
 import vn.phankyanh.shopbongda.dto.request.LoginRequest;
 import vn.phankyanh.shopbongda.dto.response.LoginResponse;
 import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
@@ -30,14 +31,37 @@ public class AuthenticationService {
 
         User user =  (User) authenticate.getPrincipal();
 
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-        log.info("Login success", user.getEmail());
+        // Debug thông tin user trước khi lưu token
+        log.info("User email: {}, role: {}", user.getEmail(), user.getRole());
+
+        TokenPayload accessPayload= jwtService.generateAccessToken(user);
+        TokenPayload refreshPayload = jwtService.generateRefreshToken(user);
+//        redisTokenRepository.save(RedisToken.builder()
+//                        .jwtId(refreshPayload.getJwtId())
+//                        .expiredTime(refreshPayload.getExpiredTime().getTime())
+//                .build());
+        try {
+            long expireSeconds = (refreshPayload.getExpiredTime().getTime() - System.currentTimeMillis()) / 1000;
+            if (expireSeconds <= 0) {
+                throw new IllegalStateException("Refresh token has already expired");
+            }
+            RedisToken redisToken = RedisToken.builder()
+                    .jwtId(refreshPayload.getJwtId())
+                    .expiredTime(expireSeconds)
+                    .build();
+            log.info("Saving RedisToken: jwtId={}, expiredTime={}", redisToken.getJwtId(), redisToken.getExpiredTime());
+            redisTokenRepository.save(redisToken);
+        } catch (Exception e) {
+            log.error("Save RedisToken failed", e);
+            throw e;
+        }
+
+        log.info("Login success: {}", user.getEmail());
 
         //Return token
         return  LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .accessToken(accessPayload.getToken())
+                .refreshToken(refreshPayload.getToken())
                 .role(user.getRole().name()) // ROLE_ADMIN hoặc ROLE_CLIENT
                 .build();
 
