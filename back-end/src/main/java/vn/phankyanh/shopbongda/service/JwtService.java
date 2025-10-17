@@ -130,7 +130,6 @@ public class JwtService {
                 .expiredTime(expiredTime)
                 .role(role)
                 .build();
-
     }
 
     // public Long getUserIdFromToken(String token) throws ParseException {

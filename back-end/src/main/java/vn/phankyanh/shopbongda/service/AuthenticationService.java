@@ -37,10 +37,7 @@ public class AuthenticationService {
 
         TokenPayload accessPayload= jwtService.generateAccessToken(user);
         TokenPayload refreshPayload = jwtService.generateRefreshToken(user);
-//        redisTokenRepository.save(RedisToken.builder()
-//                        .jwtId(refreshPayload.getJwtId())
-//                        .expiredTime(refreshPayload.getExpiredTime().getTime())
-//                .build());
+
         try {
             long expireSeconds = (refreshPayload.getExpiredTime().getTime() - System.currentTimeMillis()) / 1000;
             if (expireSeconds <= 0) {
