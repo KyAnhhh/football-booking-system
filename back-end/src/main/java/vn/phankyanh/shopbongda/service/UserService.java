@@ -3,11 +3,10 @@ package vn.phankyanh.shopbongda.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Role;
 import vn.phankyanh.shopbongda.domain.User;
 import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;

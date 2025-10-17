@@ -1,11 +1,15 @@
 package vn.phankyanh.shopbongda.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.text.ParseException;
+import java.util.Date;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import vn.phankyanh.shopbongda.domain.RedisToken;
 import vn.phankyanh.shopbongda.domain.User;
 import vn.phankyanh.shopbongda.dto.JwtInfo;
@@ -13,9 +17,6 @@ import vn.phankyanh.shopbongda.dto.TokenPayload;
 import vn.phankyanh.shopbongda.dto.request.LoginRequest;
 import vn.phankyanh.shopbongda.dto.response.LoginResponse;
 import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
-
-import java.text.ParseException;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../assets/styles/Login.css"; 
+import { login } from "../services/authService";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,12 +15,8 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
+      const res = await login({ email, password });
+      
       let data;
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {

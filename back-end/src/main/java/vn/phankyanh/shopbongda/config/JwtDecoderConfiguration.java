@@ -1,9 +1,13 @@
 package vn.phankyanh.shopbongda.config;
 
-import com.nimbusds.jose.JOSEException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Comment;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.util.List;
+import java.util.Objects;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -12,15 +16,12 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
-import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
-import vn.phankyanh.shopbongda.service.JwtService;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
-import java.util.List;
-import java.util.Objects;
+import com.nimbusds.jose.JOSEException;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import vn.phankyanh.shopbongda.service.JwtService;
 
 @Component
 @RequiredArgsConstructor
@@ -62,7 +63,6 @@ public class JwtDecoderConfiguration implements JwtDecoder {
         } catch (ParseException | JOSEException e) {
             throw new RuntimeException(e);
         }
-//        return nimbusJwtDecoder.decode(token);
     }
 
 }

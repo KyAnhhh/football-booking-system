@@ -1,20 +1,21 @@
 import { useState, useEffect } from "react";
 import "../assets/styles/Header.css";
+import { useLocation } from "react-router-dom";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    if(token){
+      setUser({ token, role : role || "user" });
+    } else{
+      setUser(null);
+    }
   }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    window.location.href = "/login";
-  };
 
   useEffect(() => {
     function onResize() {
@@ -24,22 +25,32 @@ export default function Header() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const handleLogout = () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      setUser(null);
+      window.location.href = "/login";
+    };
+
+    if(location.pathname.startsWith("/admin")){
+      return null; // Không hiển thị Header trên trang admin
+    }
+
   return (
     <header className="fs-header">
       <div className="fs-header-inner">
-        {/* Logo */}
         <a href="/" className="fs-logo" aria-label="FootballShop Home">
           <span className="fs-logo-ball" aria-hidden>⚽</span>
           <span className="fs-logo-text">Football Shop</span>
         </a>
 
-        {/* Desktop Nav */}
         <nav className={`fs-nav ${open ? "open" : ""}`} aria-label="Primary">
           <a className="fs-nav-link" href="/">Trang chủ</a>
           <a className="fs-nav-link" href="/products">Sản phẩm</a>
           <a className="fs-nav-link" href="/collections">Bộ sưu tập</a>
           <a className="fs-nav-link" href="/about">Giới thiệu</a>
           <a className="fs-nav-link" href="/contact">Liên hệ</a>
+          <a className="fs-nav-link" href="/service">Dịch vụ</a>
         </nav>
 
         {/* Actions */}
@@ -93,6 +104,7 @@ export default function Header() {
         <a className="fs-mobile-link" href="/collections" onClick={() => setOpen(false)}>Bộ sưu tập</a>
         <a className="fs-mobile-link" href="/about" onClick={() => setOpen(false)}>Giới thiệu</a>
         <a className="fs-mobile-link" href="/contact" onClick={() => setOpen(false)}>Liên hệ</a>
+        <a className="fs-mobile-link" href="/service" onClick={() => setOpen(false)}>Dịch vụ</a>
         {!user ? (
           <a className="fs-mobile-link" href="/login" onClick={() => setOpen(false)}>Đăng nhập</a>
         ) : (

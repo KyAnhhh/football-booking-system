@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ShopbongdaApplication<shopbongda>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "vn.phankyanh.shopbongda.ShopbongdaApplication",
+            "projectName": "shopbongda",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

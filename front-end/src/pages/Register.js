@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../assets/styles/Register.css"; 
+import "../assets/styles/Register.css";
+import { createUser } from "../services/userService";
 
 export default function Register() {
   const [username, setUserName] = useState("");
@@ -8,39 +9,53 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
 
+    if (username.length < 4) {
+      alert("Tên người dùng phải có ít nhất 4 ký tự");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert("Vui lòng nhập email hợp lệ");
+      return;
+    }
+
+    if (password.length < 6) {
+      alert("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+
     if (password !== confirmPassword) {
-      alert("Mật khẩu không khớp!");
+      alert("Mật khẩu không khớp! Vui lòng kiểm tra lại.");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8080/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          username, 
-          email, 
-          password
-        }),
-      });
-
+      const res = await createUser({ username, email, password });
       const data = await res.json();
 
       if (res.ok) {
-        alert("Đăng ký thành công!");
-        navigate("/login");
+        alert("Đăng ký thành công! Đang chuyển hướng...");
+
+        setTimeout(() => navigate("/login"), 1000);
       } else {
-        alert(data.message || "Đăng ký thất bại");
+        if (data.message?.includes("Email")) {
+          alert("Email đã tồn tại. Vui lòng sử dụng email khác.");
+        } else {
+          alert(data.message || "Đăng ký thất bại.");
+        }
+        alert("error");
       }
     } catch (err) {
-      console.error("Register error:", err);
-      alert("Có lỗi xảy ra khi đăng ký");
+      console.error("Lỗi đăng ký:", err);
+      alert("Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -49,10 +64,11 @@ export default function Register() {
   return (
     <div className="register-container">
       <form className="register-card" onSubmit={handleRegister}>
-        <h2>Register</h2>
+        <h2>Đăng ký tài khoản</h2>
+
         <input
           type="text"
-          placeholder="Full Name"
+          placeholder="Họ và tên"
           value={username}
           onChange={(e) => setUserName(e.target.value)}
           required
@@ -66,14 +82,14 @@ export default function Register() {
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Mật khẩu"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
         <input
           type="password"
-          placeholder="Confirm Password"
+          placeholder="Xác nhận mật khẩu"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
@@ -84,7 +100,7 @@ export default function Register() {
         </button>
 
         <p className="register-text">
-          Already have an account? <a href="/login">Login</a>
+          Đã có tài khoản? <a href="/login">Đăng nhập</a>
         </p>
       </form>
     </div>

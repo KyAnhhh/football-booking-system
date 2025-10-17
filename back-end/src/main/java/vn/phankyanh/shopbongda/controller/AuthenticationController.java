@@ -1,17 +1,17 @@
 package vn.phankyanh.shopbongda.controller;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.text.ParseException;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import vn.phankyanh.shopbongda.dto.request.LoginRequest;
 import vn.phankyanh.shopbongda.dto.response.LoginResponse;
 import vn.phankyanh.shopbongda.service.AuthenticationService;
-import vn.phankyanh.shopbongda.service.UserService;
-
-import java.text.ParseException;
 
 @RestController
 @RequiredArgsConstructor

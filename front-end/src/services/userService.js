@@ -8,15 +8,14 @@ export const getUsers = async () => {
 export const getUser = async (id) => {
   const res = await fetch(`${API_URL}/${id}`);
   return res.json();
-};
+};  
 
 export const createUser = async (user) => {
-  const res = await fetch(API_URL, {
+  return await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user),
   });
-  return res.json();
 };
 
 export const updateUser = async (id, user) => {

@@ -1,25 +1,30 @@
 package vn.phankyanh.shopbongda.service;
 
-import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import vn.phankyanh.shopbongda.domain.RedisToken;
-import vn.phankyanh.shopbongda.domain.User;
-import vn.phankyanh.shopbongda.dto.JwtInfo;
-import vn.phankyanh.shopbongda.dto.TokenPayload;
-import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
-
-import javax.xml.crypto.Data;
 import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+
+import lombok.RequiredArgsConstructor;
+import vn.phankyanh.shopbongda.domain.RedisToken;
+import vn.phankyanh.shopbongda.domain.User;
+import vn.phankyanh.shopbongda.dto.JwtInfo;
+import vn.phankyanh.shopbongda.dto.TokenPayload;
+import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -127,4 +132,9 @@ public class JwtService {
                 .build();
 
     }
+
+    // public Long getUserIdFromToken(String token) throws ParseException {
+    //     SignedJWT signedJWT = SignedJWT.parse(token);
+    //     return signedJWT.getJWTClaimsSet().getLongClaim("id");
+    // }   
 }
