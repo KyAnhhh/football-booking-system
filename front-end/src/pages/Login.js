@@ -16,7 +16,7 @@ export default function Login() {
 
     try {
       const res = await login({ email, password });
-      
+
       let data;
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {

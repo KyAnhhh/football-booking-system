@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../assets/styles/Register.css";
-import { createUser } from "../services/userService";
+import { register } from "../services/authService";
 
 export default function Register() {
   const [username, setUserName] = useState("");
@@ -38,7 +38,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const res = await createUser({ username, email, password });
+      const res = await register({ username, email, password });
       const data = await res.json();
 
       if (res.ok) {

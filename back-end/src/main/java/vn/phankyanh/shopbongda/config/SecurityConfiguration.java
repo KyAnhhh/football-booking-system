@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private static final String[] public_list = {
-              "/auth/**"
+              "/api/auth/**"
               
     };
     private static final String[] private_list = {
