@@ -69,6 +69,9 @@ public class Product {
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<Review> review;
 
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<WishList> wishLists;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
