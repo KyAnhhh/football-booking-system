@@ -24,11 +24,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private static final String[] public_list = {
-              "/auth/**" , "/users/**", "/products/**"
+              "/auth/**"
               
     };
     private static final String[] private_list = {
-             "/**"
+            "/api/admin/**"
     };
 
     private final UserDetailsService userDetailsService;
@@ -44,7 +44,10 @@ public class SecurityConfiguration {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
             String role = jwt.getClaimAsString("role");
+            // sửa
             if (role == null) role = "ROLE_CLIENT"; // default nếu không có role
+//            if (role == null) role = "client"; // default nếu không có role
+
             return List.of(new SimpleGrantedAuthority(role));
         });
         http

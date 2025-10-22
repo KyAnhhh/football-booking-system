@@ -52,7 +52,9 @@ public class JwtDecoderConfiguration implements JwtDecoder {
 
             // Lấy role từ claim
             String role = jwt.getClaimAsString("role");
+            // sửa
             if (role == null) role = "ROLE_CLIENT"; // default nếu không có role
+//            if (role == null) role = "client"; // default nếu không có role
 
             // Gắn authorities cho Spring Security
             return Jwt.withTokenValue(jwt.getTokenValue())

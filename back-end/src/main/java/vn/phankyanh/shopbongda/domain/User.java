@@ -38,16 +38,29 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Cart cart;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ShippingAddress> shippingAddresses;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
 
     @PreUpdate
-    public void preUpdate() {
+    protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 

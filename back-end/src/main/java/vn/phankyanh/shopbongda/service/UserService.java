@@ -3,6 +3,7 @@ package vn.phankyanh.shopbongda.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,10 @@ public class UserService {
     if(userRepository.existsByEmail(request.getEmail()))
         throw new RuntimeException("Email already exists");
 
+        // sửa
     Role role = (request.getRole() != null) ? request.getRole() : Role.ROLE_CLIENT;
+//        Role role = (request.getRole() != null) ? request.getRole() : Role.client;
+
     User user = User.builder()
             .username(request.getUsername())
             .email(request.getEmail())
