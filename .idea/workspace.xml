@@ -5,8 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7f41f631-bf03-46ca-a7fe-f1bc9c2abe53" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/back-end/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/resources/application.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/Brand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/Cart.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/CartItem.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/Category.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/Order.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/OrderItem.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/Payment.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/Product.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/Review.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/ShippingAddress.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/WishList.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,6 +26,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/back-end/src/main/java/vn/phankyanh/shopbongda/Entity/WishList.java" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
@@ -27,18 +41,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "develop",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/IdeaProjects/shopbongda",
-    "settings.editor.selected.configurable": "terminal"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/IdeaProjects/shopbongda&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;terminal&quot;
   }
-}]]></component>
+}</component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="7f41f631-bf03-46ca-a7fe-f1bc9c2abe53" name="Changes" comment="" />
