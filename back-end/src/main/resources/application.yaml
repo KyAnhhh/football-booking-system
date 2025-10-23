@@ -1,10 +1,10 @@
 spring:
   application:
-    name: football-shop
+    name: shopbongda
 
 datasource:
   driver-class-name: com.mysql.cj.jdbc.Driver
-  url: jdbc:msql://localhost:3306/football-shop?useSSL=false&serverTimezone=UTC
+  url: jdbc:msql://localhost:3306/shopbongda?useSSL=false&serverTimezone=UTC
   username: root
   password: kyanh3305
 
