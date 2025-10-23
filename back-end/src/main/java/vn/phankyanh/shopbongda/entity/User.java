@@ -4,9 +4,7 @@ package vn.phankyanh.shopbongda.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -41,6 +39,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(nullable = false)
+    @NotBlank(message = "Status không được để trống")
+    private String status;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
