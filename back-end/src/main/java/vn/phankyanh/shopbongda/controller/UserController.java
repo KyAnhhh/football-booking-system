@@ -1,9 +1,13 @@
 package vn.phankyanh.shopbongda.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import vn.phankyanh.shopbongda.dto.request.UserCreationRequest;
+import vn.phankyanh.shopbongda.dto.request.UserUpdateRequest;
+import vn.phankyanh.shopbongda.dto.response.ApiResponse;
 import vn.phankyanh.shopbongda.entity.User;
 import vn.phankyanh.shopbongda.service.UserService;
 
@@ -17,32 +21,41 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User userCreated = userService.handleCreateUsers(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userCreated);
+    public ApiResponse<User> createUser(@RequestBody @Valid UserCreationRequest request) {
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+        apiResponse.setData(userService.handleCreateUsers(request));
+        return apiResponse;
     }
 
-
     @GetMapping
-    public ResponseEntity<List<User>> getAllUser(){
-        return ResponseEntity.ok(this.userService.handleGetAllUsers());
+    public ApiResponse<List<User>> getAllUser(){
+        ApiResponse<List<User>> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.userService.handleGetAllUsers());
+
+        return apiResponse;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") Long id) {
-        User user = this.userService.handleGetUserById(id);
-        return ResponseEntity.ok(user);
+    public ApiResponse<User> getUserById(@PathVariable("id") Long id) {
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.userService.handleGetUserById(id));
+        return apiResponse;
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable("id") Long id, @RequestBody User userDetails){
-        User updateUser = this.userService.hanleUpdateUser(id, userDetails);
-        return ResponseEntity.ok(updateUser);
+    public ApiResponse<User> updateUser(@PathVariable("id") Long id, @RequestBody UserUpdateRequest request){
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.userService.hanleUpdateUser(id, request));
+        return apiResponse;
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(Long id){
+    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable("id") Long id){
         this.userService.handleDeleteUser(id);
-        return ResponseEntity.ok("Delete successfully with id: "+ id);
+
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        apiResponse.setMessage("Delete successfully with id: "+ id);
+
+        return ResponseEntity.ok(apiResponse);
     }
 }
