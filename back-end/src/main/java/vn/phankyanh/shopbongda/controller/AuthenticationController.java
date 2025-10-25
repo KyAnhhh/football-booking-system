@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.phankyanh.shopbongda.domain.User;
+import vn.phankyanh.shopbongda.dto.JwtInfo;
 import vn.phankyanh.shopbongda.dto.request.LoginRequest;
 import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;
 import vn.phankyanh.shopbongda.dto.response.LoginResponse;
 import vn.phankyanh.shopbongda.dto.response.UserCreateResponse;
 import vn.phankyanh.shopbongda.service.AuthenticationService;
+import vn.phankyanh.shopbongda.service.JwtService;
 import vn.phankyanh.shopbongda.service.UserService;
 
 @RestController
@@ -24,6 +26,7 @@ import vn.phankyanh.shopbongda.service.UserService;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final UserService userService;
+
 
     @PostMapping("/login")
     LoginResponse login(@RequestBody LoginRequest loginRequest){
@@ -41,17 +44,12 @@ public class AuthenticationController {
         authenticationService.logout(token);
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(Authentication authentication){
-        // Principal lúc này là một đối tượng Jwt
-        org.springframework.security.oauth2.jwt.Jwt jwt = (org.springframework.security.oauth2.jwt.Jwt) authentication.getPrincipal();
 
-        String email = jwt.getSubject(); // = "sub" trong token
-        String role = jwt.getClaim("role"); // = "ROLE_ADMIN" hoặc "ROLE_CLIENT"
+        @GetMapping("/profile/me")
+        public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String authHeader) throws Exception {
+            String token = authHeader.replace("Bearer ", "");
+            JwtInfo info = JwtService.parseToken(token);
+            return ResponseEntity.ok(info);
+        }
 
-        return ResponseEntity.ok(Map.of(
-                "email", email,
-                "role", role
-        ));
-    }
 }

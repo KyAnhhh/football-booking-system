@@ -2,7 +2,10 @@ package vn.phankyanh.shopbongda.service;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Map;
 
+import io.jsonwebtoken.Jwt;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -82,4 +85,14 @@ public class AuthenticationService {
         redisTokenRepository.save(redisToken);
         log.info("Logout success");
     }
+
+//    public Map<String, Object> getCurrentUser(Authentication authentication){
+//        org.springframework.security.oauth2.jwt.Jwt jwt = (org.springframework.security.oauth2.jwt.Jwt) authentication.getPrincipal();
+//        return Map.of(
+//                "username", jwt.getSubject(username),
+//                "email", jwt.getSubject("email"),
+//                "role", jwt.getClaim("role"),
+//                "expireAt", jwt.getExpiresAt()
+//        );
+//    }
 }

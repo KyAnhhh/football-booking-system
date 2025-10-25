@@ -44,12 +44,15 @@ public class JwtService {
         String jwtId = UUID.randomUUID().toString();
 
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getEmail())
+                .claim("id", user.getId())
+                .claim("username", user.getUsername())
+                .claim("email", user.getEmail())
+                .claim("phone", user.getPhone())
+                .claim("role", user.getRole().name())
                 .issueTime(issueTime)
                 .expirationTime(expireTime)
                 .jwtID(jwtId)
                 // Thêm role vào token
-                .claim("role", user.getRole().name())
                 .build();
 
         Payload payload = new Payload(claimsSet.toJSONObject());
@@ -116,24 +119,33 @@ public class JwtService {
         return signedJWT.verify(new MACVerifier(secretKey));
     }
 
-    public JwtInfo parseToken(String token) throws ParseException {
+    public static JwtInfo parseToken(String token) throws ParseException {
         SignedJWT signedJWT = SignedJWT.parse(token);
-        String JwtId = signedJWT.getJWTClaimsSet().getJWTID();
-        Date issueTime = signedJWT.getJWTClaimsSet().getIssueTime();
-        Date expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
-        String role = signedJWT.getJWTClaimsSet().getStringClaim("role");
-
+        JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
         return JwtInfo.builder()
-                .jwtId(JwtId)
-                .issueTime(issueTime)
-                .expiredTime(expiredTime)
-                .role(role)
+                .jwtId(claims.getJWTID())
+                .issueTime(claims.getIssueTime())
+                .expiredTime(claims.getExpirationTime())
+                .id(claims.getLongClaim("id"))
+                .username(claims.getStringClaim("username"))
+                .email(claims.getStringClaim("email"))
+                .phone(claims.getStringClaim("phone"))
+                .role(claims.getStringClaim("role"))
                 .build();
+//        String JwtId = signedJWT.getJWTClaimsSet().getJWTID();
+//        Date issueTime = signedJWT.getJWTClaimsSet().getIssueTime();
+//        Date expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+//
+//        String role = signedJWT.getJWTClaimsSet().getStringClaim("role");
+//
+//        return JwtInfo.builder()
+//                .jwtId(JwtId)
+//                .issueTime(issueTime)
+//                .expiredTime(expiredTime)
+//                .role(role)
+//                .build();
     }
 
-    // public Long getUserIdFromToken(String token) throws ParseException {
-    //     SignedJWT signedJWT = SignedJWT.parse(token);
-    //     return signedJWT.getJWTClaimsSet().getLongClaim("id");
-    // }   
+
 }

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor; // Nhận dữ liệu JSON gửi từ client
 import vn.phankyanh.shopbongda.domain.User;
 import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;
+import vn.phankyanh.shopbongda.dto.request.UserUpdateRequest;
+import vn.phankyanh.shopbongda.dto.response.ApiResponse;
 import vn.phankyanh.shopbongda.dto.response.UserCreateResponse;
 import vn.phankyanh.shopbongda.service.UserService;
 
@@ -20,8 +22,10 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public UserCreateResponse createUser(@RequestBody UserCreateRequest userCreateRequest ){
-        return userService.handleCreateUser(userCreateRequest);
+    public ApiResponse<UserCreateResponse> createUser(@RequestBody UserCreateRequest userCreateRequest ){
+        ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setData(userService.handleCreateUser(userCreateRequest));
+        return apiResponse;
     }
 
     @GetMapping
@@ -36,9 +40,10 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable("id") Long id, @RequestBody User userDetails) {
-        User updatedUser = this.userService.handleUpdateUser(id, userDetails);
-        return ResponseEntity.ok(updatedUser);
+    public ApiResponse<User> updateUser(@PathVariable("id") Long id, @RequestBody UserUpdateRequest request) {
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+         apiResponse.setData(this.userService.handleUpdateUser(id, request));
+        return apiResponse;
     }
 
     @DeleteMapping("/{id}")

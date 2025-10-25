@@ -37,9 +37,17 @@ public class User implements UserDetails {
     @NotBlank(message = "Password không được để trống")
     private String password;
 
+    @Column(nullable = false)
+    @NotBlank(message = "Password không được để trống")
+    private String phone;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(nullable = false)
+    
+    private String status = "active";
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
