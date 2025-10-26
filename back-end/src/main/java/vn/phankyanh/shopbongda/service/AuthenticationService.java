@@ -86,13 +86,4 @@ public class AuthenticationService {
         log.info("Logout success");
     }
 
-//    public Map<String, Object> getCurrentUser(Authentication authentication){
-//        org.springframework.security.oauth2.jwt.Jwt jwt = (org.springframework.security.oauth2.jwt.Jwt) authentication.getPrincipal();
-//        return Map.of(
-//                "username", jwt.getSubject(username),
-//                "email", jwt.getSubject("email"),
-//                "role", jwt.getClaim("role"),
-//                "expireAt", jwt.getExpiresAt()
-//        );
-//    }
 }

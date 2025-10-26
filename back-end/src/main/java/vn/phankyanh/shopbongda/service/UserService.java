@@ -3,7 +3,6 @@ package vn.phankyanh.shopbongda.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +13,7 @@ import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;
 import vn.phankyanh.shopbongda.dto.request.UserUpdateRequest;
 import vn.phankyanh.shopbongda.dto.response.UserCreateResponse;
 import vn.phankyanh.shopbongda.exception.UserNotFoundException;
+import vn.phankyanh.shopbongda.mapper.UserMapper;
 import vn.phankyanh.shopbongda.repository.UserRepository;
 
 @Service
@@ -21,6 +21,7 @@ import vn.phankyanh.shopbongda.repository.UserRepository;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     public UserCreateResponse handleCreateUser(UserCreateRequest request){
     if(userRepository.existsByEmail(request.getEmail()))
@@ -49,7 +50,6 @@ public class UserService {
             .phone(user.getPhone())
             .role(user.getRole())
             .status(user.getStatus())
-            .message("User created successfully!")
             .build();
     }
 
@@ -57,9 +57,11 @@ public class UserService {
         return this.userRepository.findAll();
     }
 
-    public User handleGetUserById(Long id){
-        return userRepository.findById(id)
+    public UserCreateResponse handleGetUserById(Long id){
+        User user= userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+        // k cần set từng giá trị thì ta sử dụng mapper
+        return userMapper.toUserCreateResponse(user);
     }
 
     public User handleUpdateUser(Long id, UserUpdateRequest request){

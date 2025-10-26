@@ -34,9 +34,10 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") Long id) {
-        User user = this.userService.handleGetUserById(id);
-        return ResponseEntity.ok(user);
+    public ApiResponse<UserCreateResponse> getUserById(@PathVariable("id") Long id) {
+        ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.userService.handleGetUserById(id));
+        return apiResponse;
     }
 
     @PutMapping("/{id}")

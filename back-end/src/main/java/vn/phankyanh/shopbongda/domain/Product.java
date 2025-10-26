@@ -88,12 +88,4 @@ public class Product {
         updatedAt = LocalDateTime.now();
     }
 
-//    @Transient
-//    public BigDecimal getDiscountedPrice() {
-//        if (discount == null || discount == 0) {
-//            return price;
-//        }
-//        BigDecimal discountAmount = price.multiply(BigDecimal.valueOf(discount).divide(BigDecimal.valueOf(100)));
-//        return price.subtract(discountAmount);
-//    }
 }

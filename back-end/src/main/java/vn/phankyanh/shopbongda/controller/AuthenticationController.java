@@ -13,6 +13,7 @@ import vn.phankyanh.shopbongda.domain.User;
 import vn.phankyanh.shopbongda.dto.JwtInfo;
 import vn.phankyanh.shopbongda.dto.request.LoginRequest;
 import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;
+import vn.phankyanh.shopbongda.dto.response.ApiResponse;
 import vn.phankyanh.shopbongda.dto.response.LoginResponse;
 import vn.phankyanh.shopbongda.dto.response.UserCreateResponse;
 import vn.phankyanh.shopbongda.service.AuthenticationService;
@@ -46,10 +47,12 @@ public class AuthenticationController {
 
 
         @GetMapping("/profile/me")
-        public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String authHeader) throws Exception {
+        public ApiResponse<UserCreateResponse> getProfile(@RequestHeader("Authorization") String authHeader) throws Exception {
+            ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
             String token = authHeader.replace("Bearer ", "");
             JwtInfo info = JwtService.parseToken(token);
-            return ResponseEntity.ok(info);
+            apiResponse.setData(userService.handleGetUserById(info.getId()));
+            return apiResponse;
         }
 
 }

@@ -45,14 +45,10 @@ public class JwtService {
 
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .claim("id", user.getId())
-                .claim("username", user.getUsername())
-                .claim("email", user.getEmail())
-                .claim("phone", user.getPhone())
                 .claim("role", user.getRole().name())
                 .issueTime(issueTime)
                 .expirationTime(expireTime)
                 .jwtID(jwtId)
-                // Thêm role vào token
                 .build();
 
         Payload payload = new Payload(claimsSet.toJSONObject());
@@ -81,11 +77,12 @@ public class JwtService {
         String jwtId = UUID.randomUUID().toString();
 
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getEmail())
+                .claim("id", user.getId())
                 .issueTime(issueTime)
                 .expirationTime(expireTime)
                 .jwtID(jwtId)
                 .build();
+
 
         Payload payload = new Payload(claimsSet.toJSONObject());
 
@@ -128,24 +125,6 @@ public class JwtService {
                 .issueTime(claims.getIssueTime())
                 .expiredTime(claims.getExpirationTime())
                 .id(claims.getLongClaim("id"))
-                .username(claims.getStringClaim("username"))
-                .email(claims.getStringClaim("email"))
-                .phone(claims.getStringClaim("phone"))
-                .role(claims.getStringClaim("role"))
                 .build();
-//        String JwtId = signedJWT.getJWTClaimsSet().getJWTID();
-//        Date issueTime = signedJWT.getJWTClaimsSet().getIssueTime();
-//        Date expiredTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-//
-//        String role = signedJWT.getJWTClaimsSet().getStringClaim("role");
-//
-//        return JwtInfo.builder()
-//                .jwtId(JwtId)
-//                .issueTime(issueTime)
-//                .expiredTime(expiredTime)
-//                .role(role)
-//                .build();
     }
-
-
 }

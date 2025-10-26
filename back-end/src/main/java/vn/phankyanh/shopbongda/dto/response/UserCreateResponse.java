@@ -16,5 +16,4 @@ public class UserCreateResponse {
     private String password;
     private Role role;
     private String status = "active";
-    private String message;
 }
