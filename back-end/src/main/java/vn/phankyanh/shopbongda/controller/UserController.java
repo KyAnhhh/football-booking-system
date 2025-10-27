@@ -48,8 +48,10 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUserById(@PathVariable("id") Long id) {
+    public ApiResponse<String> deleteUserById(@PathVariable("id") Long id) {
+        ApiResponse<String> apiResponse = new ApiResponse<>();
         this.userService.handleDeleteUserById(id);
-        return ResponseEntity.noContent().build();
+        apiResponse.setMessage("Delete user successful with id: " + id);
+        return apiResponse;
     }
 }
