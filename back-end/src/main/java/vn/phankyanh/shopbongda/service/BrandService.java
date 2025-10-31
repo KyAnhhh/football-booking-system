@@ -18,6 +18,7 @@ public class BrandService {
 
     public List<Brand> handleGetAllBrand(){
         return this.brandRepository.findAll();
+
     }
     public BrandResponse handleGetUserById(Long id){
         Brand brand = this.brandRepository.findById(id)

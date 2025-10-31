@@ -5,40 +5,63 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import vn.phankyanh.shopbongda.domain.Brand;
+import vn.phankyanh.shopbongda.domain.Category;
 import vn.phankyanh.shopbongda.domain.Product;
+import vn.phankyanh.shopbongda.dto.request.ProductRequest;
+import vn.phankyanh.shopbongda.dto.response.ProductResponse;
 import vn.phankyanh.shopbongda.exception.ProductNotFoundException;
+import vn.phankyanh.shopbongda.mapper.ProductMapper;
+import vn.phankyanh.shopbongda.repository.BrandRepository;
+import vn.phankyanh.shopbongda.repository.CategoryRepository;
 import vn.phankyanh.shopbongda.repository.ProductRepository;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final BrandRepository brandRepository;
+    private final ProductMapper productMapper;
 
-    public Product handleCreateProduct(Product product){
-        return this.productRepository.save(product);
+    public ProductResponse handleCreateProduct(ProductRequest request){
+        if(productRepository.existsByName(request.getName())){
+            throw new RuntimeException("Name already exists");
+        }
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Brand brand = brandRepository.findById(request.getBrandId())
+                .orElseThrow(() -> new RuntimeException("Brand not found"));
+
+        Product product = productMapper.toProduct(request);
+
+        // gán để nối mối quan hệ thật
+        product.setCategory(category);
+        product.setBrand(brand);
+
+        this.productRepository.save(product);
+        return productMapper.toProductResponse(product);
     }
 
-    public List<Product> handleGetAllProduct(){
-        return this.productRepository.findAll();
+    public List<ProductResponse> handleGetAllProduct(){
+        return productRepository.findAll()
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
     }
 
-    public Product handleGetProductById(Long id){
-        return this.productRepository.findById(id)
+    public ProductResponse handleGetProductById(Long id){
+         Product product = this.productRepository.findById(id)
         .orElseThrow(() -> new ProductNotFoundException(id));
+        return productMapper.toProductResponse(product);
     }
 
-    public Product handleUpdateProduct(Long id, Product productUpdate){
+    public Product handleUpdateProduct(Long id, ProductRequest request){
         Product product = this.productRepository.findById(id)
         .orElseThrow(() -> new ProductNotFoundException(id));
 
-        product.setName(productUpdate.getName());
-        product.setDescription(productUpdate.getDescription());
-        product.setPrice(productUpdate.getPrice());
-        product.setStock(productUpdate.getStock());
-        product.setImageUrl(productUpdate.getImageUrl());
-        product.setCategory(productUpdate.getCategory());
-
-        
+        productMapper.updateProduct(product, request);
         return this.productRepository.save(product);
     }
 

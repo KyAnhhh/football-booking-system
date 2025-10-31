@@ -8,6 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import vn.phankyanh.shopbongda.domain.Product;
+import vn.phankyanh.shopbongda.dto.request.ProductRequest;
+import vn.phankyanh.shopbongda.dto.response.ApiResponse;
+import vn.phankyanh.shopbongda.dto.response.ProductResponse;
 import vn.phankyanh.shopbongda.service.ProductService;
 
 @RestController
@@ -17,31 +20,39 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        Product createdProduct = this.productService.handleCreateProduct(product);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
+    public ApiResponse<ProductResponse> createProduct(@RequestBody ProductRequest request) {
+        ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.productService.handleCreateProduct(request));
+        return apiResponse;
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProduct(){
-        return ResponseEntity.status(HttpStatus.OK).body(this.productService.handleGetAllProduct());
+    public ApiResponse<List<ProductResponse>> getAllProduct(){
+        ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.productService.handleGetAllProduct());
+        return apiResponse;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable("id") Long id){
-        return ResponseEntity.ok(this.productService.handleGetProductById(id));
+    public ApiResponse<ProductResponse> getProductById(@PathVariable("id") Long id){
+        ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.productService.handleGetProductById(id));
+        return apiResponse;
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
-        Product product = this.productService.handleUpdateProduct(id, productDetails);
-        return ResponseEntity.ok(product);
+    public ApiResponse<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
+        ApiResponse<Product> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.productService.handleUpdateProduct(id, request));
+        return apiResponse;
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable("id") Long id){
+    public ApiResponse<String> deleteProduct(@PathVariable("id") Long id){
+        ApiResponse<String> apiResponse = new ApiResponse<>();
         this.productService.handleDeleteProduct(id);
-        return ResponseEntity.ok("Deleted product with id " + id);
+        apiResponse.setMessage("Deleted product with id: " + id);
+        return apiResponse;
     }
     
 }

@@ -1,10 +1,12 @@
 package vn.phankyanh.shopbongda.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,18 +33,18 @@ public class Payment {
     @NotBlank(message = "status không được để trống")
     private String status;
 
+    @DecimalMin(value = "0.0", inclusive = true, message = "total_amount không được âm")
     @Column(nullable = false)
-    @Min(value = 0, message = "total_amount không được âm")
-    private Integer total_amount;
+    private BigDecimal totalAmount;
 
     @NotBlank(message = "method không được để trống")
     private String method;
 
-    @Column(nullable = false)
-    private String transaction_code;
+    @Column(nullable = false, unique = true, length = 100)
+    private String transactionCode;
 
     @Column(nullable = false)
-    private LocalDateTime payment_date;
+    private LocalDateTime paymentDate;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -50,10 +52,8 @@ public class Payment {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-//    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<Order> orders = new ArrayList<>(); // Khởi tạo để tránh null
-    @OneToMany(mappedBy = "payment", fetch = FetchType.LAZY)
-    private List<Order> orders ;
+    @OneToOne(mappedBy = "payment", fetch = FetchType.LAZY)
+    private Order order ;
 
     @PrePersist
     protected void onCreate() {
@@ -66,18 +66,4 @@ public class Payment {
         this.updatedAt = LocalDateTime.now();
     }
 
-//    @Transient
-//    public Integer getAmount() {
-//        if (orders == null || orders.isEmpty()) {
-//            return 0;
-//        }
-//        return orders.stream()
-//                .mapToInt(Order::getTotal)
-//                .sum();
-//    }
-//
-//    public void updateAmount() {
-//        this.amount = getAmount();
-//        this.updatedAt = LocalDateTime.now(); // Cập nhật thủ công khi cần
-//    }
 }

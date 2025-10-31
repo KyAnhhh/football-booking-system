@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -14,6 +15,10 @@ import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(name = "products")
+//nhận dện đối tượng đã đc serialize và tránh việc lặp vô hạn khi có quan hệ 2 chiều
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+// bỏ qua các thuộc tính proxy do Hibernate thêm vào
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -49,7 +54,8 @@ public class Product {
     private String imageUrl;
 
     @Column(nullable = false)
-    private Integer sold_quantity = 0;
+    @ColumnDefault("0")
+    private Integer sold_quantity;
 
     @Column(nullable = false)
     private Integer dimension;

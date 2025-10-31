@@ -34,5 +34,6 @@ public class ProductRequest {
     @NotNull(message = "Category không được để trống")
     private Long categoryId;
 
+    @NotNull(message = "Category không được để trống")
     private Long brandId;
 }

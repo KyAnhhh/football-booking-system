@@ -1,11 +1,11 @@
 package vn.phankyanh.shopbongda.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id") //nhận dện đối tượng đã đc serialize và tránh việc lặp vô hạn khi có quan hệ 2 chiều
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // bỏ qua các thuộc tính proxy do Hibernate thêm vào
 public class OrderItem {
 
     @Id
@@ -33,8 +35,8 @@ public class OrderItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(nullable = false)
-    @NotBlank(message = "quantity không được để trống")
+    @NotNull
+    @Min(1)
     private Integer quantity;
 
     @ColumnDefault("0")
@@ -62,12 +64,5 @@ public class OrderItem {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-//    @Transient
-//    public BigDecimal getItemTotal() {
-//        BigDecimal basePrice = price.multiply(BigDecimal.valueOf(quantity));
-//        BigDecimal discountAmount = discount != null ? basePrice.multiply(BigDecimal.valueOf(discount).divide(BigDecimal.valueOf(100))) : BigDecimal.ZERO;
-//        return basePrice.subtract(discountAmount);
-//    }
 
 }

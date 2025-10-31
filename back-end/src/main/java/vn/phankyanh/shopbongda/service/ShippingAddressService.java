@@ -1,0 +1,7 @@
+package vn.phankyanh.shopbongda.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class ShippingAddressService {
+}

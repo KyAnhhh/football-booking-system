@@ -29,8 +29,10 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(this.userService.handleGetAllUsers());
+        public ApiResponse<List<User>> getAllUsers() {
+        ApiResponse<List<User>> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.userService.handleGetAllUsers());
+        return apiResponse;
     }
 
     @GetMapping("/{id}")
