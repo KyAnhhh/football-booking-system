@@ -28,8 +28,11 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final ShippingAddressRepository shippingAddressRepository;
 
-    public List<Order> handleGetAllOrder(){
-        return this.orderRepository.findAll();
+    public List<OrderResponse> handleGetAllOrder(){
+        return this.orderRepository.findAll()
+                .stream()
+                .map(orderMapper::toOrderResponse)
+                .toList();
     }
 
     public OrderResponse handleCreateOrder(OrderRequest request){

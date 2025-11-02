@@ -20,8 +20,11 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
-    public List<Category> handleGetAllCategory(){
-        return this.categoryRepository.findAll();
+    public List<CategoryResponse> handleGetAllCategory(){
+        return this.categoryRepository.findAll()
+                .stream()
+                .map(categoryMapper::toResponse)
+                .toList();
     }
     public CategoryResponse handleGetUserById(Long id){
         Category category = this.categoryRepository.findById(id)

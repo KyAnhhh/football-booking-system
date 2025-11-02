@@ -22,8 +22,8 @@ public class BrandController {
     private final BrandService brandService;
 
     @GetMapping
-    public ApiResponse<List<Brand>> getAllBrand(){
-        ApiResponse<List<Brand>> apiResponse = new ApiResponse<>();
+    public ApiResponse<List<BrandResponse>> getAllBrand(){
+        ApiResponse<List<BrandResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.brandService.handleGetAllBrand());
         return apiResponse;
     }

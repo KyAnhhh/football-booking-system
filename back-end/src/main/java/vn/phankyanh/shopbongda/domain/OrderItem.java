@@ -48,6 +48,10 @@ public class OrderItem {
     @DecimalMin(value = "0.0", inclusive = false, message = "Price phải lớn hơn 0")
     private BigDecimal price;
 
+    @Column(nullable = false)
+    @DecimalMin(value = "0.0", inclusive = false, message = "Total phải lớn hơn 0")
+    private BigDecimal total;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

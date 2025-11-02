@@ -16,8 +16,11 @@ public class BrandService {
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
 
-    public List<Brand> handleGetAllBrand(){
-        return this.brandRepository.findAll();
+    public List<BrandResponse> handleGetAllBrand(){
+        return this.brandRepository.findAll()
+                .stream()
+                .map(brandMapper::toResponse)
+                .toList();
 
     }
     public BrandResponse handleGetUserById(Long id){

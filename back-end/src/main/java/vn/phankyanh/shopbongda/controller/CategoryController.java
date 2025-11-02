@@ -22,8 +22,8 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public ApiResponse<List<Category>> getAllCategory(){
-        ApiResponse<List<Category>> apiResponse = new ApiResponse<>();
+    public ApiResponse<List<CategoryResponse>> getAllCategory(){
+        ApiResponse<List<CategoryResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.categoryService.handleGetAllCategory());
         return apiResponse;
     }
