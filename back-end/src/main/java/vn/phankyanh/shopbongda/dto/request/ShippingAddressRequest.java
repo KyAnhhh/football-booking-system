@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShippingAddressRequest {
-    private Long userId;
     private String fullName;
     private String phone;
     private String address;

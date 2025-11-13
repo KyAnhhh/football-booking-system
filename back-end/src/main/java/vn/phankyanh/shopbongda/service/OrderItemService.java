@@ -41,16 +41,16 @@ public class OrderItemService {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         // Lấy order nếu có
-        Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+//        Order order = orderRepository.findById(request.getOrderId())
+//                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        // Tính toán giá và tạo OrderItem
-        BigDecimal price = product.getPrice();
-        BigDecimal total = price.multiply(BigDecimal.valueOf(request.getQuantity()));
+
+        BigDecimal price = product.getPrice(); // lấy giá gốc
+        BigDecimal total = price.multiply(BigDecimal.valueOf(request.getQuantity())); // tỉnh tổng số tiền dựa trên quantity
 
         OrderItem orderItem = OrderItem.builder()
                 .product(product)
-                .order(order)
+//                .order(order)
                 .quantity(request.getQuantity())
                 .price(price)
                 .total(total)

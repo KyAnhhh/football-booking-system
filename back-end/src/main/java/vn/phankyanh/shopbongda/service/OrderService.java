@@ -2,9 +2,8 @@ package vn.phankyanh.shopbongda.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import vn.phankyanh.shopbongda.domain.Order;
-import vn.phankyanh.shopbongda.domain.OrderItem;
-import vn.phankyanh.shopbongda.domain.Product;
+import vn.phankyanh.shopbongda.domain.*;
+import vn.phankyanh.shopbongda.dto.JwtInfo;
 import vn.phankyanh.shopbongda.dto.request.OrderItemRequest;
 import vn.phankyanh.shopbongda.dto.request.OrderRequest;
 import vn.phankyanh.shopbongda.dto.response.OrderResponse;
@@ -13,6 +12,7 @@ import vn.phankyanh.shopbongda.mapper.ProductMapper;
 import vn.phankyanh.shopbongda.repository.*;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +27,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final PaymentRepository paymentRepository;
     private final ShippingAddressRepository shippingAddressRepository;
+    private final PaymentService paymentService;
 
     public List<OrderResponse> handleGetAllOrder(){
         return this.orderRepository.findAll()
@@ -35,20 +36,23 @@ public class OrderService {
                 .toList();
     }
 
-    public OrderResponse handleCreateOrder(OrderRequest request){
+    public OrderResponse handleCreateOrder(OrderRequest request, String authHeader) throws ParseException {
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("Order must have at least one item");
         }
+        String token = authHeader.replace("Bearer ", "");
+        JwtInfo info = JwtService.parseToken(token);
 
-        Order order = orderMapper.toOrder(request);
-        order.setUser(userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found")));
+        User user = userRepository.findById(info.getId())
+                        .orElseThrow(() -> new RuntimeException("Order not found with id " + info.getId()));
 
-        order.setPayment(paymentRepository.findById(request.getPaymentId())
-                .orElseThrow(() -> new RuntimeException("Payment not found")));
+        ShippingAddress shippingAddress = shippingAddressRepository.findById(request.getShippingAddressId())
+                .orElseThrow(() -> new RuntimeException("Address not found"));
 
-        order.setShippingAddress(shippingAddressRepository.findById(request.getShippingAddressId())
-                .orElseThrow(() -> new RuntimeException("Address not found")));
+        Order order = new Order();
+        order.setUser(user);
+        order.setShippingAddress(shippingAddress);
+        order.setOrderDate(LocalDateTime.now());
 
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
@@ -59,7 +63,7 @@ public class OrderService {
             BigDecimal price = product.getPrice();
             BigDecimal itemTotal = price.multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
 
-            OrderItem item = OrderItem.builder()
+            OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .product(product)
                     .quantity(itemRequest.getQuantity())
@@ -67,13 +71,18 @@ public class OrderService {
                     .discount(0)  // có thể để mặc định hoặc lấy từ request
                     .build();
 
-            orderItems.add(item);
+            orderItems.add(orderItem);
             total = total.add(itemTotal);
         }
 
+        // do chưa cần tới payment qua các phương thức banking nên sử dụng payment đc khởi tạo mặc định trước
+        Payment payment = paymentService.createPayment(total, "Tiền mặt", "Giao hàng tận nơi");
+
+        paymentRepository.save(payment);
+
         order.setOrderItems(orderItems);
-        order.setTotal_amount(total);
-        order.setOrderDate(LocalDateTime.now());
+        order.setTotalAmount(total);
+        order.setPayment(payment);
 
         this.orderRepository.save(order);
         return orderMapper.toOrderResponse(order);

@@ -8,18 +8,19 @@ import vn.phankyanh.shopbongda.dto.response.ApiResponse;
 import vn.phankyanh.shopbongda.dto.response.ShippingAddressResponse;
 import vn.phankyanh.shopbongda.service.ShippingAddressService;
 
+import java.text.ParseException;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/shippingAddress")
+@RequestMapping("/api/public/shippingAddress")
 public class ShippingAddressController {
     private final ShippingAddressService shippingAddressService;
 
     @PostMapping
-    public ApiResponse<ShippingAddressResponse> createShippingAddress(@RequestBody ShippingAddressRequest request){
+    public ApiResponse<ShippingAddressResponse> createShippingAddress(@RequestBody ShippingAddressRequest request, @RequestHeader("Authorization") String authHeader) throws ParseException {
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.shippingAddressService.handleCreateShippingAddress(request));
+        apiResponse.setData(this.shippingAddressService.handleCreateShippingAddress(request, authHeader));
         return apiResponse;
     }
     @GetMapping

@@ -13,6 +13,5 @@ import java.math.BigDecimal;
 @Builder
 public class OrderItemRequest {
     private Long productId;
-    private Long orderId;
     private Integer quantity;
 }

@@ -13,12 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderRequest {
-    private Long userId;
-    private Long paymentId;
     private Long shippingAddressId;
-    private BigDecimal totalAmount;
-    private String status;
     private Integer shippingCost;
-    private LocalDateTime deliveryDate;
     private List<OrderItemRequest> items;
 }

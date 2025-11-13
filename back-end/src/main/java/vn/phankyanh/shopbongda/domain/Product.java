@@ -55,7 +55,7 @@ public class Product {
 
     @Column(nullable = false)
     @ColumnDefault("0")
-    private Integer sold_quantity;
+    private Integer soldQuantity;
 
     @Column(nullable = false)
     private Integer dimension;

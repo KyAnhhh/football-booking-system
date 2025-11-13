@@ -1,5 +1,8 @@
 package vn.phankyanh.shopbongda.domain;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
@@ -13,6 +16,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Cart {
 
     @Id
@@ -26,7 +31,7 @@ public class Cart {
 
     @Column(nullable = false)
     @Min(value = 0, message = "Stock không được âm")
-    private Integer total_amount;
+    private Integer totalAmount;
 
     // Một giỏ hàng có nhiều item
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -49,10 +54,4 @@ public class Cart {
         this.updatedAt = LocalDateTime.now();
     }
 
-//    @Transient
-//    public Integer getTotal() {
-//        return items.stream()
-//                .mapToInt(item -> item.getQuantity() * item.getPriceAtAddedTime().intValue())
-//                .sum();
-//    }
 }

@@ -8,18 +8,19 @@ import vn.phankyanh.shopbongda.dto.response.ApiResponse;
 import vn.phankyanh.shopbongda.dto.response.OrderResponse;
 import vn.phankyanh.shopbongda.service.OrderService;
 
+import java.text.ParseException;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/orders")
+@RequestMapping("/api/public/orders")
 public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ApiResponse<OrderResponse> createOrder(@RequestBody OrderRequest request) {
+    public ApiResponse<OrderResponse> createOrder(@RequestBody OrderRequest request, @RequestHeader("Authorization") String authHeader) throws ParseException {
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.orderService.handleCreateOrder(request));
+        apiResponse.setData(this.orderService.handleCreateOrder(request, authHeader));
         return apiResponse;
     }
 

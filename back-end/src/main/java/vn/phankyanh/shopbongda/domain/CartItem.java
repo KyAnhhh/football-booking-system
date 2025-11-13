@@ -1,6 +1,9 @@
 package vn.phankyanh.shopbongda.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
@@ -13,6 +16,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class CartItem {
 
     @Id
@@ -31,14 +36,10 @@ public class CartItem {
 
     @Column(nullable = false)
     @Min(value = 1, message = "Stock không được âm")
-    private Integer total_quantity = 1;
+    private Integer totalQuantity = 1;
 
     // Giá tại thời điểm thêm vào giỏ (tránh thay đổi nếu product update giá)
     @Column(nullable = false)
     private BigDecimal priceAtAddedTime;
 
-//    @Transient
-//    public BigDecimal getItemTotal() {
-//        return priceAtAddedTime.multiply(BigDecimal.valueOf(quantity));
-//    }
 }

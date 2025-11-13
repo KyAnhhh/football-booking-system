@@ -43,10 +43,10 @@ public class Order {
 
     @Column(nullable = false)
     @DecimalMin(value = "0.0", message = "Stock không được âm")
-    private BigDecimal total_amount;
+    private BigDecimal totalAmount;
 
     @NotBlank(message = "status không được để trống")
-    private String status;
+    private String status = "Chờ xác nhận";
 
     @NotNull(message = "shipping_cost không được để trống")
     @Min(value = 0, message = "shipping_cost phải >= 0")
@@ -56,7 +56,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Column(name = "delivery_date", nullable = true)
-    private LocalDateTime deliveryDate;
+    private LocalDateTime deliveryDate = LocalDateTime.now().plusDays(3);
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;

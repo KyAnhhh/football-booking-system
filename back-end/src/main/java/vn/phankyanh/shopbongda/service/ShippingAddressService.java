@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import vn.phankyanh.shopbongda.domain.ShippingAddress;
 import vn.phankyanh.shopbongda.domain.User;
+import vn.phankyanh.shopbongda.dto.JwtInfo;
 import vn.phankyanh.shopbongda.dto.request.ShippingAddressRequest;
 import vn.phankyanh.shopbongda.dto.response.ShippingAddressResponse;
 import vn.phankyanh.shopbongda.mapper.ShippingAddressMapper;
 import vn.phankyanh.shopbongda.repository.ShippingAddressRepository;
 import vn.phankyanh.shopbongda.repository.UserRepository;
 
+import java.text.ParseException;
 import java.util.List;
 
 @Service
@@ -19,11 +21,14 @@ public class ShippingAddressService {
     private final ShippingAddressMapper shippingAddressMapper;
     private final UserRepository userRepository;
 
-    public ShippingAddressResponse handleCreateShippingAddress(ShippingAddressRequest request){
-        ShippingAddress shippingAddress = shippingAddressMapper.toShippingAddress(request);
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id " + request.getUserId()));
+    public ShippingAddressResponse handleCreateShippingAddress(ShippingAddressRequest request, String authHeader) throws ParseException {
+        String token = authHeader.replace("Bearer ", "");
+        JwtInfo info = JwtService.parseToken(token);
+
+        User user = userRepository.findById(info.getId())
+                .orElseThrow(() -> new RuntimeException("User not found with id " + info.getId()));
         // ánh xạ với User
+        ShippingAddress shippingAddress = shippingAddressMapper.toShippingAddress(request);
         shippingAddress.setUser(user);
 
         this.shippingAddressRepository.save(shippingAddress);

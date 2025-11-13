@@ -37,7 +37,7 @@ public class Payment {
     @Column(nullable = false, length = 100)
     private String status;
 
-    @DecimalMin(value = "0.0", inclusive = true, message = "total_amount không được âm")
+    @DecimalMin(value = "0.0", inclusive = true, message = "TotalAmount không được âm")
     @Column(nullable = false)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
