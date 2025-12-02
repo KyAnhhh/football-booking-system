@@ -8,7 +8,6 @@ import vn.phankyanh.shopbongda.dto.request.OrderItemRequest;
 import vn.phankyanh.shopbongda.dto.request.OrderRequest;
 import vn.phankyanh.shopbongda.dto.response.OrderResponse;
 import vn.phankyanh.shopbongda.mapper.OrderMapper;
-import vn.phankyanh.shopbongda.mapper.ProductMapper;
 import vn.phankyanh.shopbongda.repository.*;
 
 import java.math.BigDecimal;
@@ -16,7 +15,6 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +50,7 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setShippingAddress(shippingAddress);
+        order.setShippingCost(request.getShippingCost() != null ? request.getShippingCost() : 0);
         order.setOrderDate(LocalDateTime.now());
 
         List<OrderItem> orderItems = new ArrayList<>();
@@ -68,6 +67,7 @@ public class OrderService {
                     .product(product)
                     .quantity(itemRequest.getQuantity())
                     .price(price) // lưu giá tại thời điểm mua
+                    .total(itemTotal)
                     .discount(0)  // có thể để mặc định hoặc lấy từ request
                     .build();
 
@@ -96,6 +96,19 @@ public class OrderService {
         orderMapper.updateOrder(order , request);
         return orderRepository.save(order);
 
+    }
+
+    public OrderResponse handleUpdateOrderStatus(Long orderId, String newStatus){
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+
+        order.setStatus("Đã giao hàng");
+        if("Đã giao hàng".equals(newStatus)){
+            order.setDeliveryDate(LocalDateTime.now());
+        }
+
+        this.orderRepository.save(order);
+        return orderMapper.toOrderResponse(order);
     }
 
     public OrderResponse handleGetOrderById(Long id){

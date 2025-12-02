@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class OrderItemRequest {
+    private Long orderId;
     private Long productId;
     private Integer quantity;
 }

@@ -53,9 +53,9 @@ public class Product {
     @Column(length = 1000)
     private String imageUrl;
 
+    @Builder.Default
     @Column(nullable = false)
-    @ColumnDefault("0")
-    private Integer soldQuantity;
+    private Integer soldQuantity = 0;
 
     @Column(nullable = false)
     private Integer dimension;

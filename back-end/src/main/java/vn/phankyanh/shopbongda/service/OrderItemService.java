@@ -41,8 +41,8 @@ public class OrderItemService {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         // Lấy order nếu có
-//        Order order = orderRepository.findById(request.getOrderId())
-//                .orElseThrow(() -> new RuntimeException("Order not found"));
+        Order order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
 
         BigDecimal price = product.getPrice(); // lấy giá gốc
@@ -50,7 +50,7 @@ public class OrderItemService {
 
         OrderItem orderItem = OrderItem.builder()
                 .product(product)
-//                .order(order)
+                .order(order)
                 .quantity(request.getQuantity())
                 .price(price)
                 .total(total)

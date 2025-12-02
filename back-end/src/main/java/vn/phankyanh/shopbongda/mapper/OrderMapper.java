@@ -18,6 +18,11 @@ public interface OrderMapper {
     @Mapping(target = "orderDate", expression = "java(java.time.LocalDateTime.now())") // gán giá trị mặt định khi mapping
     Order toOrder(OrderRequest request);
 
+    @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "shippingAddress.fullName", target = "fullName")
+    @Mapping(source = "shippingAddress.phone", target = "phone")
+    @Mapping(source = "shippingAddress.address", target = "address")
+    @Mapping(source = "orderItems", target = "items")
     OrderResponse toOrderResponse(Order order);
 
     @Mapping(target = "id", ignore = true)

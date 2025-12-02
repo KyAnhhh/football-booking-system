@@ -15,6 +15,12 @@ public interface OrderItemMapper {
     @Mapping(target = "product", ignore = true)
     OrderItem toOrderItem(OrderItemRequest request);
 
+    @Mapping(source = "product.id", target = "productId")
+    @Mapping(source = "product.name", target = "productName")
+    @Mapping(
+            target = "total",
+            expression = "java(orderItem.getPrice().multiply(java.math.BigDecimal.valueOf(orderItem.getQuantity())))"
+    )
     OrderItemResponse toOrderItemResponse(OrderItem orderItem);
 
     @Mapping(target = "id", ignore = true)

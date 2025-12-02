@@ -59,7 +59,7 @@ public class AuthenticationService {
 
         log.info("Login success: {}", user.getEmail());
 
-        //Return token
+        //trả ra token và role
         return  LoginResponse.builder()
                 .accessToken(accessPayload.getToken())
                 .refreshToken(refreshPayload.getToken())

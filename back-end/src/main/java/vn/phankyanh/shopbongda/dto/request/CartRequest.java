@@ -7,6 +7,6 @@ import java.util.List;
 @Data
 public class CartRequest {
 
-    private List<CartItem> items;
+    private List<CartItemRequest> items;
 
 }

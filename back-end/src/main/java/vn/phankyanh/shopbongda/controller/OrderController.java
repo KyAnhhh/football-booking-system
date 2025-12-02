@@ -45,6 +45,13 @@ public class OrderController {
         return apiResponse;
     }
 
+    @PutMapping("/{id}/status")
+    public ApiResponse<OrderResponse> updateOrderStatus(@PathVariable("id") Long id, @RequestParam String status){
+        ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.orderService.handleUpdateOrderStatus(id, status));
+        return apiResponse;
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<String> deleteOrder(@PathVariable("id") Long id){
         ApiResponse<String> apiResponse = new ApiResponse<>();
