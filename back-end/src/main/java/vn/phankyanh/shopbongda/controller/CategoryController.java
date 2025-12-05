@@ -23,7 +23,7 @@ import vn.phankyanh.shopbongda.service.CategoryService;
 @RestController
 @Data
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/categories")
+@RequestMapping("/api/public/categories")
 public class CategoryController {
     private final CategoryService categoryService;
 

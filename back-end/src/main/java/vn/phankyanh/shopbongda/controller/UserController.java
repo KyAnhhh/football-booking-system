@@ -21,7 +21,7 @@ import vn.phankyanh.shopbongda.service.UserService;
 
 @RestController // kết hợp @Controller + @ResponBody
 @RequiredArgsConstructor // Tự động sinh ra constructor cho các filed final or đánh dấu @NonNull
-@RequestMapping("/api/admin/users")
+@RequestMapping("/api/public/users")
 public class UserController {
     
     private final UserService userService;

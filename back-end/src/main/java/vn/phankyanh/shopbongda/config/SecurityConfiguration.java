@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private static final String[] public_list = {
-              "/api/auth/**"
+              "/api/auth/**", "/api/public/**"
               
     };
     private static final String[] private_list = {
@@ -51,13 +51,14 @@ public class SecurityConfiguration {
             return List.of(new SimpleGrantedAuthority(role));
         });
         http
+                .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         // public endpoints
                         .requestMatchers(public_list).permitAll()
 
                         //Admin endpoints
-                        .requestMatchers(private_list).hasRole("ADMIN")
+                        //  .requestMatchers(private_list).hasRole("ADMIN")
 
                             // Client endpoints
                         // .requestMatchers("/", "/products", "collections", "about").hasRole("CLIENT")

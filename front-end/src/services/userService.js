@@ -1,53 +1,49 @@
-const API_URL = "http://localhost:8080/api/admin/users";
+const API_URL = "http://localhost:8080/api/public/users";
 
-const getAuthHeader = () => {
-    const token = localStorage.getItem("token");
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-    };
+const handleResponse = async (response) => {
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || "Lỗi không xác định từ server");
+  }
+
+  const result = await response.json();
+  return result.data; 
 };
 
 export const getUsers = async () => {
-  const res = await fetch(API_URL, {
-    headers: getAuthHeader(),
-  });
-  if(!res.ok) throw new Error("Không thể lấy danh sách user")
-  return res.json();
+  const response = await fetch(API_URL);
+  return await handleResponse(response);
 };
 
 export const getUser = async (id) => {
-  const res = await fetch(`${API_URL}/${id}, {
-    headers: getAuthHeader(),
-  }`);
-  if(!res.ok) throw new Error("Không thể lấy user có id: " + id)
-//  return res.json();
-};  
+  const response = await fetch(`${API_URL}/${id}`);
+  return await handleResponse(response);
+};
 
 export const createUser = async (user) => {
-  return await fetch(API_URL, {
+  const response = await fetch(API_URL, {
     method: "POST",
-    headers: getAuthHeader(),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user),
   });
-//  if (!res.ok) throw new Error("Không thể tạo user mới");
-//    return res.json();
+
+  return await handleResponse(response);
 };
 
 export const updateUser = async (id, user) => {
-  const res = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeader(),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user),
   });
-  if(!res.ok) throw new Error("Không thể update user")
-  return res.json();
+
+  return await handleResponse(response);
 };
 
 export const deleteUser = async (id) => {
-  await fetch(`${API_URL}/${id}`, {
-      method: "DELETE" ,
-      headers: getAuthHeader(),
+  const response = await fetch(`${API_URL}/${id}`, {
+    method: "DELETE",
   });
-//  if(!res.ok) throw new Error("Không thể xóa user")
+
+  return await handleResponse(response);
 };

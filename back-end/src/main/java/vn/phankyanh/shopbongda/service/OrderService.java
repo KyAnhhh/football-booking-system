@@ -120,17 +120,38 @@ public class OrderService {
 
     }
 
-    public OrderResponse handleUpdateOrderStatus(Long orderId, String newStatus){
+    public OrderResponse handleUpdateOrderStatus(Long orderId, String newStatus) {
+
         Order order = orderRepository.findByIdWithOrderItems(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
+        String oldStatus = order.getStatus();   // lấy trạng thái cũ
+
         order.setStatus(newStatus);
 
-        this.orderRepository.save(order);
-        return orderMapper.toOrderResponse(
-            this.orderRepository.findByIdWithOrderItems(orderId).orElse(order)
-        );
+        // Chỉ cập nhật stock + soldQuantity khi trạng thái chuyển sang "Đã giao hàng"
+        if (!oldStatus.equals("Đã giao hàng") && newStatus.equals("Đã giao hàng")) {
+            order.setDeliveryDate(LocalDateTime.now());
+            for (OrderItem item : order.getOrderItems()) {
+                Product p = item.getProduct();
+
+                // Tăng sản phẩm đã bán
+                p.setSoldQuantity(p.getSoldQuantity() + item.getQuantity());
+
+                // Giảm đồ tồn kho
+                p.setStock(p.getStock() - item.getQuantity());
+
+                productRepository.save(p);
+            }
+        }
+
+        // Lưu order vào DB
+        orderRepository.save(order);
+
+        // Trả về response
+        return orderMapper.toOrderResponse(order);
     }
+
 
     public OrderResponse handleGetOrderById(Long id){
         Order order = this.orderRepository.findByIdWithOrderItems(id)

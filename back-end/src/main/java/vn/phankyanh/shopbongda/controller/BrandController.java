@@ -22,7 +22,7 @@ import vn.phankyanh.shopbongda.service.BrandService;
 @RestController
 @Data
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/brands")
+@RequestMapping("/api/public/brands")
 public class BrandController {
     private final BrandService brandService;
 

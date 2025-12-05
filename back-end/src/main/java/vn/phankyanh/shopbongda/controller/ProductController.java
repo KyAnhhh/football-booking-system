@@ -20,7 +20,7 @@ import vn.phankyanh.shopbongda.service.ProductService;
 
 @RestController
 @RequiredArgsConstructor // inject dependency
-@RequestMapping("/api/admin/products")
+@RequestMapping("/api/public/products")
 public class ProductController {
     private final ProductService productService;
 

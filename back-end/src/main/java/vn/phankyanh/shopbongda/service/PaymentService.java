@@ -65,8 +65,8 @@ public class PaymentService {
         payment.setPaymentDate(LocalDateTime.now());
 
         // cập nhật order
-        order.setStatus("Đã giao hàng"); // nếu bạn muốn chuyển sang giao hàng
-        order.setDeliveryDate(LocalDateTime.now());
+        // order.setStatus("Đã giao hàng"); // nếu bạn muốn chuyển sang giao hàng
+        // order.setDeliveryDate(LocalDateTime.now());
 
         orderRepository.save(order);
 

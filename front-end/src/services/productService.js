@@ -1,19 +1,24 @@
-const API_URL = "http://localhost:8080/api/admin/products";
+const API_URL = "http://localhost:8080/api/public/products";
+
+const handleResponse = async (response) => {
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText || "Lỗi không xác định từ server");
+  }
+
+  const result = await response.json();
+
+  return result.data;
+};
 
 export const getProducts = async () => {
   const response = await fetch(API_URL);
-  if (!response.ok) {
-    throw new Error("Không thể lấy danh sách sản phẩm");
-  }
-  return response.json();
+  return await handleResponse(response);
 };
 
 export const getProductById = async (id) => {
   const response = await fetch(`${API_URL}/${id}`);
-  if (!response.ok) {
-    throw new Error("Không thể lấy sản phẩm");
-  }
-  return response.json();
+  return await handleResponse(response);
 };
 
 export const createProduct = async (product) => {
@@ -22,10 +27,8 @@ export const createProduct = async (product) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(product),
   });
-  if (!response.ok) {
-    throw new Error("Không thể thêm sản phẩm");
-  }
-  return response.json();
+
+  return await handleResponse(response);
 };
 
 export const updateProduct = async (id, product) => {
@@ -34,16 +37,14 @@ export const updateProduct = async (id, product) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(product),
   });
-  if (!response.ok) {
-    throw new Error("Không thể cập nhật sản phẩm");
-  }
-  return response.json();
+
+  return await handleResponse(response);
 };
 
 export const deleteProduct = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-  if (!response.ok) {
-    throw new Error("Không thể xóa sản phẩm");
-  }
-  return response.text();
+  const response = await fetch(`${API_URL}/${id}`, {
+    method: "DELETE",
+  });
+
+  return await handleResponse(response);
 };
