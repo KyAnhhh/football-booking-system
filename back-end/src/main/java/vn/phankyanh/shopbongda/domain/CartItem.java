@@ -1,6 +1,5 @@
 package vn.phankyanh.shopbongda.domain;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -33,6 +32,13 @@ public class CartItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @Column(name = "product_id_denorm", nullable = false)
+    private Long productId;
+
+    @Column(name = "product_name_denorm", nullable = false)
+    private String productName;
+
 
     @Column(nullable = false)
     @Min(value = 1, message = "Stock không được âm")

@@ -1,18 +1,23 @@
 package vn.phankyanh.shopbongda.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import vn.phankyanh.shopbongda.domain.Brand;
 import vn.phankyanh.shopbongda.dto.request.BrandRequest;
 import vn.phankyanh.shopbongda.dto.response.ApiResponse;
 import vn.phankyanh.shopbongda.dto.response.BrandResponse;
 import vn.phankyanh.shopbongda.service.BrandService;
-
-
-import java.util.List;
 
 @RestController
 @Data

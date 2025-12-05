@@ -1,18 +1,15 @@
 package vn.phankyanh.shopbongda.service;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
+
+import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Category;
 import vn.phankyanh.shopbongda.dto.request.CategoryRequest;
 import vn.phankyanh.shopbongda.dto.response.CategoryResponse;
 import vn.phankyanh.shopbongda.mapper.CategoryMapper;
 import vn.phankyanh.shopbongda.repository.CategoryRepository;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

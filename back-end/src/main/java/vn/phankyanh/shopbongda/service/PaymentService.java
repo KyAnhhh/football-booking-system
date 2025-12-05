@@ -1,17 +1,22 @@
 package vn.phankyanh.shopbongda.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import vn.phankyanh.shopbongda.domain.Payment;
-import vn.phankyanh.shopbongda.repository.PaymentRepository;
-
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.time.LocalDateTime;
+
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import vn.phankyanh.shopbongda.domain.Order;
+import vn.phankyanh.shopbongda.domain.Payment;
+import vn.phankyanh.shopbongda.repository.OrderRepository;
+import vn.phankyanh.shopbongda.repository.PaymentRepository;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
+
     private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
 
     public Payment createPayment(BigDecimal totalAmount, String method, String type) {
         Payment payment = Payment.builder()
@@ -32,7 +37,39 @@ public class PaymentService {
 
     public Payment getPaymentById(Long id) {
         return paymentRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Id not found"));
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+    }
+
+    // Lấy payment theo orderId
+    public Payment getPaymentByOrderId(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        return order.getPayment();
+    }
+
+    // Xác nhận thanh toán
+    public Payment confirmPaymentForOrder(Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        Payment payment = order.getPayment();
+
+        if (payment == null) {
+            throw new RuntimeException("Order has no payment");
+        }
+
+         // cập nhật payment
+        payment.setStatus("Đã thanh toán");
+        payment.setPaymentDate(LocalDateTime.now());
+
+        // cập nhật order
+        order.setStatus("Đã giao hàng"); // nếu bạn muốn chuyển sang giao hàng
+        order.setDeliveryDate(LocalDateTime.now());
+
+        orderRepository.save(order);
+
+        return paymentRepository.save(payment);
     }
 }
-

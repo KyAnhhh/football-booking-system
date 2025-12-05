@@ -1,12 +1,16 @@
 package vn.phankyanh.shopbongda.dto.response;
 
+import java.math.BigDecimal;
+
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.math.BigDecimal;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CartItemResponse {
     private Long id;              // ID của CartItem
     private Long productId;

@@ -3,11 +3,12 @@ package vn.phankyanh.shopbongda.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
+
 import vn.phankyanh.shopbongda.domain.Order;
 import vn.phankyanh.shopbongda.dto.request.OrderRequest;
 import vn.phankyanh.shopbongda.dto.response.OrderResponse;
-
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = OrderItemMapper.class)
 public interface OrderMapper {
 
     @Mapping(target = "id", ignore = true) // ko map field id

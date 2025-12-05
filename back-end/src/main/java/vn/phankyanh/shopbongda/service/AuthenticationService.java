@@ -2,10 +2,7 @@ package vn.phankyanh.shopbongda.service;
 
 import java.text.ParseException;
 import java.util.Date;
-import java.util.Map;
 
-import io.jsonwebtoken.Jwt;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

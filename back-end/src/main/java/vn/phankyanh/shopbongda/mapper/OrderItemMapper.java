@@ -1,13 +1,14 @@
 package vn.phankyanh.shopbongda.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import vn.phankyanh.shopbongda.domain.OrderItem;
 import vn.phankyanh.shopbongda.dto.request.OrderItemRequest;
 import vn.phankyanh.shopbongda.dto.response.OrderItemResponse;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface OrderItemMapper {
 
     @Mapping(target = "id", ignore = true)
@@ -15,8 +16,8 @@ public interface OrderItemMapper {
     @Mapping(target = "product", ignore = true)
     OrderItem toOrderItem(OrderItemRequest request);
 
-    @Mapping(source = "product.id", target = "productId")
-    @Mapping(source = "product.name", target = "productName")
+    @Mapping(source = "productId", target = "productId")
+    @Mapping(source = "productName", target = "productName")
     @Mapping(
             target = "total",
             expression = "java(orderItem.getPrice().multiply(java.math.BigDecimal.valueOf(orderItem.getQuantity())))"
