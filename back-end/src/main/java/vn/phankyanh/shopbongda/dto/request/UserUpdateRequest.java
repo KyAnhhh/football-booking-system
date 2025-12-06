@@ -28,7 +28,6 @@ public class UserUpdateRequest {
     @NotBlank(message = "Phone không được để trống")
     private String phone;
 
-    @NotBlank(message = "Status không được để trống")
     private String status = "active";
 
     @Enumerated(EnumType.STRING)

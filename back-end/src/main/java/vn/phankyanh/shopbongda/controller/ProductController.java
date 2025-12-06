@@ -20,7 +20,7 @@ import vn.phankyanh.shopbongda.service.ProductService;
 
 @RestController
 @RequiredArgsConstructor // inject dependency
-@RequestMapping("/api/public/products")
+@RequestMapping("/api/admin/products")
 public class ProductController {
     private final ProductService productService;
 
@@ -46,7 +46,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
+    public ApiResponse<Product> updateProduct(@PathVariable("id") Long id, @RequestBody ProductRequest request) {
         ApiResponse<Product> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.productService.handleUpdateProduct(id, request));
         return apiResponse;

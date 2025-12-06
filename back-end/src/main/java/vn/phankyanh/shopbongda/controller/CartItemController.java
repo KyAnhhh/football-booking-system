@@ -25,7 +25,6 @@ public class CartItemController {
 
     private final CartItemService cartItemService;
 
-    // Thêm hoặc tăng số lượng item
     @PostMapping
     public ApiResponse<CartItemResponse> addItem(@RequestBody CartItemRequest request) {
         ApiResponse<CartItemResponse> res = new ApiResponse<>();
@@ -33,7 +32,6 @@ public class CartItemController {
         return res;
     }
 
-    // Lấy danh sách item theo cartId
     @GetMapping("/cart/{cartId}")
     public ApiResponse<List<CartItemResponse>> getItems(@PathVariable Long cartId) {
         ApiResponse<List<CartItemResponse>> res = new ApiResponse<>();
@@ -41,7 +39,6 @@ public class CartItemController {
         return res;
     }
 
-    // Update số lượng item
     @PutMapping("/{itemId}")
     public ApiResponse<CartItemResponse> updateQuantity(
             @PathVariable Long itemId,
@@ -52,7 +49,6 @@ public class CartItemController {
         return res;
     }
 
-    // Xóa 1 item
     @DeleteMapping("/{itemId}")
     public ApiResponse<String> delete(@PathVariable Long itemId) {
         cartItemService.deleteCartItem(itemId);
@@ -61,7 +57,6 @@ public class CartItemController {
         return res;
     }
 
-    // Xóa toàn bộ giỏ
     @DeleteMapping("/cart/{cartId}/clear")
     public ApiResponse<String> clearCart(@PathVariable Long cartId) {
         cartItemService.clearCart(cartId);

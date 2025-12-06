@@ -50,14 +50,15 @@ public class JwtDecoderConfiguration implements JwtDecoder {
             }
             Jwt jwt = nimbusJwtDecoder.decode(token);
 
-            // Lấy role từ claim
-            String role = jwt.getClaimAsString("role");
-            // sửa
-            if (role == null) role = "ROLE_CLIENT"; // default nếu không có role
-//            if (role == null) role = "client"; // default nếu không có role
+                // Lấy role từ claim
+                String role = jwt.getClaimAsString("role");
+                if (role == null) role = "CLIENT"; // default nếu không có role
+                if (!role.startsWith("ROLE_")) {
+                role = "ROLE_" + role;
+                }
 
-            // Gắn authorities cho Spring Security
-            return Jwt.withTokenValue(jwt.getTokenValue())
+                // Gắn authorities cho Spring Security (normalize to ROLE_ prefix)
+                return Jwt.withTokenValue(jwt.getTokenValue())
                     .headers(h -> h.putAll(jwt.getHeaders()))
                     .claims(c -> c.putAll(jwt.getClaims()))
                     .claim("authorities", List.of(new SimpleGrantedAuthority(role)))

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Role;
 import vn.phankyanh.shopbongda.domain.User;
+import vn.phankyanh.shopbongda.dto.request.UpdateRoleRequest;
 import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;
 import vn.phankyanh.shopbongda.dto.request.UserUpdateRequest;
 import vn.phankyanh.shopbongda.dto.response.UserCreateResponse;
@@ -72,6 +73,15 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPassword(request.getPassword());
         user.setPhone(request.getPhone());
+
+        return userRepository.save(user);
+    }
+    public User handleUpdateRole(Long id, UpdateRoleRequest request){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        user.setRole(request.getRole());
+        user.setUpdatedAt(LocalDateTime.now());
 
         return userRepository.save(user);
     }

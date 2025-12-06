@@ -16,12 +16,9 @@ public class UserCreateRequest {
     @NotBlank(message = "Password không được để trống")
     private String password;
 
-    @NotBlank(message = "Phone không được để trống")
-    private String phone;
+    private String phone; 
 
-    @NotBlank(message = "Role không được để trống")
     private final Role role = Role.ROLE_CLIENT;
 
-    @NotBlank(message = "Status không được để trống")
     private final String status = "active";
 }

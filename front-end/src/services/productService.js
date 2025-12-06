@@ -1,30 +1,50 @@
-const API_URL = "http://localhost:8080/api/public/products";
+const API_URL = "http://localhost:8080/api/admin/products";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
     const errText = await response.text();
     throw new Error(errText || "Lỗi không xác định từ server");
   }
-
   const result = await response.json();
 
   return result.data;
 };
 
+function getAuthHeader() {
+  const token = localStorage.getItem("token");
+  return token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+}
+
 export const getProducts = async () => {
-  const response = await fetch(API_URL);
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+  const response = await fetch(API_URL, {headers});
   return await handleResponse(response);
 };
 
 export const getProductById = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`);
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+  const response = await fetch(`${API_URL}/${id}`,{
+    method: "GET",
+    headers
+  });
   return await handleResponse(response);
 };
 
 export const createProduct = async (product) => {
+  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
   const response = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(product),
   });
 
@@ -32,9 +52,10 @@ export const createProduct = async (product) => {
 };
 
 export const updateProduct = async (id, product) => {
+  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
   const response = await fetch(`${API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(product),
   });
 
@@ -42,8 +63,10 @@ export const updateProduct = async (id, product) => {
 };
 
 export const deleteProduct = async (id) => {
+  const headers = { ...getAuthHeader() };
   const response = await fetch(`${API_URL}/${id}`, {
     method: "DELETE",
+    headers,
   });
 
   return await handleResponse(response);

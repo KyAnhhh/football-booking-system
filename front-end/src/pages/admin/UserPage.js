@@ -7,7 +7,7 @@ export default function UserPage() {
   const [users, setUsers] = useState([]);
   const [show, setShow] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [form, setForm] = useState({ username: "", email: "", phone: "", password: "" });
 
   // modal confirm delete
   const [confirmUser, setConfirmUser] = useState(null);
@@ -29,10 +29,10 @@ export default function UserPage() {
   const handleShow = (user = null) => {
     if (user) {
       setEditingUser(user);
-      setForm({ username: user.username, email: user.email, password: "" });
+      setForm({ username: user.username, email: user.email, phone: user.phone, password: user.password });
     } else {
       setEditingUser(null);
-      setForm({ username: "", email: "", password: "" });
+      setForm({ username: "", email: "", phone: "", password: "" });
     }
     setShow(true);
   };
@@ -88,6 +88,7 @@ export default function UserPage() {
           <tr>
             <th>ID</th>
             <th>UserName</th>
+            <th>Phone</th>
             <th>Email</th>
             <th>Actions</th>
           </tr>
@@ -97,6 +98,7 @@ export default function UserPage() {
             <tr key={u.id}>
               <td>{u.id}</td>
               <td>{u.username}</td>
+              <td>{u.phone}</td>
               <td>{u.email}</td>
               <td>
                 <Button size="sm" variant="warning" onClick={() => handleShow(u)}>
@@ -134,6 +136,16 @@ export default function UserPage() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Phone</Form.Label>
+              <Form.Control
+                type="number"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 required
               />
             </Form.Group>

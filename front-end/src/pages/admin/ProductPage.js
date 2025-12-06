@@ -12,8 +12,11 @@ export default function ProductPage() {
     description: "",
     price: "",
     stock: "",
-    category: "",
+    discount: "",
     imageUrl: "",
+    dimension: "",
+    category: "",
+    brand: "",
   });
 
   // modal confirm delete
@@ -41,12 +44,15 @@ export default function ProductPage() {
         description: product.description,
         price: product.price,
         stock: product.stock,
-        category: product.category,
         imageUrl: product.imageUrl || "",
+        discount: product.discount,
+        dimension: product.dimension,
+        category: product.categoryName,
+        brand: product.brandName,
       });
     } else {
       setEditingProduct(null);
-      setForm({ name: "", description: "", price: "", stock: "", category: "", imageUrl: "" });
+      setForm({ name: "", description: "", price: "", stock: "", discount: "", imageUrl: "" , dimension: "", category: "", brand: ""});
     }
     setShow(true);
   };
@@ -103,8 +109,11 @@ export default function ProductPage() {
             <th>ID</th>
             <th>Name</th>
             <th>Category</th>
+            <th>Brand</th>
             <th>Price</th>
             <th>Stock</th>
+            <th>Dimension</th>
+            <th>Discount</th>
             <th>Image</th>
             <th>Actions</th>
           </tr>
@@ -114,9 +123,12 @@ export default function ProductPage() {
             <tr key={p.id}>
               <td>{p.id}</td>
               <td>{p.name}</td>
-              <td>{p.category}</td>
+              <td>{p.categoryName}</td>
+              <td>{p.brandName}</td>
               <td>{p.price}</td>
               <td>{p.stock}</td>
+              <td>{p.dimension}</td>
+              <td>{p.discount}</td>
               <td>
                 {p.imageUrl ? <img src={p.imageUrl} alt={p.name} style={{ width: "60px" }} /> : "N/A"}
               </td>
@@ -180,13 +192,23 @@ export default function ProductPage() {
                 required
               />
             </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Dimension</Form.Label>
+              <Form.Control
+                type="number"
+                value={form.dimension}
+                onChange={(e) => setForm({ ...form, dimension: e.target.value })}
+                required
+              />
+            </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Category</Form.Label>
+              <Form.Label>Discount</Form.Label>
               <Form.Control
-                type="text"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                type="number"
+                value={form.discount}
+                onChange={(e) => setForm({ ...form, discount: e.target.value })}
                 required
               />
             </Form.Group>
@@ -199,6 +221,27 @@ export default function ProductPage() {
                 onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
               />
             </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Category</Form.Label>
+              <Form.Control
+                type="number"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Brand</Form.Label>
+              <Form.Control
+                type="number"
+                value={form.brand}
+                onChange={(e) => setForm({ ...form, bran: e.target.value })}
+                required
+              />
+            </Form.Group>
+
+            
 
             <Button variant="success" type="submit" style={{ backgroundColor: "blue" }}>
               {editingProduct ? "Update" : "Create"}

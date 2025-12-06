@@ -83,7 +83,12 @@ public class User implements UserDetails {
     // Implement UserDetails methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(this.getRole().name()));
+        // Ensure authorities use Spring Security ROLE_ prefix
+        String roleName = this.getRole() != null ? this.getRole().name() : "CLIENT";
+        if (!roleName.startsWith("ROLE_")) {
+            roleName = "ROLE_" + roleName;
+        }
+        return List.of(new SimpleGrantedAuthority(roleName));
     }
 
     @Override

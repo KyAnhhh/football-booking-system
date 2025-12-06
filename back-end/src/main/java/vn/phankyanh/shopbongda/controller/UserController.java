@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.User;
+import vn.phankyanh.shopbongda.dto.request.UpdateRoleRequest;
 import vn.phankyanh.shopbongda.dto.request.UserCreateRequest;
 import vn.phankyanh.shopbongda.dto.request.UserUpdateRequest;
 import vn.phankyanh.shopbongda.dto.response.ApiResponse;
@@ -21,7 +22,7 @@ import vn.phankyanh.shopbongda.service.UserService;
 
 @RestController // kết hợp @Controller + @ResponBody
 @RequiredArgsConstructor // Tự động sinh ra constructor cho các filed final or đánh dấu @NonNull
-@RequestMapping("/api/public/users")
+@RequestMapping("/api/admin/users")
 public class UserController {
     
     private final UserService userService;
@@ -34,7 +35,7 @@ public class UserController {
     }
 
     @GetMapping
-        public ApiResponse<List<User>> getAllUsers() {
+    public ApiResponse<List<User>> getAllUsers() {
         ApiResponse<List<User>> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.userService.handleGetAllUsers());
         return apiResponse;
@@ -51,6 +52,13 @@ public class UserController {
     public ApiResponse<User> updateUser(@PathVariable("id") Long id, @RequestBody UserUpdateRequest request) {
         ApiResponse<User> apiResponse = new ApiResponse<>();
          apiResponse.setData(this.userService.handleUpdateUser(id, request));
+        return apiResponse;
+    }
+
+    @PutMapping("/{id}/role")
+    public ApiResponse<User> updateRole(@PathVariable("id") Long id, @RequestBody UpdateRoleRequest request) {
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+         apiResponse.setData(this.userService.handleUpdateRole(id, request));
         return apiResponse;
     }
 

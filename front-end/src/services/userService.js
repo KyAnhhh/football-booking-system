@@ -1,29 +1,56 @@
-const API_URL = "http://localhost:8080/api/public/users";
+const API_URL = "http://localhost:8080/api/admin/users";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(errText || "Lỗi không xác định từ server");
+    let errText = await response.text();
+    throw new Error(errText || `HTTP Error ${response.status}`);
   }
 
   const result = await response.json();
   return result.data; 
 };
 
+function getAuthHeader() {
+  const token = localStorage.getItem("token");
+  return token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+}
+
 export const getUsers = async () => {
-  const response = await fetch(API_URL);
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+
+  const response = await fetch(API_URL, { headers });
   return await handleResponse(response);
 };
 
 export const getUser = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`);
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+
+  const response = await fetch(`${API_URL}/${id}`, {
+    method: "GET",
+    headers,
+  });
+
   return await handleResponse(response);
 };
 
 export const createUser = async (user) => {
-  const response = await fetch(API_URL, {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+  const response = await fetch(`${API_URL}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(user),
   });
 
@@ -31,9 +58,14 @@ export const createUser = async (user) => {
 };
 
 export const updateUser = async (id, user) => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+
   const response = await fetch(`${API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(user),
   });
 
@@ -41,8 +73,14 @@ export const updateUser = async (id, user) => {
 };
 
 export const deleteUser = async (id) => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+
   const response = await fetch(`${API_URL}/${id}`, {
     method: "DELETE",
+    headers,
   });
 
   return await handleResponse(response);

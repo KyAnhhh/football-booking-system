@@ -44,10 +44,11 @@ public class SecurityConfiguration {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
             String role = jwt.getClaimAsString("role");
-            // sửa
-            if (role == null) role = "ROLE_CLIENT"; // default nếu không có role
-//            if (role == null) role = "client"; // default nếu không có role
-
+            if (role == null) role = "CLIENT"; // default nếu không có role
+            // Ensure authority has ROLE_ prefix
+            if (!role.startsWith("ROLE_")) {
+                role = "ROLE_" + role;
+            }
             return List.of(new SimpleGrantedAuthority(role));
         });
         http
@@ -58,7 +59,7 @@ public class SecurityConfiguration {
                         .requestMatchers(public_list).permitAll()
 
                         //Admin endpoints
-                        //  .requestMatchers(private_list).hasRole("ADMIN")
+                         .requestMatchers(private_list).hasRole("ADMIN")
 
                             // Client endpoints
                         // .requestMatchers("/", "/products", "collections", "about").hasRole("CLIENT")
