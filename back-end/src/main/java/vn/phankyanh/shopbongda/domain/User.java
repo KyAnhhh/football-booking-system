@@ -43,7 +43,7 @@ public class User implements UserDetails {
     private String password;
 
     @Column(nullable = false)
-    @NotBlank(message = "Password không được để trống")
+    @NotBlank(message = "Phone không được để trống")
     private String phone;
 
     @Enumerated(EnumType.STRING)

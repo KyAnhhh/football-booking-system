@@ -15,8 +15,8 @@ export default function ProductPage() {
     discount: "",
     imageUrl: "",
     dimension: "",
-    category: "",
-    brand: "",
+    categoryId: "",
+    brandId: "",
   });
 
   // modal confirm delete
@@ -47,12 +47,12 @@ export default function ProductPage() {
         imageUrl: product.imageUrl || "",
         discount: product.discount,
         dimension: product.dimension,
-        category: product.categoryName,
-        brand: product.brandName,
+        categoryId: product.categoryId,
+        brandId: product.brandId,
       });
     } else {
       setEditingProduct(null);
-      setForm({ name: "", description: "", price: "", stock: "", discount: "", imageUrl: "" , dimension: "", category: "", brand: ""});
+      setForm({ name: "", description: "", price: "", stock: "", discount: "", imageUrl: "" , dimension: "", categoryId: "", brandId: ""});
     }
     setShow(true);
   };
@@ -108,8 +108,8 @@ export default function ProductPage() {
           <tr>
             <th>ID</th>
             <th>Name</th>
-            <th>Category</th>
-            <th>Brand</th>
+            <th>CategoryId</th>
+            <th>BrandId</th>
             <th>Price</th>
             <th>Stock</th>
             <th>Dimension</th>
@@ -123,8 +123,8 @@ export default function ProductPage() {
             <tr key={p.id}>
               <td>{p.id}</td>
               <td>{p.name}</td>
-              <td>{p.categoryName}</td>
-              <td>{p.brandName}</td>
+              <td>{p.categoryId}</td>
+              <td>{p.brandId}</td>
               <td>{p.price}</td>
               <td>{p.stock}</td>
               <td>{p.dimension}</td>
@@ -223,25 +223,23 @@ export default function ProductPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Category</Form.Label>
+              <Form.Label>CategoryId</Form.Label>
               <Form.Control
                 type="number"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                value={form.categoryId}
+                onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                 required
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Brand</Form.Label>
+              <Form.Label>BrandId</Form.Label>
               <Form.Control
                 type="number"
-                value={form.brand}
-                onChange={(e) => setForm({ ...form, bran: e.target.value })}
+                value={form.brandId}
+                onChange={(e) => setForm({ ...form, brandId: e.target.value })}
                 required
               />
             </Form.Group>
-
-            
 
             <Button variant="success" type="submit" style={{ backgroundColor: "blue" }}>
               {editingProduct ? "Update" : "Create"}

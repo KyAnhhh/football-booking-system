@@ -1,10 +1,10 @@
 package vn.phankyanh.shopbongda.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
+import lombok.Data;
 import vn.phankyanh.shopbongda.domain.Role;
 
-@Getter
+@Data
 public class UserCreateRequest {
 
     @NotBlank(message = "Username không được để trống")
@@ -16,7 +16,8 @@ public class UserCreateRequest {
     @NotBlank(message = "Password không được để trống")
     private String password;
 
-    private String phone; 
+    @NotBlank(message = "Phone không được để trống")
+    private String phone;
 
     private final Role role = Role.ROLE_CLIENT;
 

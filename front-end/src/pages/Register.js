@@ -6,6 +6,7 @@ import { register } from "../services/authService";
 export default function Register() {
   const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,10 @@ export default function Register() {
       alert("Vui lòng nhập email hợp lệ");
       return;
     }
+    if(phone.length < 10 && phone.length > 10){
+      alert("Phone phải là 10 số");
+      return;
+    }
 
     if (password.length < 6) {
       alert("Mật khẩu phải có ít nhất 6 ký tự");
@@ -38,7 +43,7 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const res = await register({ username, email, password });
+      const res = await register({ username, email, phone, password });
       const data = await res.json();
 
       if (res.ok) {
@@ -78,6 +83,13 @@ export default function Register() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Phone"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
           required
         />
         <input
