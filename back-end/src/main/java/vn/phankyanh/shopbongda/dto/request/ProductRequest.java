@@ -2,7 +2,6 @@ package vn.phankyanh.shopbongda.dto.request;
 
 import java.math.BigDecimal;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -38,9 +37,7 @@ public class ProductRequest {
 
     private String imageUrl;
 
-    @Column(nullable = true)
     private Integer dimension;
-
 
     @NotNull(message = "Category không được để trống")
     private Long categoryId;

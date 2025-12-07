@@ -22,5 +22,7 @@ public interface ProductMapper {
     @Mapping(source = "soldQuantity", target = "soldQuantity")
     ProductResponse toProductResponse(Product product);
 
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "brand", ignore = true)
     void updateProduct(@MappingTarget Product product, ProductRequest request);
 }
