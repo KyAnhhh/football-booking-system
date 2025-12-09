@@ -18,6 +18,14 @@ public class ImageController {
 
     @PostMapping("/upload")
     public ApiResponse<String> upload(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+        throw new RuntimeException("File không được để trống");
+            }
+
+            if (!file.getContentType().startsWith("image/")) {
+                throw new RuntimeException("Chỉ được upload file ảnh");
+            }
+
         String url = imageService.uploadImage(file);
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setData(url);

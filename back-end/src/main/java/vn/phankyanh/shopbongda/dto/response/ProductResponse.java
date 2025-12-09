@@ -20,8 +20,8 @@ public class ProductResponse {
     private Integer dimension;
     private String categoryName;
     private String brandName;
-    private String categoryId;
-    private String brandId;
+    private Long categoryId;
+    private Long brandId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

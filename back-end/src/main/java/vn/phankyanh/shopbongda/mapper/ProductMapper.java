@@ -20,6 +20,7 @@ public interface ProductMapper {
     @Mapping(source = "category.id", target = "categoryId")
     @Mapping(source = "brand.id", target = "brandId")
     @Mapping(source = "soldQuantity", target = "soldQuantity")
+    @Mapping(source = "imageUrl", target = "imageUrl")
     ProductResponse toProductResponse(Product product);
 
     @Mapping(target = "category", ignore = true)

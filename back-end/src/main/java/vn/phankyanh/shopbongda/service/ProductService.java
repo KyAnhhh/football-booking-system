@@ -2,9 +2,10 @@ package vn.phankyanh.shopbongda.service;
 
 import java.util.List;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import vn.phankyanh.shopbongda.domain.Brand;
 import vn.phankyanh.shopbongda.domain.Category;
 import vn.phankyanh.shopbongda.domain.Product;
@@ -18,11 +19,13 @@ import vn.phankyanh.shopbongda.repository.ProductRepository;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
     private final ProductMapper productMapper;
+    private final ImageService imageService;
 
     public ProductResponse handleCreateProduct(ProductRequest request){
         if(productRepository.existsByName(request.getName())){
@@ -34,11 +37,34 @@ public class ProductService {
         Brand brand = brandRepository.findById(request.getBrandId())
                 .orElseThrow(() -> new RuntimeException("Brand not found"));
 
+            // upload ảnh nếu có file, nếu không thì lấy imageUrl từ request
+            String imageUrl = null;
+            if (request.getImage() != null) {
+                try {
+                    if (!request.getImage().isEmpty()) {
+                        log.info("Received multipart image: name={}, size={}", request.getImage().getOriginalFilename(), request.getImage().getSize());
+                        imageUrl = imageService.uploadImage(request.getImage()); // return URL
+                    } else {
+                        log.info("Multipart image provided but empty");
+                    }
+                } catch (Exception e) {
+                    log.error("Image upload failed", e);
+                    throw e;
+                }
+            }
+
+            if (imageUrl == null && request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
+                log.info("Using imageUrl from request payload");
+                imageUrl = request.getImageUrl();
+        }
+
         Product product = productMapper.toProduct(request);
 
         // gán để nối mối quan hệ thật
         product.setCategory(category);
         product.setBrand(brand);
+        product.setImageUrl(imageUrl);
+        log.info(imageUrl);
 
         this.productRepository.save(product);
         return productMapper.toProductResponse(product);
@@ -57,12 +83,32 @@ public class ProductService {
         return productMapper.toProductResponse(product);
     }
 
-    public Product handleUpdateProduct(Long id, ProductRequest request){
-        Product product = this.productRepository.findById(id)
-        .orElseThrow(() -> new ProductNotFoundException(id));
+    public ProductResponse handleUpdateProduct(Long id, ProductRequest request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
 
         productMapper.updateProduct(product, request);
-        return this.productRepository.save(product);
+
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            product.setCategory(category);
+        }
+
+        if (request.getBrandId() != null) {
+            Brand brand = brandRepository.findById(request.getBrandId())
+                    .orElseThrow(() -> new RuntimeException("Brand not found"));
+            product.setBrand(brand);
+        }
+
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            String newImageUrl = imageService.uploadImage(request.getImage());
+            product.setImageUrl(newImageUrl);
+        }
+
+        Product updatedProduct = productRepository.save(product);
+
+        return productMapper.toProductResponse(updatedProduct);
     }
 
     public void handleDeleteProduct(Long id){

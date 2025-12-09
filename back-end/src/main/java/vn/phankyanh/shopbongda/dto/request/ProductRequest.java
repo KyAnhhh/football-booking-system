@@ -2,6 +2,8 @@ package vn.phankyanh.shopbongda.dto.request;
 
 import java.math.BigDecimal;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -44,4 +46,7 @@ public class ProductRequest {
 
     @NotNull(message = "Category không được để trống")
     private Long brandId;
+
+    private MultipartFile image;
+
 }

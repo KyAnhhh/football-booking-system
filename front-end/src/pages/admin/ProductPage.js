@@ -14,6 +14,7 @@ export default function ProductPage() {
     stock: "",
     discount: "",
     imageUrl: "",
+    imageFile: null,
     dimension: "",
     categoryId: "",
     brandId: "",
@@ -44,7 +45,8 @@ export default function ProductPage() {
         description: product.description,
         price: product.price,
         stock: product.stock,
-        imageUrl: product.imageUrl || "",
+        // imageUrl: product.imageUrl || "",
+        imageFile: null,
         discount: product.discount,
         dimension: product.dimension,
         categoryId: product.categoryId,
@@ -52,7 +54,8 @@ export default function ProductPage() {
       });
     } else {
       setEditingProduct(null);
-      setForm({ name: "", description: "", price: "", stock: "", discount: "", imageUrl: "" , dimension: "", categoryId: "", brandId: ""});
+      // setForm({ name: "", description: "", price: "", stock: "", discount: "", imageUrl: "" , imageFile: null, dimension: "", categoryId: "", brandId: ""});
+      setForm({ name: "", description: "", price: "", stock: "", discount: "", imageFile: null, dimension: "", categoryId: "", brandId: ""});
     }
     setShow(true);
   };
@@ -65,10 +68,46 @@ export default function ProductPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editingProduct) {
-        await updateProduct(editingProduct.id, form);
+      // prepare payload: if a file is selected, send multipart/form-data
+      if (form.imageFile) {
+        const fd = new FormData();
+        fd.append("name", form.name);
+        fd.append("description", form.description || "");
+        fd.append("price", form.price);
+        fd.append("stock", form.stock);
+        fd.append("discount", form.discount ?? 0);
+        fd.append("dimension", form.dimension);
+        fd.append("categoryId", form.categoryId);
+        fd.append("brandId", form.brandId);
+        // append file under field name 'image' expected by backend
+        fd.append("image", form.imageFile);
+        // also allow providing imageUrl together with file (optional)
+        if (form.imageUrl) fd.append("imageUrl", form.imageUrl);
+
+        if (editingProduct) {
+          await updateProduct(editingProduct.id, fd);
+        } else {
+          await createProduct(fd);
+        }
       } else {
-        await createProduct(form);
+        // send JSON payload (no file)
+        const payload = {
+          name: form.name,
+          description: form.description,
+          price: Number(form.price),
+          stock: Number(form.stock),
+          discount: form.discount ? Number(form.discount) : 0,
+          dimension: Number(form.dimension),
+          categoryId: Number(form.categoryId),
+          brandId: Number(form.brandId),
+          imageUrl: form.imageUrl ? form.imageUrl : null,
+        };
+
+        if (editingProduct) {
+          await updateProduct(editingProduct.id, payload);
+        } else {
+          await createProduct(payload);
+        }
       }
       await loadProducts();
       handleClose();
@@ -213,12 +252,21 @@ export default function ProductPage() {
               />
             </Form.Group>
 
-            <Form.Group className="mb-3">
+            {/* <Form.Group className="mb-3">
               <Form.Label>Image URL</Form.Label>
               <Form.Control
                 type="text"
                 value={form.imageUrl}
                 onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+              />
+            </Form.Group> */}
+
+            <Form.Group className="mb-3">
+              <Form.Label>Upload Image (file)</Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={(e) => setForm({ ...form, imageFile: e.target.files && e.target.files[0] ? e.target.files[0] : null })}
               />
             </Form.Group>
 

@@ -41,6 +41,17 @@ export const getProductById = async (id) => {
 };
 
 export const createProduct = async (product) => {
+  // if product is FormData (file upload), let fetch set Content-Type boundary
+  if (product instanceof FormData) {
+    const headers = { ...getAuthHeader() };
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers,
+      body: product,
+    });
+    return await handleResponse(response);
+  }
+
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
   const response = await fetch(API_URL, {
     method: "POST",
@@ -52,6 +63,16 @@ export const createProduct = async (product) => {
 };
 
 export const updateProduct = async (id, product) => {
+  if (product instanceof FormData) {
+    const headers = { ...getAuthHeader() };
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers,
+      body: product,
+    });
+    return await handleResponse(response);
+  }
+
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
   const response = await fetch(`${API_URL}/${id}`, {
     method: "PUT",
