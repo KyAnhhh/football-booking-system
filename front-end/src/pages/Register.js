@@ -1,4 +1,5 @@
 import { useState } from "react";
+import swal from 'sweetalert';
 import { useNavigate } from "react-router-dom";
 import "../assets/styles/Register.css";
 import { register } from "../services/authService";
@@ -17,27 +18,27 @@ export default function Register() {
     e.preventDefault();
 
     if (username.length < 4) {
-      alert("Tên người dùng phải có ít nhất 4 ký tự");
+      swal({ text: "Tên người dùng phải có ít nhất 4 ký tự", icon: "warning" });
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      alert("Vui lòng nhập email hợp lệ");
+      swal({ text: "Vui lòng nhập email hợp lệ", icon: "warning" });
       return;
     }
     if(phone.length < 10 && phone.length > 10){
-      alert("Phone phải là 10 số");
+      swal({ text: "Phone phải là 10 số", icon: "warning" });
       return;
     }
 
     if (password.length < 6) {
-      alert("Mật khẩu phải có ít nhất 6 ký tự");
+      swal({ text: "Mật khẩu phải có ít nhất 6 ký tự", icon: "warning" });
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Mật khẩu không khớp! Vui lòng kiểm tra lại.");
+      swal({ text: "Mật khẩu không khớp! Vui lòng kiểm tra lại.", icon: "warning" });
       return;
     }
 
@@ -47,20 +48,19 @@ export default function Register() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Đăng ký thành công! Đang chuyển hướng...");
+        swal({ text: "Đăng ký thành công! Đang chuyển hướng...", icon: "success" });
 
         setTimeout(() => navigate("/login"), 1000);
       } else {
         if (data.message?.includes("Email")) {
-          alert("Email đã tồn tại. Vui lòng sử dụng email khác.");
+          swal({ text: "Email đã tồn tại. Vui lòng sử dụng email khác.", icon: "error" });
         } else {
-          alert(data.message || "Đăng ký thất bại.");
+          swal({ text: data.message || "Đăng ký thất bại.", icon: "error" });
         }
-        alert("error");
       }
     } catch (err) {
       console.error("Lỗi đăng ký:", err);
-      alert("Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.");
+      swal({ text: "Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.", icon: "error" });
     } finally {
       setLoading(false);
     }

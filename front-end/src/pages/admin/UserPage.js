@@ -9,13 +9,23 @@ export default function UserPage() {
   const [editingUser, setEditingUser] = useState(null);
   const [form, setForm] = useState({ username: "", email: "", phone: "", password: "" });
 
+  // Paging + Sorting + Search
+  const [pageNo, setPageNo] = useState(0);
+  const [pageSize] = useState(5);
+  const [sortBy, setSortBy] = useState("id");
+  const [sortDir, setSortDir] = useState("asc");
+  const [search, setSearch] = useState("");
+
+  const [pageData, setPageData] = useState(null);
+
   // modal confirm delete
   const [confirmUser, setConfirmUser] = useState(null);
 
   const loadUsers = async () => {
     try {
-      const data = await getUsers();
-      setUsers(data);
+      const data = await getUsers(pageNo, pageSize, sortBy, sortDir, search);
+      setUsers(data.content);
+      setPageData(data);
     } catch (err) {
       console.error("Fetch users failed:", err);
     }
@@ -23,13 +33,34 @@ export default function UserPage() {
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [pageNo, sortBy, sortDir, search]);
+
+  // Sort toggle
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortDir("asc");
+    }
+  };
+
+  // Search debounce
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPageNo(0); // reset page
+  };
 
   // open modal create / edit
   const handleShow = (user = null) => {
     if (user) {
       setEditingUser(user);
-      setForm({ username: user.username, email: user.email, phone: user.phone, password: user.password });
+      setForm({
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        password: "",
+      });
     } else {
       setEditingUser(null);
       setForm({ username: "", email: "", phone: "", password: "" });
@@ -57,12 +88,11 @@ export default function UserPage() {
     }
   };
 
-  // mở modal confirm delete
+  // delete
   const handleDeleteClick = (user) => {
     setConfirmUser(user);
   };
 
-  // xác nhận delete
   const confirmDelete = async () => {
     if (!confirmUser) return;
     try {
@@ -78,21 +108,33 @@ export default function UserPage() {
     <div className="user-page">
       <div className="user-header">
         <h2>User Management</h2>
-        <Button variant="primary" onClick={() => handleShow()}>
-          + Add User
-        </Button>
+
+        <div className="user-actions">
+          <Form.Control
+            type="text"
+            placeholder="Search by email..."
+            value={search}
+            onChange={handleSearchChange}
+            style={{ width: "250px" }}
+          />
+
+          <Button variant="primary" onClick={() => handleShow()}>
+            + Thêm người dùng
+          </Button>
+        </div>
       </div>
 
       <table className="user-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>UserName</th>
-            <th>Phone</th>
-            <th>Email</th>
+            <th onClick={() => toggleSort("id")}>ID</th>
+            <th onClick={() => toggleSort("username")}>UserName</th>
+            <th onClick={() => toggleSort("phone")}>Phone</th>
+            <th onClick={() => toggleSort("email")}>Email</th>
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
           {users.map((u) => (
             <tr key={u.id}>
@@ -112,6 +154,29 @@ export default function UserPage() {
           ))}
         </tbody>
       </table>
+
+      {/* Pagination */}
+      {pageData && (
+        <div className="pagination-section">
+          <Button
+            disabled={pageNo === 0}
+            onClick={() => setPageNo(pageNo - 1)}
+          >
+            Prev
+          </Button>
+
+          <span style={{ margin: "0 10px" }}>
+            Page {pageNo + 1} / {pageData.totalPages}
+          </span>
+
+          <Button
+            disabled={pageNo + 1 >= pageData.totalPages}
+            onClick={() => setPageNo(pageNo + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* Modal Create / Edit User */}
       <Modal show={show} onHide={handleClose}>
@@ -160,7 +225,7 @@ export default function UserPage() {
               />
             </Form.Group>
 
-            <Button variant="success" type="submit" style={{backgroundColor: "blue"}}>
+            <Button variant="success" type="submit" style={{ backgroundColor: "blue" }}>
               {editingUser ? "Update" : "Create"}
             </Button>
           </Form>
@@ -173,8 +238,7 @@ export default function UserPage() {
           <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bạn có chắc chắn muốn xóa user{" "}
-          <b>{confirmUser?.username}</b> không?
+          Bạn có chắc chắn muốn xóa user <b>{confirmUser?.username}</b> không?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmUser(null)}>

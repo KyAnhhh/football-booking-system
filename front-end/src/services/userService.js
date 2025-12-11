@@ -19,15 +19,28 @@ function getAuthHeader() {
     : {};
 }
 
-export const getUsers = async () => {
+// export const getUsers = async () => {
+//   const headers = {
+//     "Content-Type": "application/json",
+//     ...getAuthHeader(),
+//   };
+
+//   const response = await fetch(API_URL, { headers });
+//   return await handleResponse(response);
+// };
+
+export const getUsers = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
   const headers = {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
 
-  const response = await fetch(API_URL, { headers });
+  const url = `${API_URL}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}&search=${search}`;
+
+  const response = await fetch(url, { headers });
   return await handleResponse(response);
 };
+
 
 export const getUser = async (id) => {
   const headers = {

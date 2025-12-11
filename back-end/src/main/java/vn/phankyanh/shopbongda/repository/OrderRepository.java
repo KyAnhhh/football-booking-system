@@ -13,6 +13,8 @@ import vn.phankyanh.shopbongda.domain.Order;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     
+       List<Order> findByUserId(Long userId);
+
     @Query("SELECT DISTINCT o FROM Order o " +
            "LEFT JOIN FETCH o.orderItems oi " +
            "LEFT JOIN FETCH oi.product p " +

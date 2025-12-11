@@ -1,20 +1,19 @@
 package vn.phankyanh.shopbongda.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.multipart.MultipartFile;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.dto.request.ProductRequest;
 import vn.phankyanh.shopbongda.dto.response.ApiResponse;
@@ -23,15 +22,13 @@ import vn.phankyanh.shopbongda.service.ProductService;
 
 @RestController
 @RequiredArgsConstructor 
-@RequestMapping("/api/admin/products")
 public class ProductController {
     private final ProductService productService;
 
-    @PostMapping(value = "",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/api/admin/products",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ProductResponse> createProduct(@ModelAttribute ProductRequest request,
                                                      @RequestPart(value = "image", required = false) MultipartFile image,
                                                      HttpServletRequest servletRequest) {
-        // ensure image from multipart is set on request (some clients bind differently)
         if (image != null) {
             request.setImage(image);
         }
@@ -40,29 +37,27 @@ public class ProductController {
         return apiResponse;
     }
 
-    // also accept JSON payloads (no file upload) for clients that send imageUrl directly
-    @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<ProductResponse> createProductJson(@org.springframework.web.bind.annotation.RequestBody ProductRequest request) {
-        ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleCreateProduct(request));
+    @GetMapping("/api/public/products")
+    public ApiResponse<Page<ProductResponse>> getAllProduct(
+        @RequestParam(defaultValue = "0") int pageNo,
+        @RequestParam(defaultValue = "10") int pageSize,
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "asc") String sortDir,
+        @RequestParam(required = false) String search
+    ){
+        ApiResponse<Page<ProductResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.productService.handleGetAllProduct(pageNo, pageSize, sortBy, sortDir, search));
         return apiResponse;
     }
 
-    @GetMapping
-    public ApiResponse<List<ProductResponse>> getAllProduct(){
-        ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleGetAllProduct());
-        return apiResponse;
-    }
-
-    @GetMapping("/{id}")
+    @GetMapping("/api/public/products/{id}")
     public ApiResponse<ProductResponse> getProductById(@PathVariable("id") Long id){
         ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.productService.handleGetProductById(id));
         return apiResponse;
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/api/admin/products/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ProductResponse> updateProduct(@PathVariable("id") Long id,
                                                      @ModelAttribute ProductRequest request,
                                                      @RequestPart(value = "image", required = false) MultipartFile image) {
@@ -74,14 +69,7 @@ public class ProductController {
         return apiResponse;
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<ProductResponse> updateProductJson(@PathVariable("id") Long id, @org.springframework.web.bind.annotation.RequestBody ProductRequest request) {
-        ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleUpdateProduct(id, request));
-        return apiResponse;
-    }
-
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/admin/products/{id}")
     public ApiResponse<String> deleteProduct(@PathVariable("id") Long id){
         ApiResponse<String> apiResponse = new ApiResponse<>();
         this.productService.handleDeleteProduct(id);

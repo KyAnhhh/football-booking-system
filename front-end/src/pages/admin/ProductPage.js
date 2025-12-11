@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
+import swal from 'sweetalert';
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../services/productService";
+import { getAllBrandsForDropdown } from "../../services/brandService";
+import { getAllCategoriesForDropdown } from "../../services/categoryService";
 import { Modal, Button, Form } from "react-bootstrap";
 import "../../assets/styles/ProductPage.css";
 
@@ -7,26 +10,46 @@ export default function ProductPage() {
   const [products, setProducts] = useState([]);
   const [show, setShow] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
     price: "",
     stock: "",
     discount: "",
+    dimension: "",
     imageUrl: "",
     imageFile: null,
-    dimension: "",
     categoryId: "",
     brandId: "",
   });
 
-  // modal confirm delete
+  const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  // Paging + Sorting + Search
+  const [pageNo, setPageNo] = useState(0);
+  const [pageSize] = useState(5);
+  const [sortBy, setSortBy] = useState("id");
+  const [sortDir, setSortDir] = useState("asc");
+  const [search, setSearch] = useState("");
+
+  const [pageData, setPageData] = useState(null);
+
+  // confirm delete
   const [confirmProduct, setConfirmProduct] = useState(null);
 
+  // Load products
   const loadProducts = async () => {
     try {
-      const data = await getProducts();
-      setProducts(data);
+      const data = await getProducts(pageNo, pageSize, sortBy, sortDir, search);
+
+      if (data?.content) {
+        setProducts(data.content);
+        setPageData(data);
+      } else {
+        setProducts([]);
+      }
     } catch (err) {
       console.error("Fetch products failed:", err);
     }
@@ -34,9 +57,31 @@ export default function ProductPage() {
 
   useEffect(() => {
     loadProducts();
-  }, []);
 
-  // open modal create / edit
+    // tải brands + categories cho dropdown
+    (async () => {
+      const [b, c] = await Promise.all([getAllBrandsForDropdown(), getAllCategoriesForDropdown()]);
+      setBrands(b || []);
+      setCategories(c || []);
+    })();
+  }, [pageNo, sortBy, sortDir, search]);
+
+  // Sort toggle
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortDir("asc");
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPageNo(0);
+  };
+
+  // Modal create / edit
   const handleShow = (product = null) => {
     if (product) {
       setEditingProduct(product);
@@ -45,17 +90,27 @@ export default function ProductPage() {
         description: product.description,
         price: product.price,
         stock: product.stock,
-        // imageUrl: product.imageUrl || "",
-        imageFile: null,
         discount: product.discount,
         dimension: product.dimension,
+        imageUrl: product.imageUrl,
+        imageFile: null,
         categoryId: product.categoryId,
         brandId: product.brandId,
       });
     } else {
       setEditingProduct(null);
-      // setForm({ name: "", description: "", price: "", stock: "", discount: "", imageUrl: "" , imageFile: null, dimension: "", categoryId: "", brandId: ""});
-      setForm({ name: "", description: "", price: "", stock: "", discount: "", imageFile: null, dimension: "", categoryId: "", brandId: ""});
+      setForm({
+        name: "",
+        description: "",
+        price: "",
+        stock: "",
+        discount: "",
+        dimension: "",
+        imageUrl: "",
+        imageFile: null,
+        categoryId: "",
+        brandId: "",
+      });
     }
     setShow(true);
   };
@@ -65,71 +120,64 @@ export default function ProductPage() {
     setEditingProduct(null);
   };
 
+  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    let payload;
+
+    // Nếu có file thì gửi FormData
+    if (form.imageFile) {
+      const fd = new FormData();
+      Object.keys(form).forEach((key) => {
+        if (key === "imageFile" && form.imageFile) fd.append("image", form.imageFile);
+        else fd.append(key, form[key]);
+      });
+      payload = fd;
+    } else {
+      payload = {
+        ...form,
+        price: Number(form.price),
+        stock: Number(form.stock),
+        discount: Number(form.discount),
+        dimension: Number(form.dimension),
+        categoryId: Number(form.categoryId),
+        brandId: Number(form.brandId),
+        imageUrl: form.imageUrl || null,
+      };
+    }
+
     try {
-      // prepare payload: if a file is selected, send multipart/form-data
-      if (form.imageFile) {
-        const fd = new FormData();
-        fd.append("name", form.name);
-        fd.append("description", form.description || "");
-        fd.append("price", form.price);
-        fd.append("stock", form.stock);
-        fd.append("discount", form.discount ?? 0);
-        fd.append("dimension", form.dimension);
-        fd.append("categoryId", form.categoryId);
-        fd.append("brandId", form.brandId);
-        // append file under field name 'image' expected by backend
-        fd.append("image", form.imageFile);
-        // also allow providing imageUrl together with file (optional)
-        if (form.imageUrl) fd.append("imageUrl", form.imageUrl);
-
-        if (editingProduct) {
-          await updateProduct(editingProduct.id, fd);
-        } else {
-          await createProduct(fd);
-        }
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, payload);
+        swal({ text: "Product updated successfully!", icon: "success" });
       } else {
-        // send JSON payload (no file)
-        const payload = {
-          name: form.name,
-          description: form.description,
-          price: Number(form.price),
-          stock: Number(form.stock),
-          discount: form.discount ? Number(form.discount) : 0,
-          dimension: Number(form.dimension),
-          categoryId: Number(form.categoryId),
-          brandId: Number(form.brandId),
-          imageUrl: form.imageUrl ? form.imageUrl : null,
-        };
-
-        if (editingProduct) {
-          await updateProduct(editingProduct.id, payload);
-        } else {
-          await createProduct(payload);
-        }
+        await createProduct(payload);
+        swal({ text: "Product created successfully!", icon: "success" });
       }
-      await loadProducts();
+
+      loadProducts();
       handleClose();
     } catch (err) {
       console.error("Save product failed:", err);
+      swal({ text: err.message || "Error saving product", icon: "error" });
     }
   };
 
-  // mở modal confirm delete
   const handleDeleteClick = (product) => {
     setConfirmProduct(product);
   };
 
-  // xác nhận delete
   const confirmDelete = async () => {
     if (!confirmProduct) return;
     try {
       await deleteProduct(confirmProduct.id);
-      await loadProducts();
+      swal({ text: "Product deleted successfully!", icon: "success" });
+      loadProducts();
       setConfirmProduct(null);
     } catch (err) {
-      console.error("Delete product failed:", err);
+      console.error("Delete failed:", err);
+      swal({ text: err.message || "Error deleting product", icon: "error" });
     }
   };
 
@@ -137,26 +185,38 @@ export default function ProductPage() {
     <div className="product-page">
       <div className="product-header">
         <h2>Product Management</h2>
-        <Button variant="primary" onClick={() => handleShow()}>
-          + Add Product
-        </Button>
+
+        <div className="product-actions">
+          <Form.Control
+            type="text"
+            placeholder="Search by name..."
+            value={search}
+            onChange={handleSearchChange}
+            style={{ width: "250px" }}
+          />
+
+          <Button variant="primary" onClick={() => handleShow()}>
+            + Thêm sản phẩm
+          </Button>
+        </div>
       </div>
 
       <table className="product-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>CategoryId</th>
-            <th>BrandId</th>
-            <th>Price</th>
-            <th>Stock</th>
+            <th onClick={() => toggleSort("id")}>ID</th>
+            <th onClick={() => toggleSort("name")}>Name</th>
+            <th>Category</th>
+            <th>Brand</th>
+            <th onClick={() => toggleSort("price")}>Price</th>
+            <th onClick={() => toggleSort("stock")}>Stock</th>
             <th>Dimension</th>
             <th>Discount</th>
             <th>Image</th>
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
           {products.map((p) => (
             <tr key={p.id}>
@@ -169,7 +229,7 @@ export default function ProductPage() {
               <td>{p.dimension}</td>
               <td>{p.discount}</td>
               <td>
-                {p.imageUrl ? <img src={p.imageUrl} alt={p.name} style={{ width: "60px" }} /> : "N/A"}
+                {p.imageUrl ? <img src={p.imageUrl} alt="" style={{ width: "60px" }} /> : "No image"}
               </td>
               <td>
                 <Button size="sm" variant="warning" onClick={() => handleShow(p)}>
@@ -184,13 +244,32 @@ export default function ProductPage() {
         </tbody>
       </table>
 
-      {/* Modal Create / Edit Product */}
+      {/* Pagination */}
+      {pageData && (
+        <div className="pagination-section">
+          <Button disabled={pageNo === 0} onClick={() => setPageNo(pageNo - 1)}>
+            Prev
+          </Button>
+
+          <span style={{ margin: "0 10px" }}>
+            Page {pageNo + 1} / {pageData.totalPages}
+          </span>
+
+          <Button disabled={pageNo + 1 >= pageData.totalPages} onClick={() => setPageNo(pageNo + 1)}>
+            Next
+          </Button>
+        </div>
+      )}
+
+      {/* Modal Create / Edit */}
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>{editingProduct ? "Edit Product" : "Create Product"}</Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
+            {/* name */}
             <Form.Group className="mb-3">
               <Form.Label>Name</Form.Label>
               <Form.Control
@@ -201,6 +280,7 @@ export default function ProductPage() {
               />
             </Form.Group>
 
+            {/* description */}
             <Form.Group className="mb-3">
               <Form.Label>Description</Form.Label>
               <Form.Control
@@ -211,17 +291,18 @@ export default function ProductPage() {
               />
             </Form.Group>
 
+            {/* price */}
             <Form.Group className="mb-3">
               <Form.Label>Price</Form.Label>
               <Form.Control
                 type="number"
-                step="0.01"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 required
               />
             </Form.Group>
 
+            {/* stock */}
             <Form.Group className="mb-3">
               <Form.Label>Stock</Form.Label>
               <Form.Control
@@ -231,7 +312,8 @@ export default function ProductPage() {
                 required
               />
             </Form.Group>
-            
+
+            {/* dimension */}
             <Form.Group className="mb-3">
               <Form.Label>Dimension</Form.Label>
               <Form.Control
@@ -242,67 +324,87 @@ export default function ProductPage() {
               />
             </Form.Group>
 
+            {/* discount */}
             <Form.Group className="mb-3">
               <Form.Label>Discount</Form.Label>
               <Form.Control
                 type="number"
                 value={form.discount}
                 onChange={(e) => setForm({ ...form, discount: e.target.value })}
-                required
               />
             </Form.Group>
 
-            {/* <Form.Group className="mb-3">
+            {/* imageUrl */}
+            <Form.Group className="mb-3">
               <Form.Label>Image URL</Form.Label>
               <Form.Control
                 type="text"
                 value={form.imageUrl}
                 onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                placeholder="Paste image URL or upload file"
               />
-            </Form.Group> */}
+            </Form.Group>
 
+            {/* image file */}
             <Form.Group className="mb-3">
-              <Form.Label>Upload Image (file)</Form.Label>
+              <Form.Label>Upload Image</Form.Label>
               <Form.Control
                 type="file"
                 accept="image/*"
-                onChange={(e) => setForm({ ...form, imageFile: e.target.files && e.target.files[0] ? e.target.files[0] : null })}
+                onChange={(e) =>
+                  setForm({ ...form, imageFile: e.target.files?.[0] || null })
+                }
               />
             </Form.Group>
 
+            {/* category */}
             <Form.Group className="mb-3">
-              <Form.Label>CategoryId</Form.Label>
-              <Form.Control
-                type="number"
+              <Form.Label>Category</Form.Label>
+              <Form.Select
                 value={form.categoryId}
                 onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                 required
-              />
+              >
+                <option value="">-- Select Category --</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
+
+            {/* brand */}
             <Form.Group className="mb-3">
-              <Form.Label>BrandId</Form.Label>
-              <Form.Control
-                type="number"
+              <Form.Label>Brand</Form.Label>
+              <Form.Select
                 value={form.brandId}
                 onChange={(e) => setForm({ ...form, brandId: e.target.value })}
                 required
-              />
+              >
+                <option value="">-- Select Brand --</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
 
-            <Button variant="success" type="submit" style={{ backgroundColor: "blue" }}>
+            <Button type="submit" variant="success" style={{ backgroundColor: "blue" }}>
               {editingProduct ? "Update" : "Create"}
             </Button>
           </Form>
         </Modal.Body>
       </Modal>
 
-      {/* Modal Confirm Delete */}
+      {/* Confirm Delete */}
       <Modal show={!!confirmProduct} onHide={() => setConfirmProduct(null)}>
         <Modal.Header closeButton>
           <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bạn có chắc chắn muốn xóa product <b>{confirmProduct?.name}</b> không?
+          Bạn có chắc chắn muốn xóa product <b>{confirmProduct?.name}</b>?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmProduct(null)}>

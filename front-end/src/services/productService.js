@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:8080/api/admin/products";
+const API_URL_ADMIN = "http://localhost:8080/api/admin/products";
+const API_URL_PUBLIC = "http://localhost:8080/api/public/products";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -19,21 +20,27 @@ function getAuthHeader() {
     : {};
 }
 
-export const getProducts = async () => {
+export const getProducts = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
   const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
+    "Content-Type": "application/json"
   };
-  const response = await fetch(API_URL, {headers});
+  const params = new URLSearchParams({
+    pageNo,
+    pageSize,
+    sortBy,
+    sortDir
+  });
+  if (search) params.append("search", search);
+  
+  const response = await fetch(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
   return await handleResponse(response);
 };
 
 export const getProductById = async (id) => {
   const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
+    "Content-Type": "application/json"
   };
-  const response = await fetch(`${API_URL}/${id}`,{
+  const response = await fetch(`${API_URL_PUBLIC}/${id}`,{
     method: "GET",
     headers
   });
@@ -44,7 +51,7 @@ export const createProduct = async (product) => {
   // if product is FormData (file upload), let fetch set Content-Type boundary
   if (product instanceof FormData) {
     const headers = { ...getAuthHeader() };
-    const response = await fetch(API_URL, {
+    const response = await fetch(API_URL_ADMIN, {
       method: "POST",
       headers,
       body: product,
@@ -53,7 +60,7 @@ export const createProduct = async (product) => {
   }
 
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(API_URL, {
+  const response = await fetch(API_URL_ADMIN, {
     method: "POST",
     headers,
     body: JSON.stringify(product),
@@ -65,7 +72,7 @@ export const createProduct = async (product) => {
 export const updateProduct = async (id, product) => {
   if (product instanceof FormData) {
     const headers = { ...getAuthHeader() };
-    const response = await fetch(`${API_URL}/${id}`, {
+    const response = await fetch(`${API_URL_ADMIN}/${id}`, {
       method: "PUT",
       headers,
       body: product,
@@ -74,7 +81,7 @@ export const updateProduct = async (id, product) => {
   }
 
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
     headers,
     body: JSON.stringify(product),
@@ -85,7 +92,7 @@ export const updateProduct = async (id, product) => {
 
 export const deleteProduct = async (id) => {
   const headers = { ...getAuthHeader() };
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
     headers,
   });

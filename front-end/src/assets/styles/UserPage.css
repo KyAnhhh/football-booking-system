@@ -1,58 +1,119 @@
 .user-page {
-  padding: 20px;
-  max-width: 1000px;
-  margin: 0 auto; /* căn giữa màn hình */
+  padding: 25px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: "Inter", sans-serif;
 }
 
 .user-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .user-header h2 {
   margin: 0;
-  color: #333;
+  font-size: 1.8rem;
+  color: #222;
+  font-weight: 700;
 }
 
-/* Table */
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .user-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.user-table th,
-.user-table td {
-  padding: 12px 15px;
-  text-align: left;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
 }
 
 .user-table th {
-  background-color: #007bff;
-  color: white;
-  font-weight: 600;
+  background: #0d6efd;
+  color: #fff;
+  padding: 14px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.user-table th:hover {
+  background: #0b5ed7;
+}
+
+.user-table td {
+  padding: 13px;
+  font-size: 0.93rem;
+  color: #333;
 }
 
 .user-table tr {
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #e6e6e6;
 }
 
 .user-table tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: #fafafa;
 }
 
 .user-table tr:hover {
   background-color: #eef5ff;
+  transition: 0.2s ease;
 }
 
-/* Buttons in table */
 .user-table button {
-  padding: 4px 10px;
-  font-size: 0.85rem;
-  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 0.83rem !important;
+  border-radius: 6px !important;
+}
+
+.pagination-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.pagination-section button {
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+}
+
+.user-actions input {
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid #d0d0d0;
+  transition: 0.2s;
+}
+
+.user-actions input:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 4px rgba(13, 110, 253, 0.4);
+}
+
+.modal-content {
+  border-radius: 12px !important;
+}
+
+.modal-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.form-control {
+  border-radius: 8px !important;
+  padding: 10px !important;
 }

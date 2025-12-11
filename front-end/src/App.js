@@ -14,6 +14,8 @@ import About from "./pages/client/About";
 import Contact from "./pages/client/Contact";
 import BrandPage from "./pages/admin/BrandPage";
 import CategoryPage from "./pages/admin/CategoryPage";
+import OrderPage from "./pages/admin/OrderPage";
+import Profile from "./pages/client/Profile";
 
 function App() {
   return (
@@ -36,6 +38,7 @@ function App() {
           <Route path="products" element={<ProductPage />} />
           <Route path="brands" element={<BrandPage />} />
           <Route path="categories" element={<CategoryPage />} />
+          <Route path="orders" element={<OrderPage />} />
         </Route>
 
         {/* Client page */}
@@ -68,6 +71,14 @@ function App() {
           element={
             <ClientLayout>
               <Contact />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ClientLayout>
+              <Profile />
             </ClientLayout>
           }
         />

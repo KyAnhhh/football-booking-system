@@ -1,7 +1,9 @@
 package vn.phankyanh.shopbongda.service;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -17,11 +19,18 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
-    public List<CategoryResponse> handleGetAllCategory(){
-        return this.categoryRepository.findAll()
-                .stream()
-                .map(categoryMapper::toResponse)
-                .toList();
+    public Page<CategoryResponse> handleGetAllCategory(int pageNo, int pageSize, String sortBy, String sortDir, String search){
+        Sort.Direction direction = sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+        
+        Page<Category> categoriesPage;
+        if(search != null && !search.isEmpty()){
+            categoriesPage = categoryRepository.findByNameContaining(search, pageable);
+        } else {
+            categoriesPage = categoryRepository.findAll(pageable);
+        }
+        return categoriesPage.map(categoryMapper::toResponse);
     }
     public CategoryResponse handleGetUserById(Long id){
         Category category = this.categoryRepository.findById(id)

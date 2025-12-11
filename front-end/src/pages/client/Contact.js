@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"; // Thêm useEffect
+import swal from 'sweetalert';
 import "../../assets/styles/Contact.css";
 
 export default function Contact() {
@@ -35,7 +36,7 @@ export default function Contact() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất.');
+    swal({ text: 'Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi sớm nhất.', icon: 'success' });
     setFormData({ name: '', email: '', message: '' });
   };
 

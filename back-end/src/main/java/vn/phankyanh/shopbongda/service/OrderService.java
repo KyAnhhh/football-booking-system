@@ -5,6 +5,7 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -158,6 +159,17 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Not found with id: " + id));
         return  orderMapper.toOrderResponse(order);
     }
+
+    public List<OrderResponse> handleGetMyOrders(String authHeader) throws ParseException {
+        String token = authHeader.replace("Bearer ", "");
+        JwtInfo info = JwtService.parseToken(token);
+
+        List<Order> orders = orderRepository.findByUserId(info.getId());
+        return orders.stream()
+                    .map(orderMapper::toOrderResponse)
+                    .collect(Collectors.toList());
+    }
+
 
     public void handleDeleteOrder(Long id){
         if(!orderRepository.existsById(id)){

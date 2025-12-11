@@ -1,8 +1,10 @@
 // src/pages/Login.jsx
 import { useState } from "react";
+import swal from 'sweetalert';
 import { useNavigate } from "react-router-dom";
 import "../assets/styles/Login.css"; 
 import { login } from "../services/authService";
+import { jwtDecode } from "jwt-decode";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -28,17 +30,19 @@ export default function Login() {
 
       if (res.ok) {
         localStorage.setItem("token", data.accessToken);
-        localStorage.setItem("role", data.role);
-
-        const role = data.role?.toLowerCase().replace("role_", "");
-        if (role === "admin") navigate("/admin");
-        else navigate("/");
+        const decode = jwtDecode(data.accessToken);
+        
+        if (decode.role && decode.role.includes("ADMIN")){
+          navigate("/admin");
+        } else{
+          navigate("/");
+        }
       } else {
-        alert(data.message || "Đăng nhập thất bại");
+        swal({ text: data.message || "Đăng nhập thất bại", icon: "error" });
       }
     } catch (err) {
       console.error("Lỗi đăng nhập:", err);
-      alert("Error logging in");
+      swal({ text: "Error logging in", icon: "error" });
     } finally {
       setLoading(false);
     }

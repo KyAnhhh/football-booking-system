@@ -1,7 +1,6 @@
 package vn.phankyanh.shopbongda.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.Data;
@@ -27,9 +27,15 @@ public class BrandController {
     private final BrandService brandService;
 
     @GetMapping
-    public ApiResponse<List<BrandResponse>> getAllBrand(){
-        ApiResponse<List<BrandResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.brandService.handleGetAllBrand());
+    public ApiResponse<Page<BrandResponse>> getAllBrand(
+        @RequestParam(defaultValue = "0") int pageNo,
+        @RequestParam(defaultValue = "5") int pageSize,
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "asc") String sortDir,
+        @RequestParam(required = false) String search
+    ){
+        ApiResponse<Page<BrandResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.brandService.handleGetAllBrand(pageNo, pageSize, sortBy, sortDir, search));
         return apiResponse;
     }
 

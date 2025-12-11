@@ -1,6 +1,10 @@
 package vn.phankyanh.shopbongda.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import vn.phankyanh.shopbongda.domain.Brand;
 import vn.phankyanh.shopbongda.dto.request.BrandRequest;
@@ -16,12 +20,18 @@ public class BrandService {
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
 
-    public List<BrandResponse> handleGetAllBrand(){
-        return this.brandRepository.findAll()
-                .stream()
-                .map(brandMapper::toResponse)
-                .toList();
-
+    public Page<BrandResponse> handleGetAllBrand(int pageNo, int pageSize, String sortBy, String sortDir, String search){
+        Sort.Direction direction = sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+        
+        Page<Brand> brandsPage;
+        if(search != null && !search.isEmpty()){
+            brandsPage = brandRepository.findByNameContaining(search, pageable);
+        } else {
+            brandsPage = brandRepository.findAll(pageable);
+        }
+        return brandsPage.map(brandMapper::toResponse);
     }
     public BrandResponse handleGetUserById(Long id){
         Brand brand = this.brandRepository.findById(id)

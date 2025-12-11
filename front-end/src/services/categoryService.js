@@ -19,13 +19,32 @@ function getAuthHeader() {
     : {};
 }
 
-export const getCategories = async () => {
+export const getCategories = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
   const headers = {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(API_URL, {headers});
+  const params = new URLSearchParams({
+    pageNo,
+    pageSize,
+    sortBy,
+    sortDir
+  });
+  if (search) params.append("search", search);
+  
+  const response = await fetch(`${API_URL}?${params.toString()}`, {headers});
   return await handleResponse(response);
+};
+
+// Get all categories for dropdown (no pagination)
+export const getAllCategoriesForDropdown = async () => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+  const response = await fetch(`${API_URL}?pageNo=0&pageSize=100`, {headers});
+  const data = await handleResponse(response);
+  return data.content || [];
 };
 
 export const getCategoryById = async (id) => {

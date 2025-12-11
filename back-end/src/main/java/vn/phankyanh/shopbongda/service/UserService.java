@@ -1,8 +1,11 @@
 package vn.phankyanh.shopbongda.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +31,7 @@ public class UserService {
     if(userRepository.existsByEmail(request.getEmail()))
         throw new RuntimeException("Email already exists");
 
-        // sửa
     Role role = (request.getRole() != null) ? request.getRole() : Role.ROLE_CLIENT;
-//        Role role = (request.getRole() != null) ? request.getRole() : Role.client;
     User user = User.builder()
             .username(request.getUsername())
             .email(request.getEmail())
@@ -54,8 +55,22 @@ public class UserService {
             .build();
     }
 
-    public List<User> handleGetAllUsers(){
-        return this.userRepository.findAll();
+    public Page<UserCreateResponse> handleGetAllUsers(int pageNo, int pageSize, String sortBy, String sortDir, String search){
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+
+        Page<User> usersPage;
+
+        if (search != null && !search.trim().isEmpty()) {
+            usersPage = userRepository.findByEmailContaining(search, pageable);
+        } else {
+            usersPage = userRepository.findAll(pageable);
+        }
+
+        return usersPage.map(userMapper::toUserCreateResponse);
     }
 
     public UserCreateResponse handleGetUserById(Long id){
@@ -69,13 +84,34 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
-        user.setPhone(request.getPhone());
+        // Chỉ update nếu có truyền lên
+        if (request.getUsername() != null && !request.getUsername().isBlank()) {
+            user.setUsername(request.getUsername());
+        }
+
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            if(!request.getEmail().equals(user.getEmail())){
+                    // Check email tồn tại
+                if (userRepository.existsByEmail(request.getEmail())) {
+                    throw new RuntimeException("Email đã tồn tại!");
+                }
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setPhone(request.getPhone());
+        }
+
+        // Mật khẩu phải mã hoá
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            String hashed = passwordEncoder.encode(request.getPassword());
+            user.setPassword(hashed);
+        }
 
         return userRepository.save(user);
     }
+
     public User handleUpdateRole(Long id, UpdateRoleRequest request){
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));

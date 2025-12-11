@@ -19,12 +19,26 @@ export default function CategoryPage() {
 
   const [confirmCategory, setConfirmCategory] = useState(null);
 
+  // -------- FIXED LOAD CATEGORIES --------
   const loadCategories = async () => {
     try {
       const data = await getCategories();
-      setCategories(data);
+
+      // Trường hợp API trả về dạng Page (Spring Data)
+      if (data && typeof data === "object" && Array.isArray(data.content)) {
+        setCategories(data.content);
+      } 
+      // Trường hợp API trả về mảng
+      else if (Array.isArray(data)) {
+        setCategories(data);
+      } 
+      else {
+        setCategories([]); // fallback tránh map lỗi
+      }
+
     } catch (err) {
       console.error("Fetch categories failed:", err);
+      setCategories([]); // tránh break UI
     }
   };
 
@@ -92,21 +106,29 @@ export default function CategoryPage() {
         </thead>
 
         <tbody>
-          {categories.map((c) => (
-            <tr key={c.id}>
-              <td>{c.id}</td>
-              <td>{c.name}</td>
-              <td>{c.description}</td>
-              <td>
-                <Button variant="warning" size="sm" onClick={() => handleShow(c)}>
-                  Edit
-                </Button>{" "}
-                <Button variant="danger" size="sm" onClick={() => setConfirmCategory(c)}>
-                  Delete
-                </Button>
+          {categories.length > 0 ? (
+            categories.map((c) => (
+              <tr key={c.id}>
+                <td>{c.id}</td>
+                <td>{c.name}</td>
+                <td>{c.description}</td>
+                <td>
+                  <Button variant="warning" size="sm" onClick={() => handleShow(c)}>
+                    Edit
+                  </Button>{" "}
+                  <Button variant="danger" size="sm" onClick={() => setConfirmCategory(c)}>
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="4" style={{ textAlign: "center", color: "gray" }}>
+                No categories found.
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
 

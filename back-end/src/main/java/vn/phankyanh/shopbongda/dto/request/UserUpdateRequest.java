@@ -15,17 +15,12 @@ import vn.phankyanh.shopbongda.domain.Role;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserUpdateRequest {
-    @NotBlank(message = "Username không được để trống")
     private String username;
 
-    @Email(message = "Email không hợp lệ")
-    @NotBlank(message = "Email không được để trống")
     private String email;
 
-    @NotBlank(message = "Password không được để trống")
     private String password;
 
-    @NotBlank(message = "Phone không được để trống")
     private String phone;
 
     private String status = "active";
