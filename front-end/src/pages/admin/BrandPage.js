@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
-import { getBrands, createBrand, updateBrand, deleteBrand } from "../../services/brandService";
+import { 
+  getBrands, 
+  createBrand, 
+  updateBrand, 
+  deleteBrand 
+} from "../../services/brandService";
 import { Modal, Button, Form } from "react-bootstrap";
-import "../../assets/styles/ProductPage.css";
 
 export default function BrandPage() {
   const [brands, setBrands] = useState([]);
@@ -9,27 +13,66 @@ export default function BrandPage() {
   const [editingBrand, setEditingBrand] = useState(null);
   const [confirmBrand, setConfirmBrand] = useState(null);
 
+    // Paging + Sorting + Search
+  const [pageNo, setPageNo] = useState(0);
+  const [pageSize] = useState(5);
+  const [sortBy, setSortBy] = useState("id");
+  const [sortDir, setSortDir] = useState("asc");
+  const [search, setSearch] = useState("");
+
+  const [pageData, setPageData] = useState(null);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
     logoUrl: ""
   });
 
-  // load brand list
   const loadBrands = async () => {
     try {
-      const data = await getBrands();
-      setBrands(data);
+      const data = await getBrands(pageNo, pageSize, sortBy, sortDir, search);
+
+      // Trường hợp API trả về dạng Page
+      if (data && typeof data === "object" && Array.isArray(data.content)) {
+        setBrands(data.content);
+        setPageData(data);
+      }
+      // Trả về list bình thường
+      else if (Array.isArray(data)) {
+        setBrands(data);
+        setPageData(data);
+      } 
+      else {
+        setBrands([]); // tránh lỗi map
+      }
+
     } catch (err) {
       console.error("Fetch brands failed:", err);
+      setBrands([]);
     }
   };
 
   useEffect(() => {
     loadBrands();
-  }, []);
+  }, [pageNo, sortBy, sortDir, search]);
 
-  // open modal create / edit
+  // Sort toggle
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortDir("asc");
+    }
+  };
+
+  // Search debounce
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPageNo(0); // reset page
+  };
+
+  // Mở modal create/edit
   const handleShow = (brand = null) => {
     if (brand) {
       setEditingBrand(brand);
@@ -45,12 +88,6 @@ export default function BrandPage() {
     setShow(true);
   };
 
-  const handleClose = () => {
-    setShow(false);
-    setEditingBrand(null);
-  };
-
-  // submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -59,21 +96,18 @@ export default function BrandPage() {
       } else {
         await createBrand(form);
       }
+
       await loadBrands();
-      handleClose();
+      setShow(false);
     } catch (err) {
       console.error("Save brand failed:", err);
     }
   };
 
-  // open modal delete confirm
-  const handleDeleteClick = (brand) => {
-    setConfirmBrand(brand);
-  };
-
-  // confirm delete
+  // Confirm delete
   const confirmDelete = async () => {
     if (!confirmBrand) return;
+
     try {
       await deleteBrand(confirmBrand.id);
       await loadBrands();
@@ -87,52 +121,106 @@ export default function BrandPage() {
     <div className="product-page">
       <div className="product-header">
         <h2>Brand Management</h2>
-        <Button variant="primary" onClick={() => handleShow()}>
-          + Add Brand
-        </Button>
+        <div className="user-actions">
+          <Form.Control
+            type="text"
+            placeholder="Search by email..."
+            value={search}
+            onChange={handleSearchChange}
+            style={{ width: "250px" }}
+          />
+
+          <Button variant="primary" onClick={() => handleShow()}>
+            + Thêm brand
+          </Button>
+        </div>
       </div>
 
       <table className="product-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Logo</th>
+            <th onClick={() => toggleSort("id")}>ID</th>
+            <th onClick={() => toggleSort("name")}>Name</th>
+            <th onClick={() => toggleSort("description")}>Description</th>
+            <th onClick={() => toggleSort("logo")}>Logo</th>
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
-          {brands.map((b) => (
-            <tr key={b.id}>
-              <td>{b.id}</td>
-              <td>{b.name}</td>
-              <td>{b.description}</td>
-              <td>
-                {b.logoUrl ? (
-                  <img src={b.logoUrl} alt={b.name} style={{ width: "60px" }} />
-                ) : (
-                  "N/A"
-                )}
-              </td>
-              <td>
-                <Button size="sm" variant="warning" onClick={() => handleShow(b)}>
-                  Edit
-                </Button>{" "}
-                <Button size="sm" variant="danger" onClick={() => handleDeleteClick(b)}>
-                  Delete
-                </Button>
+          {brands.length > 0 ? (
+            brands.map((b) => (
+              <tr key={b.id}>
+                <td>{b.id}</td>
+                <td>{b.name}</td>
+                <td>{b.description}</td>
+                <td>
+                  {b.logoUrl ? (
+                    <img 
+                      src={b.logoUrl} 
+                      alt={b.name} 
+                      style={{ width: "60px" }} 
+                    />
+                  ) : "N/A"}
+                </td>
+                <td>
+                  <Button 
+                    size="sm" 
+                    variant="warning" 
+                    onClick={() => handleShow(b)}
+                  >
+                    Edit
+                  </Button>{" "}
+                  <Button 
+                    size="sm" 
+                    variant="danger"
+                    onClick={() => setConfirmBrand(b)}
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="5" style={{ textAlign: "center", color: "gray" }}>
+                No brands found.
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
+      {/* Pagination */}
+      {pageData && (
+        <div className="pagination-section">
+          <Button
+            disabled={pageNo === 0}
+            onClick={() => setPageNo(pageNo - 1)}
+          >
+            Prev
+          </Button>
 
-      {/* Modal Create / Edit Brand */}
-      <Modal show={show} onHide={handleClose}>
+          <span style={{ margin: "0 10px" }}>
+            Page {pageNo + 1} / {pageData.totalPages}
+          </span>
+
+          <Button
+            disabled={pageNo + 1 >= pageData.totalPages}
+            onClick={() => setPageNo(pageNo + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
+      {/* Modal Create / Edit */}
+      <Modal show={show} onHide={() => setShow(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingBrand ? "Edit Brand" : "Create Brand"}</Modal.Title>
+          <Modal.Title>
+            {editingBrand ? "Edit Brand" : "Create Brand"}
+          </Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
@@ -164,20 +252,20 @@ export default function BrandPage() {
               />
             </Form.Group>
 
-            <Button variant="success" type="submit" style={{ backgroundColor: "blue" }}>
+            <Button variant="success" type="submit">
               {editingBrand ? "Update" : "Create"}
             </Button>
           </Form>
         </Modal.Body>
       </Modal>
 
-      {/* Modal Confirm Delete */}
+      {/* Confirm Delete Modal */}
       <Modal show={!!confirmBrand} onHide={() => setConfirmBrand(null)}>
         <Modal.Header closeButton>
           <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bạn có chắc chắn muốn xóa brand <b>{confirmBrand?.name}</b> không?
+          Bạn có chắc muốn xóa brand <b>{confirmBrand?.name}</b> không?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmBrand(null)}>

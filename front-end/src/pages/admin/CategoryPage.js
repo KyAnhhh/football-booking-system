@@ -12,6 +12,15 @@ export default function CategoryPage() {
   const [show, setShow] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
 
+    // Paging + Sorting + Search
+  const [pageNo, setPageNo] = useState(0);
+  const [pageSize] = useState(5);
+  const [sortBy, setSortBy] = useState("id");
+  const [sortDir, setSortDir] = useState("asc");
+  const [search, setSearch] = useState("");
+
+  const [pageData, setPageData] = useState(null);
+
   const [form, setForm] = useState({
     name: "",
     description: ""
@@ -19,18 +28,19 @@ export default function CategoryPage() {
 
   const [confirmCategory, setConfirmCategory] = useState(null);
 
-  // -------- FIXED LOAD CATEGORIES --------
   const loadCategories = async () => {
     try {
-      const data = await getCategories();
-
+      const data = await getCategories(pageNo, pageSize, sortBy, sortDir, search);
+      
       // Trường hợp API trả về dạng Page (Spring Data)
       if (data && typeof data === "object" && Array.isArray(data.content)) {
         setCategories(data.content);
+        setPageData(data);
       } 
       // Trường hợp API trả về mảng
       else if (Array.isArray(data)) {
         setCategories(data);
+        setPageData(data);
       } 
       else {
         setCategories([]); // fallback tránh map lỗi
@@ -44,7 +54,23 @@ export default function CategoryPage() {
 
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [pageNo, sortBy, sortDir, search]);
+
+  // Sort toggle
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortDir("asc");
+    }
+  };
+
+  // Search debounce
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPageNo(0); // reset page
+  };
 
   const handleShow = (category = null) => {
     if (category) {
@@ -90,17 +116,27 @@ export default function CategoryPage() {
     <div className="product-page">
       <div className="product-header">
         <h2>Category Management</h2>
-        <Button variant="primary" onClick={() => handleShow()}>
-          + Add Category
-        </Button>
+        <div className="user-actions">
+          <Form.Control
+            type="text"
+            placeholder="Search by email..."
+            value={search}
+            onChange={handleSearchChange}
+            style={{ width: "250px" }}
+          />
+
+          <Button variant="primary" onClick={() => handleShow()}>
+            + Thêm Category
+          </Button>
+        </div>
       </div>
 
       <table className="product-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Description</th>
+            <th onClick={() => toggleSort("id")}>ID</th>
+            <th onClick={() => toggleSort("name")}>Name</th>
+            <th onClick={() => toggleSort("description")}>Description</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -131,6 +167,28 @@ export default function CategoryPage() {
           )}
         </tbody>
       </table>
+      {/* Pagination */}
+      {pageData && (
+        <div className="pagination-section">
+          <Button
+            disabled={pageNo === 0}
+            onClick={() => setPageNo(pageNo - 1)}
+          >
+            Prev
+          </Button>
+
+          <span style={{ margin: "0 10px" }}>
+            Page {pageNo + 1} / {pageData.totalPages}
+          </span>
+
+          <Button
+            disabled={pageNo + 1 >= pageData.totalPages}
+            onClick={() => setPageNo(pageNo + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       <Modal show={show} onHide={() => setShow(false)}>
