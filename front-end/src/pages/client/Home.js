@@ -164,7 +164,7 @@ export default function Home() {
             </div>
             <div className="brand-item">
               <img
-                src="https://logos-world.net/wp-content/uploads/2020/04/Mizuno-Logo.png"
+                src="https://res.cloudinary.com/do8twj1im/image/upload/v1765553051/a9o3lnyu9ga0tuqjjxp6.png"
                 alt="Mizuno"
                 className="brand-logo"
               />
@@ -295,24 +295,6 @@ export default function Home() {
               <div className="feature-icon">💰</div>
               <h3>Hoàn Tiền 30 Ngày</h3>
               <p>Đổi trả dễ dàng nếu không hài lòng</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter Section */}
-      <section className="newsletter-section">
-        <div className="container">
-          <div className="newsletter-content">
-            <h2>Nhận Tin Khuyến Mãi</h2>
-            <p>Đăng ký để nhận thông tin về các chương trình giảm giá mới nhất</p>
-            <div className="newsletter-form">
-              <input
-                type="email"
-                placeholder="Nhập email của bạn"
-                className="email-input"
-              />
-              <button className="subscribe-btn">Đăng Ký</button>
             </div>
           </div>
         </div>

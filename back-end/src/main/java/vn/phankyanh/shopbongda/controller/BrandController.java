@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,11 +21,10 @@ import vn.phankyanh.shopbongda.service.BrandService;
 @RestController
 @Data
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/brands")
 public class BrandController {
     private final BrandService brandService;
 
-    @GetMapping
+    @GetMapping("/api/public/brands")
     public ApiResponse<Page<BrandResponse>> getAllBrand(
         @RequestParam(defaultValue = "0") int pageNo,
         @RequestParam(defaultValue = "5") int pageSize,
@@ -39,14 +37,14 @@ public class BrandController {
         return apiResponse;
     }
 
-    @PostMapping
+    @PostMapping("/api/admin/brands")
     public ApiResponse<BrandResponse> createBrand(@RequestBody BrandRequest request){
         ApiResponse<BrandResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.brandService.handleCreateBrand(request));
         return apiResponse;
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/admin/brands/{id}")
     public ApiResponse<String> deleteBrand(@PathVariable("id") Long id){
         ApiResponse<String> apiResponse = new ApiResponse<>();
         this.brandService.handleDeleteBrand(id);
@@ -54,14 +52,14 @@ public class BrandController {
         return apiResponse;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/api/admin/brands/{id}")
     public ApiResponse<BrandResponse> getUserById(@PathVariable("id") Long id){
         ApiResponse<BrandResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.brandService.handleGetUserById(id));
         return apiResponse;
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/api/admin/brands/{id}")
     public ApiResponse<Brand> updateBrand(@PathVariable("id") Long id, @RequestBody BrandRequest request){
         ApiResponse<Brand> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.brandService.handleUpdateBrand(id, request));

@@ -33,16 +33,30 @@ export default function Login() {
         const decode = jwtDecode(data.accessToken);
         
         if (decode.role && decode.role.includes("ADMIN")){
-          navigate("/admin");
+          swal({ text: "Đăng thành thành công. Đang chuyển hướng..." || "Đăng nhập thành công", icon: "success" });
+          setTimeout(() => {
+            navigate("/admin");
+            swal({
+              text: "Chuyển hướng thành công!",
+              icon: "success"
+            })
+          }, 2000);
         } else{
-          navigate("/");
+          swal({ text: "Đăng thành thành công. Đang chuyển hướng..." || "Đăng nhập thành công", icon: "success" });
+          setTimeout(() => {
+            navigate("/");
+            swal({
+              text: "Chuyển hướng thành công!",
+              icon: "success"
+            })
+          }, 2000);
         }
       } else {
-        swal({ text: data.message || "Đăng nhập thất bại", icon: "error" });
+        swal({ text: "Email hoặc mật khẩu sai. Hãy nhập lại!" || "Đăng nhập thất bại", icon: "error" });
       }
     } catch (err) {
       console.error("Lỗi đăng nhập:", err);
-      swal({ text: "Error logging in", icon: "error" });
+      swal({ text: "Lỗi đăng nhập", icon: "error" });
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:8080/api/admin/categories";
+const API_URL_ADMIN = "http://localhost:8080/api/admin/categories";
+const API_URL_PUBLIC = "http://localhost:8080/api/public/categories";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -22,7 +23,6 @@ function getAuthHeader() {
 export const getCategories = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
   const headers = {
     "Content-Type": "application/json",
-    ...getAuthHeader(),
   };
   const params = new URLSearchParams({
     pageNo,
@@ -32,19 +32,23 @@ export const getCategories = async (pageNo = 0, pageSize = 5, sortBy = "id", sor
   });
   if (search) params.append("search", search);
   
-  const response = await fetch(`${API_URL}?${params.toString()}`, {headers});
+  const response = await fetch(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
   return await handleResponse(response);
 };
 
-// Get all categories for dropdown (no pagination)
+// Get all categories for dropdown (no pagination, public endpoint) 
 export const getAllCategoriesForDropdown = async () => {
   const headers = {
     "Content-Type": "application/json",
-    ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL}?pageNo=0&pageSize=100`, {headers});
-  const data = await handleResponse(response);
-  return data.content || [];
+  try {
+    const response = await fetch(`${API_URL_PUBLIC}`, {headers});
+    const data = await handleResponse(response);
+    return data.content || [];
+  } catch (err) {
+    console.error("Error fetching categories:", err);
+    return [];
+  }
 };
 
 export const getCategoryById = async (id) => {
@@ -52,7 +56,7 @@ export const getCategoryById = async (id) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL}/${id}`,{
+  const response = await fetch(`${API_URL_ADMIN}/${id}`,{
     method: "GET",
     headers
   });
@@ -61,7 +65,7 @@ export const getCategoryById = async (id) => {
 
 export const createCategory = async (Category) => {
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(API_URL, {
+  const response = await fetch(API_URL_ADMIN, {
     method: "POST",
     headers,
     body: JSON.stringify(Category),
@@ -72,7 +76,7 @@ export const createCategory = async (Category) => {
 
 export const updateCategory = async (id, Category) => {
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
     headers,
     body: JSON.stringify(Category),
@@ -83,7 +87,7 @@ export const updateCategory = async (id, Category) => {
 
 export const deleteCategory = async (id) => {
   const headers = { ...getAuthHeader() };
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
     headers,
   });

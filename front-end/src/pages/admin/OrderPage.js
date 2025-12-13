@@ -7,7 +7,6 @@ import {
   deleteOrder,
 } from "../../services/orderService";
 import { Modal, Button, Form } from "react-bootstrap";
-import "../../assets/styles/ProductPage.css";
 
 export default function OrderPage() {
   const [orders, setOrders] = useState([]);
