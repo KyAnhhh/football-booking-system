@@ -9,7 +9,9 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "cart_items")
+@Table(name = "cart_items",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"cart_id", "product_variant_id", "size_id"}) // ràng buộc khi add song song => có thể tạo 2 cartItem trùng
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,8 +39,9 @@ public class CartItem {
     @Column(name = "product_name_denorm", nullable = false)
     private String productName;
     
-    @Column(name = "variant_size_denorm")
-    private String size;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "size_id", nullable = false)
+    private Size size;
 
     @Column(nullable = false)
     @Min(value = 1, message = "Stock không được âm")

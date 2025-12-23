@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CartResponse {
 
-    private Long id;           // ID của cartItem
+    private Long id;
     private Long userId;
     private Integer totalAmount;
     private BigDecimal totalPrice;

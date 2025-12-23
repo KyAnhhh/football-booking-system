@@ -1,12 +1,17 @@
 package vn.phankyanh.shopbongda.domain;
 
+import java.math.BigDecimal;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -30,10 +35,15 @@ public class Cart {
 
     @Column(nullable = false)
     @Min(value = 0, message = "Stock không được âm")
-    private Integer totalAmount;
+    private BigDecimal totalAmount;
+
+    // @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    // private List<CartItem> items;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CartItem> items;
+    @Builder.Default
+    private List<CartItem> items = new ArrayList<>();
+
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
