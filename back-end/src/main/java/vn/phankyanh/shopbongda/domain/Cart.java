@@ -24,7 +24,6 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Một user có thể có 1 giỏ hàng
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
@@ -33,7 +32,6 @@ public class Cart {
     @Min(value = 0, message = "Stock không được âm")
     private Integer totalAmount;
 
-    // Một giỏ hàng có nhiều item
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items;
 

@@ -11,12 +11,10 @@ import vn.phankyanh.shopbongda.dto.response.OrderResponse;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = OrderItemMapper.class)
 public interface OrderMapper {
 
-    @Mapping(target = "id", ignore = true) // ko map field id
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "payment", ignore = true)
     @Mapping(target = "shippingAddress", ignore = true)
     @Mapping(target = "orderItems", ignore = true)
-    @Mapping(target = "orderDate", expression = "java(java.time.LocalDateTime.now())") // gán giá trị mặt định khi mapping
     Order toOrder(OrderRequest request);
 
     @Mapping(source = "user.id", target = "userId")

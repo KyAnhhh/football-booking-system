@@ -1,8 +1,9 @@
 package vn.phankyanh.shopbongda.dto.response;
 
 import lombok.*;
-import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -12,16 +13,17 @@ public class ProductResponse {
     private Long id;
     private String name;
     private String description;
-    private BigDecimal price;
-    private Integer stock;
     private Integer discount;
-    private String imageUrl;
-    private Integer soldQuantity;
-    private Integer dimension;
-    private String categoryName;
-    private String brandName;
+
     private Long categoryId;
+    private String categoryName;
+
     private Long brandId;
+    private String brandName;
+
+    private List<ProductVariantResponse> variants;
+    private List<String> imageUrls;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

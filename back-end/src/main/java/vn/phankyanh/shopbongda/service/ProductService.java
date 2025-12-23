@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.phankyanh.shopbongda.domain.Brand;
@@ -23,56 +24,36 @@ import vn.phankyanh.shopbongda.repository.ProductRepository;
 @RequiredArgsConstructor
 @Slf4j
 public class ProductService {
+
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
     private final ProductMapper productMapper;
-    private final ImageService imageService;
 
-    public ProductResponse handleCreateProduct(ProductRequest request){
-        if(productRepository.existsByName(request.getName())){
+    @Transactional
+    public ProductResponse handleCreateProduct(ProductRequest request) {
+        if (productRepository.existsByName(request.getName())) {
             throw new RuntimeException("Name already exists");
         }
+
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
         Brand brand = brandRepository.findById(request.getBrandId())
                 .orElseThrow(() -> new RuntimeException("Brand not found"));
 
-            // upload ảnh nếu có file, nếu không thì lấy imageUrl từ request
-            String imageUrl = null;
-            if (request.getImage() != null) {
-                try {
-                    if (!request.getImage().isEmpty()) {
-                        log.info("Received multipart image: name={}, size={}", request.getImage().getOriginalFilename(), request.getImage().getSize());
-                        imageUrl = imageService.uploadImage(request.getImage()); // return URL
-                    } else {
-                        log.info("Multipart image provided but empty");
-                    }
-                } catch (Exception e) {
-                    log.error("Image upload failed", e);
-                    throw e;
-                }
-            }
-
-            if (imageUrl == null && request.getImageUrl() != null && !request.getImageUrl().isBlank()) {
-                log.info("Using imageUrl from request payload");
-                imageUrl = request.getImageUrl();
-        }
-
         Product product = productMapper.toProduct(request);
-
-        // gán để nối mối quan hệ thật
         product.setCategory(category);
         product.setBrand(brand);
-        product.setImageUrl(imageUrl);
-        log.info(imageUrl);
 
-        this.productRepository.save(product);
-        return productMapper.toProductResponse(product);
+        Product savedProduct = productRepository.save(product);
+
+        return productMapper.toResponse(savedProduct);
     }
-    
-    public Page<ProductResponse> handleGetAllProduct(int pageNo, int pageSize, String sortBy, String sortDir, String search){
+
+    // Lấy tất cả
+    public Page<ProductResponse> handleGetAllProduct(int pageNo, int pageSize, String sortBy, String sortDir,
+            String search) {
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
@@ -85,15 +66,19 @@ public class ProductService {
         } else {
             productsPage = productRepository.findAll(pageable);
         }
-        return productsPage.map(productMapper::toProductResponse);
+        return productsPage.map(productMapper::toResponse);
     }
 
+    // lấy theo id
     public ProductResponse handleGetProductById(Long id){
-         Product product = this.productRepository.findById(id)
-        .orElseThrow(() -> new ProductNotFoundException(id));
-        return productMapper.toProductResponse(product);
+        Product product = this.productRepository.findById(id)
+            .orElseThrow(() -> new ProductNotFoundException(id));
+            return productMapper.toResponse(product);
     }
 
+
+    // update
+    @Transactional
     public ProductResponse handleUpdateProduct(Long id, ProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
@@ -112,18 +97,13 @@ public class ProductService {
             product.setBrand(brand);
         }
 
-        if (request.getImage() != null && !request.getImage().isEmpty()) {
-            String newImageUrl = imageService.uploadImage(request.getImage());
-            product.setImageUrl(newImageUrl);
-        }
-
-        Product updatedProduct = productRepository.save(product);
-
-        return productMapper.toProductResponse(updatedProduct);
+        Product savedProduct = productRepository.save(product);
+        return productMapper.toResponse(savedProduct);
     }
 
-    public void handleDeleteProduct(Long id){
-        if(!productRepository.existsById(id)){
+    // xóa
+    public void handleDeleteProduct(Long id) {
+        if (!productRepository.existsById(id)) {
             throw new ProductNotFoundException(id);
         }
         productRepository.deleteById(id);

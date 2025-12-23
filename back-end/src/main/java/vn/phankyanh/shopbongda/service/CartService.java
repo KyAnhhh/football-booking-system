@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Cart;
 import vn.phankyanh.shopbongda.domain.CartItem;
-import vn.phankyanh.shopbongda.domain.Product;
+import vn.phankyanh.shopbongda.domain.ProductVariant;
 import vn.phankyanh.shopbongda.domain.User;
 import vn.phankyanh.shopbongda.dto.JwtInfo;
 import vn.phankyanh.shopbongda.dto.request.CartItemRequest;
@@ -19,6 +19,7 @@ import vn.phankyanh.shopbongda.dto.response.CartResponse;
 import vn.phankyanh.shopbongda.mapper.CartMapper;
 import vn.phankyanh.shopbongda.repository.CartRepository;
 import vn.phankyanh.shopbongda.repository.ProductRepository;
+import vn.phankyanh.shopbongda.repository.ProductVariantRepository;
 import vn.phankyanh.shopbongda.repository.ShippingAddressRepository;
 import vn.phankyanh.shopbongda.repository.UserRepository;
 
@@ -29,6 +30,7 @@ public class CartService {
     private final CartMapper cartMapper;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final ShippingAddressRepository shippingAddressRepository;
 
     public List<CartResponse> handleGetAllCart() {
@@ -62,13 +64,13 @@ public class CartService {
 
     // Merge items
     for (CartItemRequest itemReq : request.getItems()) {
-        Product product = productRepository.findById(itemReq.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        ProductVariant productVariant = productVariantRepository.findById(itemReq.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Product not found with id " + itemReq.getProductId()));
 
         // Check if product already exists in cart
         CartItem exItem = null;
         for (CartItem item : cart.getItems()) {
-            if (item.getProductId() != null && item.getProductId().equals(product.getId())) {
+            if (item.getProductId() != null && item.getProductId().equals(productVariant.getId())) {
                 exItem = item;
                 break;
             }
@@ -83,11 +85,11 @@ public class CartService {
             // Create new cart item
             CartItem newItem = CartItem.builder()
                     .cart(cart)
-                    .product(product)
-                    .productId(product.getId())
-                    .productName(product.getName())
+                    .productVariant(productVariant)
+                    .productId(productVariant.getProduct().getId())
+                    .productName(productVariant.getProduct().getName())
                     .totalQuantity(itemReq.getQuantity())
-                    .priceAtAddedTime(product.getPrice())
+                    .priceAtAddedTime(productVariant.getPrice())
                     .build();
 
             cart.getItems().add(newItem);
@@ -134,16 +136,16 @@ public class CartService {
         List<CartItem> newItems = new ArrayList<>();
 
         for (CartItemRequest itemReq : request.getItems()) {
-            Product product = productRepository.findById(itemReq.getProductId())
+            ProductVariant productVariant = productVariantRepository.findById(itemReq.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found with id " + itemReq.getProductId()));
 
             CartItem item = CartItem.builder()
                     .cart(cart)
-                    .product(product)
-                    .productId(product.getId())
-                    .productName(product.getName())
+                    .productVariant(productVariant)
+                    .productId(productVariant.getProduct().getId())
+                    .productName(productVariant.getProduct().getName())
                     .totalQuantity(itemReq.getQuantity() != null ? itemReq.getQuantity() : 1)
-                    .priceAtAddedTime(product.getPrice())
+                    .priceAtAddedTime(productVariant.getPrice())
                     .build();
 
             newItems.add(item);

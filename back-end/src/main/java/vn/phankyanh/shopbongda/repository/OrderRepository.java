@@ -17,13 +17,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT DISTINCT o FROM Order o " +
            "LEFT JOIN FETCH o.orderItems oi " +
-           "LEFT JOIN FETCH oi.product p " +
+           "LEFT JOIN FETCH oi.productVariant p " +
            "WHERE o.id = :id")
     Optional<Order> findByIdWithOrderItems(@Param("id") Long id);
     
     @Query("SELECT DISTINCT o FROM Order o " +
            "LEFT JOIN FETCH o.orderItems oi " +
-           "LEFT JOIN FETCH oi.product p")
+           "LEFT JOIN FETCH oi.productVariant p")
     List<Order> findAllWithOrderItems();
 
 }

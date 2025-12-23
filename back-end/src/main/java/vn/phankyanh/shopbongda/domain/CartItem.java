@@ -23,28 +23,27 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Mỗi CartItem thuộc về 1 Cart
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
-    // Mỗi CartItem tương ứng với 1 Product
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @ManyToOne
+    @JoinColumn(name = "product_variant_id")
+    private ProductVariant productVariant;
 
     @Column(name = "product_id_denorm", nullable = false)
     private Long productId;
-
+    
     @Column(name = "product_name_denorm", nullable = false)
     private String productName;
-
+    
+    @Column(name = "variant_size_denorm")
+    private String size;
 
     @Column(nullable = false)
     @Min(value = 1, message = "Stock không được âm")
-    private Integer totalQuantity = 1;
+    private Integer totalQuantity;
 
-    // Giá tại thời điểm thêm vào giỏ (tránh thay đổi nếu product update giá)
     @Column(nullable = false)
     private BigDecimal priceAtAddedTime;
 

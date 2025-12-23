@@ -16,12 +16,17 @@ import lombok.NoArgsConstructor;
 public class OrderResponse {
     private Long id;
     private String userId;
-    private BigDecimal totalAmount;
-    private Integer shippingCost;
-    private String status;
+
     private String fullName;
     private String phone;
     private String address;
+
+    private BigDecimal shippingCost;
+    private BigDecimal totalAmount;
+
+    private String status;
     private LocalDateTime orderDate;
+    private LocalDateTime deliveryDate;
+
     private List<OrderItemResponse> items;
 }

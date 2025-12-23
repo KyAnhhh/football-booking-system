@@ -1,95 +1,100 @@
 package vn.phankyanh.shopbongda.service;
 
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Order;
 import vn.phankyanh.shopbongda.domain.OrderItem;
-import vn.phankyanh.shopbongda.domain.Product;
-import vn.phankyanh.shopbongda.dto.request.OrderItemRequest;
-import vn.phankyanh.shopbongda.dto.request.OrderRequest;
+import vn.phankyanh.shopbongda.domain.OrderStatus;
+import vn.phankyanh.shopbongda.domain.ProductVariant;
 import vn.phankyanh.shopbongda.dto.response.OrderItemResponse;
-import vn.phankyanh.shopbongda.dto.response.OrderResponse;
 import vn.phankyanh.shopbongda.mapper.OrderItemMapper;
 import vn.phankyanh.shopbongda.repository.OrderItemRepository;
-import vn.phankyanh.shopbongda.repository.OrderRepository;
-import vn.phankyanh.shopbongda.repository.ProductRepository;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class OrderItemService {
     private final OrderItemRepository orderItemRepository;
     private final OrderItemMapper orderItemMapper;
-    private final ProductRepository productRepository;
-    private final OrderRepository orderRepository;
 
-    public List<OrderItemResponse> handleGetAllOrderItem(){
-        return this.orderItemRepository.findAll()
+    public List<OrderItemResponse> handleGetOrderItemByOrderId(Long orderId, Long userId) {
+        return orderItemRepository
+                .findByOrder_IdAndOrder_User_Id(orderId, userId)
                 .stream()
                 .map(orderItemMapper::toOrderItemResponse)
                 .toList();
     }
 
-    public OrderItemResponse handleCreateOrderItem(OrderItemRequest request){
 
-        // Lấy product từ DB
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+    public OrderItemResponse handleUpdateQuantity(Long orderItemId, Integer quantity, Long userId) {
+        OrderItem item = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new RuntimeException("OrderItem not found"));
 
-        // Lấy order nếu có
-        Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-
-        BigDecimal price = product.getPrice(); // lấy giá gốc
-        BigDecimal total = price.multiply(BigDecimal.valueOf(request.getQuantity())); // tỉnh tổng số tiền dựa trên quantity
-
-        OrderItem orderItem = OrderItem.builder()
-                .product(product)
-                .order(order)
-                .quantity(request.getQuantity())
-                .price(price)
-                .total(total)
-                .build();
-
-
-        this.orderItemRepository.save(orderItem);
-        return orderItemMapper.toOrderItemResponse(orderItem);
-    }
-
-    public OrderItemResponse handleUpdateOrderItem(Long id, OrderItemRequest request) {
-        OrderItem orderItem = orderItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        BigDecimal price = product.getPrice();
-        BigDecimal total = price.multiply(BigDecimal.valueOf(request.getQuantity()));
-
-        orderItemMapper.updateOrderItem(orderItem, request);
-        orderItem.setPrice(price);
-        orderItem.setTotal(total);
-
-         this.orderItemRepository.save(orderItem);
-        return orderItemMapper.toOrderItemResponse(orderItem);
-    }
-
-
-    public OrderItemResponse handleGetOrderItemById(Long id){
-        OrderItem orderItem = this.orderItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Not found with id: " + id));
-        return  orderItemMapper.toOrderItemResponse(orderItem);
-    }
-
-    public void handleDeleteOrderItem(Long id){
-        if(!orderItemRepository.existsById(id)){
-            throw new RuntimeException("Not found with id: "+ id);
+        Order order = item.getOrder();
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Truy cập bị từ chối");
         }
-        this.orderItemRepository.deleteById(id);
+
+        if (!order.getStatus().equals(OrderStatus.CHO_XAC_NHAN)) {
+            throw new RuntimeException("Không thể cập nhật đơn hàng sau khi đơn hàng đang được xử lý");
+        }
+
+        ProductVariant variant = item.getProductVariant();
+        int diff = quantity - item.getQuantity();
+
+        if (variant.getStock() < diff) {
+            throw new RuntimeException("Không đủ hàng");
+        }
+
+        // Update stock
+        variant.setStock(variant.getStock() - diff);
+        variant.setSoldQuantity(variant.getSoldQuantity() + diff);
+
+        // Update item
+        item.setQuantity(quantity);
+        item.setTotal(item.getFinalPrice().multiply(BigDecimal.valueOf(quantity)));
+
+        order.setTotalAmount(order.getOrderItems().stream()
+                .map(OrderItem::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(order.getShippingCost()));
+
+        return orderItemMapper.toOrderItemResponse(item);
+    }
+
+    public void handleDeleteOrderItem(Long orderItemId, Long userId) {
+        OrderItem item = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new RuntimeException("OrderItem not found"));
+
+        Order order = item.getOrder();
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        if (!order.getStatus().equals(OrderStatus.CHO_XAC_NHAN)) {
+            throw new RuntimeException("Cannot delete order item after order processing");
+        }
+
+        // Trả stock
+        ProductVariant variant = item.getProductVariant();
+        variant.setStock(variant.getStock() + item.getQuantity());
+        variant.setSoldQuantity(variant.getSoldQuantity() - item.getQuantity());
+
+        // Xóa item
+        order.getOrderItems().remove(item);
+
+        // Cập nhật total đơn
+        order.setTotalAmount(order.getOrderItems().stream()
+                .map(OrderItem::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(order.getShippingCost()));
+
+        orderItemRepository.delete(item);
     }
 }

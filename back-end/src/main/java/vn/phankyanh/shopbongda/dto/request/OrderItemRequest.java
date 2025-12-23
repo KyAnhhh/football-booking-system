@@ -1,5 +1,7 @@
 package vn.phankyanh.shopbongda.dto.request;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +12,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class OrderItemRequest {
-    private Long orderId;
-    private Long productId;
+    @NotNull
+    private Long productVariantId;
+
+    @NotNull
+    @Min(2)
     private Integer quantity;
 }

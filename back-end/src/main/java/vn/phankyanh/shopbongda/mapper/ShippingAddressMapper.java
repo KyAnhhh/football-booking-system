@@ -17,6 +17,10 @@ public interface ShippingAddressMapper {
     ShippingAddress toShippingAddress(ShippingAddressRequest request);
 
     @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "phone", target = "phone")
+    @Mapping(source = "fullName", target = "fullName")
+    @Mapping(source = "address", target = "address")
     ShippingAddressResponse toResponse(ShippingAddress shippingAddress);
 
     @Mapping(target = "user", ignore = true) // tránh ghi đè user

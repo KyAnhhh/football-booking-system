@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "wishList")
+@Table(name = "wishlist")
 @Getter
 @Setter
 @NoArgsConstructor

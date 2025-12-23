@@ -19,8 +19,8 @@ import lombok.*;
 @Entity
 @Data
 @Builder
-@NoArgsConstructor // parameterless constructor
-@AllArgsConstructor // constructor
+@NoArgsConstructor 
+@AllArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id") //nhận dện đối tượng đã đc serialize và tránh việc lặp vô hạn khi có quan hệ 2 chiều
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // bỏ qua các thuộc tính proxy do Hibernate thêm vào
 @Table(name = "users")
@@ -80,7 +80,6 @@ public class User implements UserDetails {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Implement UserDetails methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Ensure authorities use Spring Security ROLE_ prefix

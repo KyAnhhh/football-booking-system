@@ -7,21 +7,23 @@ import vn.phankyanh.shopbongda.domain.Product;
 import vn.phankyanh.shopbongda.dto.request.ProductRequest;
 import vn.phankyanh.shopbongda.dto.response.ProductResponse;
 
-import java.util.List;
-
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {ProductVariantMapper.class, ProductImageMapper.class})
 public interface ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "brand", ignore = true)
+    @Mapping(target = "variants", ignore = true)
+    @Mapping(target = "images", ignore = true)
+    @Mapping(target = "review", ignore = true)
+    @Mapping(target = "wishLists", ignore = true)
     Product toProduct(ProductRequest request);
 
-    @Mapping(source = "category.name", target = "categoryName")
-    @Mapping(source = "brand.name", target = "brandName")
     @Mapping(source = "category.id", target = "categoryId")
+    @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "brand.id", target = "brandId")
-    @Mapping(source = "soldQuantity", target = "soldQuantity")
-    @Mapping(source = "imageUrl", target = "imageUrl")
-    ProductResponse toProductResponse(Product product);
+    @Mapping(source = "brand.name", target = "brandName")
+    @Mapping(source = "variants", target = "variants")
+    @Mapping(source = "images", target = "imageUrls")
+    ProductResponse toResponse(Product product);
 
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "brand", ignore = true)

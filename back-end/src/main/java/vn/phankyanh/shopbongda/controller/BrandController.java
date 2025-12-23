@@ -55,7 +55,7 @@ public class BrandController {
     @GetMapping("/api/admin/brands/{id}")
     public ApiResponse<BrandResponse> getUserById(@PathVariable("id") Long id){
         ApiResponse<BrandResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.brandService.handleGetUserById(id));
+        apiResponse.setData(this.brandService.handleGetBrandById(id));
         return apiResponse;
     }
 

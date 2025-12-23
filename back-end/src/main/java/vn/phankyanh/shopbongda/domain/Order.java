@@ -32,8 +32,8 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY,  cascade = CascadeType.ALL)
+    @JoinColumn(name = "payment_id")
     private Payment payment;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,23 +41,41 @@ public class Order {
     private ShippingAddress shippingAddress;
 
     @Column(nullable = false)
-    @DecimalMin(value = "0.0", message = "Stock không được âm")
     private BigDecimal totalAmount;
 
-    @NotBlank(message = "status không được để trống")
-    private String status = "Chờ xác nhận";
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
 
-    @NotNull(message = "shipping_cost không được để trống")
-    @Min(value = 0, message = "shipping_cost phải >= 0")
-    private Integer shippingCost;
+    @NotNull
+    @DecimalMin("0.0")
+    @Column(nullable = false)
+    private BigDecimal shippingCost;
 
-    @Column(name = "order_date", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime orderDate;
 
-    @Column(name = "delivery_date", nullable = true)
-    private LocalDateTime deliveryDate = LocalDateTime.now().plusDays(3);
+    @Column(name = "delivery_date")
+    private LocalDateTime deliveryDate;
+    
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+    
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

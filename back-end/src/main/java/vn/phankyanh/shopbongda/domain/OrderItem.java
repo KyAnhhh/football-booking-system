@@ -51,31 +51,45 @@ public class OrderItem {
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @JoinColumn(name = "product_variant_id", nullable = false)
+    private ProductVariant productVariant;
 
-    @Column(name = "product_id_denorm", nullable = false)
+    //snapshot
+    @Column(nullable = false)
     private Long productId;
 
-    @Column(name = "product_name_denorm", nullable = false)
+    @Column(nullable = false)
     private String productName;
+
+    @Column(nullable = false)
+    private String sizeName;
+
+    @Column(nullable = false)
+    private String imageUrl;
+
+    @NotNull
+    @DecimalMin("0.0")
+    @Column(nullable = false)
+    private BigDecimal unitPrice;
+
+    @NotNull
+    @DecimalMin("0.0")
+    @Column(nullable = false)
+    private BigDecimal discountAmount;
+
+    @NotNull
+    @DecimalMin("0.0")
+    @Column(nullable = false)
+    private BigDecimal finalPrice;
+
+    @NotNull
+    @DecimalMin("0.0")
+    @Column(nullable = false)
+    private BigDecimal total;
 
     @NotNull
     @Min(1)
     private Integer quantity;
-
-    @ColumnDefault("0")
-    @Min(value = 0, message = "Giảm giá không được âm")
-    @Max(value = 100, message = "Giảm giá tối đa là 100%")
-    private Integer discount;
-
-    @Column(nullable = false)
-    @DecimalMin(value = "0.0", inclusive = false, message = "Price phải lớn hơn 0")
-    private BigDecimal price;
-
-    @Column(nullable = false)
-    @DecimalMin(value = "0.0", inclusive = false, message = "Total phải lớn hơn 0")
-    private BigDecimal total;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -93,5 +107,6 @@ public class OrderItem {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
 
 }

@@ -24,11 +24,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private static final String[] public_list = {
-              "/api/auth/**", "/api/public/**"
+              "/api/auth/**"
               
     };
     private static final String[] private_list = {
-            "/api/admin/**"
+            "/api/admin/**", "/api/public/**"
     };
 
     private final UserDetailsService userDetailsService;
@@ -58,11 +58,11 @@ public class SecurityConfiguration {
                         // public endpoints
                         .requestMatchers(public_list).permitAll()
 
-                        //Admin endpoints
-                         .requestMatchers(private_list).hasRole("ADMIN")
+                        //  .requestMatchers(private_list).hasRole("ADMIN")
+                         .requestMatchers(private_list).authenticated()
 
                             // Client endpoints
-                        // .requestMatchers("/", "/products", "collections", "about").hasRole("CLIENT")
+                        // .requestMatchers().hasRole("CLIENT")
 
                         // Các request còn lại cần phải login thì mới truy cập được
                         .anyRequest().authenticated()

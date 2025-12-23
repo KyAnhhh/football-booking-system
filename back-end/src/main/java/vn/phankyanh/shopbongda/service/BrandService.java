@@ -1,18 +1,17 @@
 package vn.phankyanh.shopbongda.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Brand;
 import vn.phankyanh.shopbongda.dto.request.BrandRequest;
 import vn.phankyanh.shopbongda.dto.response.BrandResponse;
 import vn.phankyanh.shopbongda.mapper.BrandMapper;
 import vn.phankyanh.shopbongda.repository.BrandRepository;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +32,7 @@ public class BrandService {
         }
         return brandsPage.map(brandMapper::toResponse);
     }
-    public BrandResponse handleGetUserById(Long id){
+    public BrandResponse handleGetBrandById(Long id){
         Brand brand = this.brandRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not found with id: " + id));
         return brandMapper.toResponse(brand);
