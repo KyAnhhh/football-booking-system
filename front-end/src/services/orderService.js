@@ -7,8 +7,7 @@ const handleResponse = async (response) => {
     throw new Error(errText || "Lỗi không xác định từ server");
   }
   const result = await response.json();
-
-  return result.data;
+  return result.data ?? result.message;
 };
 
 function getAuthHeader() {
@@ -20,14 +19,36 @@ function getAuthHeader() {
     : {};
 }
 
-export const getOrders = async () => {
+export const getOrders = async (
+  pageNo = 0,
+  pageSize = 5,
+  sortBy = "id",
+  sortDir = "asc",
+  search = "",
+  status = ""
+) => {
   const headers = {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(API_URL_ADMIN, {headers});
+
+  const params = new URLSearchParams({
+    pageNo: String(pageNo),
+    pageSize: String(pageSize),
+    sortBy,
+    sortDir,
+  });
+
+  if (search) params.append("search", search);
+  if (status) params.append("status", status);
+
+  const response = await fetch(`${API_URL_ADMIN}?${params.toString()}`, {
+    headers,
+  });
+
   return await handleResponse(response);
 };
+
 
 export const createOrder = async (Order) => { 
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
@@ -56,7 +77,7 @@ export const getMyOrders = async () => {
   const headers = { 
     "Content-Type": "application/json", 
     ...getAuthHeader() };
-  const response = await fetch(`${API_URL_PUBLIC}/my`, { headers });
+  const response = await fetch(`${API_URL_PUBLIC}/me`, { headers });
   return await handleResponse(response);
 };
 
@@ -66,6 +87,17 @@ export const updateOrder = async (id, Order) => {
     method: "PUT",
     headers,
     body: JSON.stringify(Order),
+  });
+
+  return await handleResponse(response);
+};
+
+export const updateOrderStatus = async (id, status) => {
+  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
+  const response = await fetch(`${API_URL_ADMIN}/${id}/status`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify( status ),
   });
 
   return await handleResponse(response);

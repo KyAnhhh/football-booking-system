@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:8080/api/admin/users";
+const API_URL_ADMIN = "http://localhost:8080/api/admin/users";
+const API_URL_PUBLIC = "http://localhost:8080/api/public/users";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -7,7 +8,7 @@ const handleResponse = async (response) => {
   }
 
   const result = await response.json();
-  return result.data; 
+  return result.data ?? result.message;
 };
 
 function getAuthHeader() {
@@ -19,40 +20,15 @@ function getAuthHeader() {
     : {};
 }
 
-// export const getUsers = async () => {
-//   const headers = {
-//     "Content-Type": "application/json",
-//     ...getAuthHeader(),
-//   };
-
-//   const response = await fetch(API_URL, { headers });
-//   return await handleResponse(response);
-// };
-
-export const getUsers = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
+export const getUsers = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDir = "asc", search = "") => {
   const headers = {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
 
-  const url = `${API_URL}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}&search=${search}`;
+  const url = `${API_URL_ADMIN}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}&search=${search}`;
 
   const response = await fetch(url, { headers });
-  return await handleResponse(response);
-};
-
-
-export const getUser = async (id) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  };
-
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: "GET",
-    headers,
-  });
-
   return await handleResponse(response);
 };
 
@@ -61,7 +37,7 @@ export const createUser = async (user) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL}`, {
+  const response = await fetch(`${API_URL_ADMIN}`, {
     method: "POST",
     headers,
     body: JSON.stringify(user),
@@ -76,7 +52,7 @@ export const updateUser = async (id, user) => {
     ...getAuthHeader(),
   };
 
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
     headers,
     body: JSON.stringify(user),
@@ -91,10 +67,40 @@ export const deleteUser = async (id) => {
     ...getAuthHeader(),
   };
 
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
     headers,
   });
 
   return await handleResponse(response);
 };
+
+export const getProfile = async () => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+
+  const response = await fetch(`${API_URL_PUBLIC}/profile`, {
+    method: "GET",
+    headers,
+  });
+
+  return await handleResponse(response);
+};
+
+export const updateProfile = async () => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  };
+
+  const response = await fetch(`${API_URL_PUBLIC}/profile/update`, {
+    method: "PUT",
+    headers,
+  });
+
+  return await handleResponse(response);
+};
+
+

@@ -33,7 +33,7 @@ export default function Login() {
         const decode = jwtDecode(data.accessToken);
         
         if (decode.role && decode.role.includes("ADMIN")){
-          swal({ text: "Đăng thành thành công. Đang chuyển hướng..." || "Đăng nhập thành công", icon: "success" });
+          swal({ text: "Đăng nhập thành công. Đang chuyển hướng...", icon: "success" });
           setTimeout(() => {
             navigate("/admin");
             swal({
@@ -42,7 +42,7 @@ export default function Login() {
             })
           }, 2000);
         } else{
-          swal({ text: "Đăng thành thành công. Đang chuyển hướng..." || "Đăng nhập thành công", icon: "success" });
+          swal({ text: "Đăng nhập thành công. Đang chuyển hướng...", icon: "success" });
           setTimeout(() => {
             navigate("/");
             swal({

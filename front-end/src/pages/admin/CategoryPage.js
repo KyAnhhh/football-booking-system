@@ -6,6 +6,8 @@ import {
   deleteCategory 
 } from "../../services/categoryService";
 import { Modal, Button, Form } from "react-bootstrap";
+import "../../assets/styles/CategoryPage.css";
+
 
 export default function CategoryPage() {
   const [categories, setCategories] = useState([]);
@@ -113,8 +115,8 @@ export default function CategoryPage() {
   };
 
   return (
-    <div className="product-page">
-      <div className="product-header">
+    <div className="category-page">
+      <div className="category-header">
         <h2>Category Management</h2>
         <div className="user-actions">
           <Form.Control
@@ -131,7 +133,7 @@ export default function CategoryPage() {
         </div>
       </div>
 
-      <table className="product-table">
+      <table className="category-table">
         <thead>
           <tr>
             <th onClick={() => toggleSort("id")}>ID</th>

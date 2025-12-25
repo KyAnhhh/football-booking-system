@@ -39,11 +39,12 @@ public class JwtService {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         Date issueTime = new Date();
-        Date expireTime = Date.from(issueTime.toInstant().plus(30, ChronoUnit.MINUTES));
+        Date expireTime = Date.from(issueTime.toInstant().plus(1, ChronoUnit.HOURS));
 
         String jwtId = UUID.randomUUID().toString();
 
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                .claim("sub", user.getUsername())
                 .claim("id", user.getId())
                 .claim("role", user.getRole().name())
                 .issueTime(issueTime)

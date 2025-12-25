@@ -48,7 +48,7 @@ public class UserService {
             .id(user.getId())
             .username(user.getUsername())
             .email(user.getEmail())
-            .password(user.getPassword())
+            // .password(user.getPassword())
             .phone(user.getPhone())
             .role(user.getRole())
             .status(user.getStatus())
@@ -80,7 +80,7 @@ public class UserService {
         return userMapper.toUserCreateResponse(user);
     }
 
-    public User handleUpdateUser(Long id, UserUpdateRequest request){
+    public UserCreateResponse handleUpdateUser(Long id, UserUpdateRequest request){
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
@@ -109,7 +109,7 @@ public class UserService {
             user.setPassword(hashed);
         }
 
-        return userRepository.save(user);
+        return userMapper.toUserCreateResponse(userRepository.save(user));
     }
 
     public User handleUpdateRole(Long id, UpdateRoleRequest request){

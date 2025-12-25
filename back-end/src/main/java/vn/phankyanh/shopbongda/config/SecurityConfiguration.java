@@ -24,11 +24,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private static final String[] public_list = {
-              "/api/auth/**"
+              "/api/auth/**", "/api/public/**"
               
     };
     private static final String[] private_list = {
-            "/api/admin/**", "/api/public/**"
+            "/api/admin/**"
     };
 
     private final UserDetailsService userDetailsService;
@@ -58,8 +58,8 @@ public class SecurityConfiguration {
                         // public endpoints
                         .requestMatchers(public_list).permitAll()
 
-                        //  .requestMatchers(private_list).hasRole("ADMIN")
-                         .requestMatchers(private_list).authenticated()
+                         .requestMatchers(private_list).hasRole("ADMIN")
+                        //  .requestMatchers(private_list).authenticated()
 
                             // Client endpoints
                         // .requestMatchers().hasRole("CLIENT")

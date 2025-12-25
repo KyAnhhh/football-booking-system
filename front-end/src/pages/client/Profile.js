@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getProfile, updateProfile } from "../../services/authService";
+import { getProfile, updateProfile } from "../../services/userService";
 import { Container, Card, Button, Form, Alert } from "react-bootstrap";
 import "../../assets/styles/Profile.css";
 

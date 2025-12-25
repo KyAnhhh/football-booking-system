@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +40,31 @@ public class OrderService {
     private final PaymentService paymentService;
     private final ProductVariantRepository productVariantRepository;
 
-    public List<OrderResponse> handleGetAllOrder(){
-        return this.orderRepository.findAllWithOrderItems()
-                .stream()
-                .map(orderMapper::toOrderResponse)
-                .toList();
+    public Page<OrderResponse> handleGetAllOrder(int pageNo, int pageSize, String sortBy, String sortDir, String search, OrderStatus status) {
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+
+        Page<Order> ordersPage;
+
+        if (status != null && search != null && !search.trim().isEmpty()) {
+            // Nếu có status + search
+            ordersPage = orderRepository.findByStatusAndShippingFullName(status, search.trim(), pageable);
+        } else if (status != null) {
+            // Chỉ filter theo status
+            ordersPage = orderRepository.findByStatus(status, pageable);
+        } else if (search != null && !search.trim().isEmpty()) {
+            // Chỉ search theo keyword
+            ordersPage = orderRepository.search(search.trim(), pageable);
+        } else {
+            // Lấy tất cả
+            ordersPage = orderRepository.findAll(pageable);
+        }
+
+        // Chuyển Order -> OrderResponse
+        return ordersPage.map(orderMapper::toOrderResponse);
     }
 
     public OrderResponse handleGetOrderById(Long id, Long userId){
@@ -141,10 +165,14 @@ public class OrderService {
         return orderMapper.toOrderResponse(this.orderRepository.save(order));
     }
 
-    public Order handleUpdateOrder(Long id, OrderRequest request){
+    public Order handleUpdateOrder(Long id, OrderRequest request, Long userId){
         Order order = this.orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not found with id: "+ id));
 
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("User không có quyền cập nhật đơn hàng này");
+        }
+        
         // thiếu update sp mới và xóa sp cũ và tính tiền
         orderMapper.updateOrder(order , request);
         return orderRepository.save(order);

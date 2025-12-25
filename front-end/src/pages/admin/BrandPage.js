@@ -6,6 +6,7 @@ import {
   deleteBrand 
 } from "../../services/brandService";
 import { Modal, Button, Form } from "react-bootstrap";
+import "../../assets/styles/BrandPage.css"
 
 export default function BrandPage() {
   const [brands, setBrands] = useState([]);
@@ -13,7 +14,6 @@ export default function BrandPage() {
   const [editingBrand, setEditingBrand] = useState(null);
   const [confirmBrand, setConfirmBrand] = useState(null);
 
-    // Paging + Sorting + Search
   const [pageNo, setPageNo] = useState(0);
   const [pageSize] = useState(5);
   const [sortBy, setSortBy] = useState("id");
@@ -118,8 +118,8 @@ export default function BrandPage() {
   };
 
   return (
-    <div className="product-page">
-      <div className="product-header">
+    <div className="brand-page">
+      <div className="brand-header">
         <h2>Brand Management</h2>
         <div className="user-actions">
           <Form.Control
@@ -136,7 +136,7 @@ export default function BrandPage() {
         </div>
       </div>
 
-      <table className="product-table">
+      <table className="brand-table">
         <thead>
           <tr>
             <th onClick={() => toggleSort("id")}>ID</th>

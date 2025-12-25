@@ -41,7 +41,7 @@ function App() {
           <Route path="orders" element={<OrderPage />} />
         </Route>
 
-        {/* Client page */}
+        {/* Client routes */}
         <Route
           path="/"
           element={

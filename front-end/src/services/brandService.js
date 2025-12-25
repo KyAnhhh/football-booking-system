@@ -7,8 +7,7 @@ const handleResponse = async (response) => {
     throw new Error(errText || "Lỗi không xác định từ server");
   }
   const result = await response.json();
-
-  return result.data;
+  return result.data ?? result.message;
 };
 
 function getAuthHeader() {
@@ -38,18 +37,21 @@ export const getBrands = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir
 
 // Get all brands for dropdown (no pagination, public endpoint)
 export const getAllBrandsForDropdown = async () => {
-  const headers = {
-    "Content-Type": "application/json",
-  };
   try {
-    const response = await fetch(`${API_URL_PUBLIC}`, {headers});
-    const data = await handleResponse(response);
-    return data.content || [];
+    const response = await fetch(`${API_URL_PUBLIC}`);
+    const res = await handleResponse(response);
+
+    // res có thể là Page hoặc List
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.content)) return res.content;
+
+    return [];
   } catch (err) {
     console.error("Error fetching brands:", err);
     return [];
   }
 };
+
 
 export const getBrandById = async (id) => {
   const headers = {

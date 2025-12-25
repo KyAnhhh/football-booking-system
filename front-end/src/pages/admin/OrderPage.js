@@ -1,151 +1,161 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   getOrders,
-  // getOrderById,
-  createOrder,
-  updateOrder,
+  updateOrderStatus,
   deleteOrder,
 } from "../../services/orderService";
 import { Modal, Button, Form } from "react-bootstrap";
+import "../../assets/styles/OrderPage.css";
 
 export default function OrderPage() {
   const [orders, setOrders] = useState([]);
+  const [pageData, setPageData] = useState(null);
+
+  // filter – paging – sort
+  const [pageNo, setPageNo] = useState(0);
+  const [pageSize] = useState(5);
+  const [sortBy, setSortBy] = useState("id");
+  const [sortDir, setSortDir] = useState("asc");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  // modal
   const [show, setShow] = useState(false);
-  const [editingOrder, setEditingOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [status, setStatus] = useState("");
   const [confirmOrder, setConfirmOrder] = useState(null);
 
-  const [form, setForm] = useState({
-    userId: "",
-    totalAmount: "",
-    shippingCost: "",
-    status: "",
-    fullName: "",
-    phone: "",
-    address: "",
-    orderDate: "",
-  });
-
-  // Load Order list (Admin)
   const loadOrders = async () => {
     try {
-      const data = await getOrders();
-      setOrders(data);
+      const data = await getOrders(
+        pageNo,
+        pageSize,
+        sortBy,
+        sortDir,
+        search,
+        statusFilter
+      );
+      setOrders(data.content);
+      setPageData(data);
     } catch (err) {
-      console.error("Fetch Orders failed:", err);
+      console.error(err);
     }
   };
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [pageNo, sortBy, sortDir, search, statusFilter]);
 
-  // open modal create / edit
-  const handleShow = (order = null) => {
-    if (order) {
-      setEditingOrder(order);
-      setForm({
-        userId: order.userId,
-        totalAmount: order.totalAmount,
-        shippingCost: order.shippingCost,
-        status: order.status,
-        fullName: order.fullName,
-        phone: order.phone,
-        address: order.address,
-        orderDate: order.orderDate,
-      });
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
     } else {
-      setEditingOrder(null);
-      setForm({
-        userId: "",
-        totalAmount: "",
-        shippingCost: "",
-        status: "",
-        fullName: "",
-        phone: "",
-        address: "",
-        orderDate: "",
-      });
+      setSortBy(field);
+      setSortDir("asc");
     }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPageNo(0);
+  };
+
+  const handleStatusFilter = (e) => {
+    setStatusFilter(e.target.value);
+    setPageNo(0);
+  };
+
+  const openStatusModal = (order) => {
+    setSelectedOrder(order);
+    setStatus(order.status);
     setShow(true);
   };
 
-  const handleClose = () => {
-    setShow(false);
-    setEditingOrder(null);
-  };
-
-  // submit form
-  const handleSubmit = async (e) => {
+  const handleUpdateStatus = async (e) => {
     e.preventDefault();
     try {
-      if (editingOrder) {
-        await updateOrder(editingOrder.id, form);
-      } else {
-        await createOrder(form);
-      }
+      await updateOrderStatus(selectedOrder.id, status);
       await loadOrders();
-      handleClose();
+      setShow(false);
     } catch (err) {
-      console.error("Save Order failed:", err);
+      console.error(err);
     }
   };
 
-  // open modal delete confirm
-  const handleDeleteClick = (order) => {
-    setConfirmOrder(order);
-  };
-
-  // confirm delete
   const confirmDelete = async () => {
-    if (!confirmOrder) return;
-    try {
-      await deleteOrder(confirmOrder.id);
-      await loadOrders();
-      setConfirmOrder(null);
-    } catch (err) {
-      console.error("Delete Order failed:", err);
-    }
+    await deleteOrder(confirmOrder.id);
+    await loadOrders();
+    setConfirmOrder(null);
   };
 
   return (
-    <div className="product-page">
-      <div className="product-header">
+    <div className="order-page">
+      <div className="order-header">
         <h2>Order Management</h2>
-        <Button variant="primary" onClick={() => handleShow()}>
-          + Create Order
-        </Button>
+
+        <div className="order-tools">
+          <Form.Control
+            type="text"
+            placeholder="Search name / phone..."
+            value={search}
+            onChange={handleSearchChange}
+            style={{ width: "220px" }}
+          />
+
+          <Form.Select
+            value={statusFilter}
+            onChange={handleStatusFilter}
+            style={{ width: "200px" }}
+          >
+            <option value="">All Status</option>
+            <option value="CHO_XAC_NHAN">Chờ xác nhận</option>
+            <option value="DA_XAC_NHAN">Đã xác nhận</option>
+            <option value="DANG_GIAO">Đang giao</option>
+            <option value="DA_GIAO">Đã giao</option>
+            <option value="DA_HUY">Đã huỷ</option>
+          </Form.Select>
+        </div>
       </div>
 
-      <table className="product-table">
+      <table className="order-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th onClick={() => toggleSort("id")}>ID</th>
             <th>User</th>
-            <th>Total</th>
-            <th>Status</th>
+            <th onClick={() => toggleSort("totalAmount")}>Total</th>
+            <th onClick={() => toggleSort("status")}>Status</th>
             <th>Receiver</th>
             <th>Phone</th>
             <th>Address</th>
-            <th>Order Date</th>
+            <th onClick={() => toggleSort("orderDate")}>Order Date</th>
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
           {orders.map((o) => (
             <tr key={o.id}>
               <td>{o.id}</td>
               <td>{o.userId}</td>
-              <td>{o.totalAmount}₫</td>
+              <td>{o.totalAmount.toLocaleString()} ₫</td>
               <td>{o.status}</td>
               <td>{o.fullName}</td>
               <td>{o.phone}</td>
               <td>{o.address}</td>
               <td>{o.orderDate}</td>
               <td>
-                <Button size="sm" variant="warning" onClick={() => handleShow(o)}>
-                  Edit
+                <Button
+                  size="sm"
+                  variant="warning"
+                  onClick={() => openStatusModal(o)}
+                >
+                  Update
                 </Button>{" "}
-                <Button size="sm" variant="danger" onClick={() => handleDeleteClick(o)}>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => setConfirmOrder(o)}
+                >
                   Delete
                 </Button>
               </td>
@@ -154,93 +164,58 @@ export default function OrderPage() {
         </tbody>
       </table>
 
-      {/* Modal Create / Edit */}
-      <Modal show={show} onHide={handleClose}>
+      {pageData && (
+        <div className="pagination-section">
+          <Button
+            disabled={pageNo === 0}
+            onClick={() => setPageNo(pageNo - 1)}
+          >
+            Prev
+          </Button>
+
+          <span>
+            Page {pageNo + 1} / {pageData.totalPages}
+          </span>
+
+          <Button
+            disabled={pageNo + 1 >= pageData.totalPages}
+            onClick={() => setPageNo(pageNo + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
+      <Modal show={show} onHide={() => setShow(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingOrder ? "Edit Order" : "Create Order"}</Modal.Title>
+          <Modal.Title>Update Order Status</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleUpdateStatus}>
+            <Form.Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="CHO_XAC_NHAN">Chờ xác nhận</option>
+              <option value="DA_XAC_NHAN">Đã xác nhận</option>
+              <option value="DANG_GIAO">Đang giao</option>
+              <option value="DA_GIAO">Đã giao</option>
+              <option value="DA_HUY">Đã huỷ</option>
+            </Form.Select>
 
-            <Form.Group className="mb-3">
-              <Form.Label>User ID</Form.Label>
-              <Form.Control
-                type="number"
-                value={form.userId}
-                onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Total Amount</Form.Label>
-              <Form.Control
-                type="number"
-                value={form.totalAmount}
-                onChange={(e) => setForm({ ...form, totalAmount: e.target.value })}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Shipping Cost</Form.Label>
-              <Form.Control
-                type="number"
-                value={form.shippingCost}
-                onChange={(e) => setForm({ ...form, shippingCost: e.target.value })}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Status</Form.Label>
-              <Form.Control
-                type="text"
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Full Name</Form.Label>
-              <Form.Control
-                type="text"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control
-                type="text"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Address</Form.Label>
-              <Form.Control
-                type="text"
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-              />
-            </Form.Group>
-
-            <Button variant="success" type="submit">
-              {editingOrder ? "Update" : "Create"}
+            <Button type="submit" className="mt-3" variant="success">
+              Update
             </Button>
           </Form>
         </Modal.Body>
       </Modal>
 
-      {/* Modal Confirm Delete */}
       <Modal show={!!confirmOrder} onHide={() => setConfirmOrder(null)}>
         <Modal.Header closeButton>
           <Modal.Title>Confirm delete</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to delete order <b>#{confirmOrder?.id}</b> ?
+          Delete order <b>#{confirmOrder?.id}</b>?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmOrder(null)}>

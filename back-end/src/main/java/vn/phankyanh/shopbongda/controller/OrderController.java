@@ -2,6 +2,7 @@ package vn.phankyanh.shopbongda.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -34,9 +36,15 @@ public class OrderController {
     }
 
     @GetMapping("/api/admin/orders")
-    public ApiResponse<List<OrderResponse>> getAllOrder(){
-        ApiResponse<List<OrderResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.orderService.handleGetAllOrder());
+    public ApiResponse<Page<OrderResponse>> getAllOrder(
+        @RequestParam(defaultValue = "0") int pageNo,
+        @RequestParam(defaultValue = "10") int pageSize,
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "asc") String sortDir,
+        @RequestParam(required = false) String search,
+        @RequestParam(required = false) OrderStatus status){
+        ApiResponse<Page<OrderResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setData(orderService.handleGetAllOrder(pageNo, pageSize, sortBy, sortDir, search, status));
         return apiResponse;
     }
 
@@ -48,7 +56,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @GetMapping("/api/public/orders/my")
+    @GetMapping("/api/public/orders/me")
     public ApiResponse<List<OrderResponse>> getMyOrder(@AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<List<OrderResponse>> apiResponse = new ApiResponse<>();
@@ -57,9 +65,10 @@ public class OrderController {
     }
 
     @PutMapping("/api/public/orders/{id}")
-    public ApiResponse<Order> updateOrder(@PathVariable("id") Long id, @RequestBody OrderRequest request){
+    public ApiResponse<Order> updateOrder(@PathVariable("id") Long id, @RequestBody OrderRequest request, @AuthenticationPrincipal Jwt jwt){
+        Long userId = jwt.getClaim("id");
         ApiResponse<Order> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.orderService.handleUpdateOrder(id, request));
+        apiResponse.setData(this.orderService.handleUpdateOrder(id, request, userId));
         return apiResponse;
     }
 

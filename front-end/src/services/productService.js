@@ -6,9 +6,9 @@ const handleResponse = async (response) => {
     const errText = await response.text();
     throw new Error(errText || "Lỗi không xác định từ server");
   }
-  const result = await response.json();
 
-  return result.data;
+  const result = await response.json();
+  return result.data ?? result.message;
 };
 
 function getAuthHeader() {
@@ -48,37 +48,21 @@ export const getProductById = async (id) => {
 };
 
 export const createProduct = async (product) => {
-  // if product is FormData (file upload), let fetch set Content-Type boundary
-  if (product instanceof FormData) {
-    const headers = { ...getAuthHeader() };
+
+    const headers = {
+      "Content-Type": "application/json",
+      ...getAuthHeader()
+    };
     const response = await fetch(API_URL_ADMIN, {
       method: "POST",
       headers,
-      body: product,
+      body: JSON.stringify(product),
     });
     return await handleResponse(response);
-  }
 
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(API_URL_ADMIN, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(product),
-  });
-
-  return await handleResponse(response);
 };
 
 export const updateProduct = async (id, product) => {
-  if (product instanceof FormData) {
-    const headers = { ...getAuthHeader() };
-    const response = await fetch(`${API_URL_ADMIN}/${id}`, {
-      method: "PUT",
-      headers,
-      body: product,
-    });
-    return await handleResponse(response);
-  }
 
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
   const response = await fetch(`${API_URL_ADMIN}/${id}`, {
