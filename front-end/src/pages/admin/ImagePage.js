@@ -11,93 +11,194 @@ import {
 export default function ImagePage({ product, onClose }) {
   const [images, setImages] = useState([]);
   const [files, setFiles] = useState([]);
-  const [primaryIndex, setPrimaryIndex] = useState(null);
+  const [previews, setPreviews] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  /* ================= LOAD IMAGES ================= */
   const loadImages = async () => {
+    if (!product?.id) return;
     const res = await getImageByProduct(product.id);
     setImages(res);
   };
 
   useEffect(() => {
     loadImages();
-  }, [product.id]);
+  }, [product?.id]);
 
-  const handleUpload = async () => {
-    if (files.length === 0) return;
+  /* ================= FILE VALIDATE ================= */
+  const validateFiles = (fileList) => {
+    if (!fileList || fileList.length === 0) {
+      swal("Error", "Chưa chọn ảnh", "error");
+      return false;
+    }
 
-    await uploadProductImages(product.id, files, primaryIndex);
-    setFiles([]);
-    setPrimaryIndex(null);
-    loadImages();
-    swal("Success", "Images uploaded", "success");
+    for (let file of fileList) {
+      if (!file.type.startsWith("image/")) {
+        swal("Error", "Chỉ được upload file ảnh", "error");
+        return false;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        swal("Error", "Ảnh phải nhỏ hơn 2MB", "error");
+        return false;
+      }
+    }
+    return true;
   };
 
+  /* ================= HANDLE SELECT FILE ================= */
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    if (!validateFiles(selectedFiles)) return;
+
+    setFiles(selectedFiles);
+
+    // preview
+    const previewUrls = selectedFiles.map((file) =>
+      URL.createObjectURL(file)
+    );
+    setPreviews(previewUrls);
+  };
+
+  /* ================= UPLOAD ================= */
+  const handleUpload = async () => {
+    if (!product?.id) {
+      swal("Error", "Chưa có product", "error");
+      return;
+    }
+
+    if (files.length === 0) {
+      swal("Error", "Chưa chọn ảnh", "error");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await uploadProductImages(product.id, files);
+      swal("Success", "Upload ảnh thành công", "success");
+      setFiles([]);
+      setPreviews([]);
+      loadImages();
+    } catch (err) {
+      swal("Error", err.message || "Upload thất bại", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= DELETE ================= */
   const handleDelete = async (id) => {
-    if (!(await swal({ text: "Delete image?", buttons: true }))) return;
+    const ok = await swal({
+      title: "Xóa ảnh?",
+      text: "Không thể khôi phục",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    });
+
+    if (!ok) return;
+
     await deleteImage(id);
     loadImages();
+    swal("Deleted", "Ảnh đã bị xóa", "success");
   };
 
+  /* ================= SET PRIMARY ================= */
   const handleSetPrimary = async (id) => {
     await setPrimary(id);
     loadImages();
   };
 
+  /* ================= UI ================= */
   return (
     <div className="card mt-4">
       <div className="card-header d-flex justify-content-between">
-        <strong>Images of: {product.name}</strong>
+        <strong>Images of: {product?.name}</strong>
         <button className="btn btn-sm btn-secondary" onClick={onClose}>
           Close
         </button>
       </div>
 
       <div className="card-body">
-        {/* Upload */}
-        <input
-          type="file"
-          multiple
-          onChange={(e) => setFiles([...e.target.files])}
-        />
+        {/* ===== Upload ===== */}
+        <div className="mb-3">
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            className="form-control"
+            onChange={handleFileChange}
+          />
+        </div>
 
-        <button className="btn btn-primary ms-2" onClick={handleUpload}>
-          Upload
+        {/* Preview */}
+        {previews.length > 0 && (
+          <>
+            <strong>Preview</strong>
+            <div className="row mt-2">
+              {previews.map((src, idx) => (
+                <div key={idx} className="col-md-3 mb-2">
+                  <img
+                    src={src}
+                    className="img-fluid border"
+                    alt=""
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        <button
+          className="btn btn-primary mt-2"
+          disabled={loading}
+          onClick={handleUpload}
+        >
+          {loading ? "Uploading..." : "Upload"}
         </button>
 
         <hr />
 
-        {/* Image list */}
-        <div className="row">
-          {images.map((img) => (
-            <div key={img.id} className="col-md-3 mb-3 text-center">
-              <img
-                src={img.url}
-                alt=""
-                className="img-fluid border"
-                style={{
-                  border:
-                    img.primary === true ? "3px solid green" : "1px solid #ccc",
-                }}
-              />
-              <div className="mt-1">
-                {!img.primary && (
-                  <button
-                    className="btn btn-sm btn-outline-success me-1"
-                    onClick={() => handleSetPrimary(img.id)}
-                  >
-                    Primary
-                  </button>
-                )}
+        {/* ===== IMAGE LIST ===== */}
+       <div className="row">
+        {images.map((img) => (
+          <div key={img.id} className="col-md-3 mb-3 text-center">
+            <img
+              src={img.imageUrl}
+              alt=""
+              style={{
+                width: "150px",
+                height: "150px",
+                objectFit: "cover",
+                borderRadius: "6px",
+                border: img.primary
+                  ? "3px solid green"
+                  : "1px solid #ccc",
+              }}
+            />
+
+            <div className="mt-2">
+              {!img.primary && (
                 <button
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() => handleDelete(img.id)}
+                  className="btn btn-sm btn-outline-success me-1"
+                  onClick={() => handleSetPrimary(img.id)}
                 >
-                  Delete
+                  Primary
                 </button>
-              </div>
+              )}
+              <button
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => handleDelete(img.id)}
+              >
+                Delete
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
+
+        {images.length === 0 && (
+          <p className="text-muted">Chưa có ảnh nào</p>
+        )}
       </div>
     </div>
   );

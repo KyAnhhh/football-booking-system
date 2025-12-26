@@ -22,14 +22,14 @@ public class SizeController {
     private final SizeService sizeService;
 
     @GetMapping("/api/public/sizes")
-    public ApiResponse<List<SizeResponse>> getAllCategory(){
+    public ApiResponse<List<SizeResponse>> getAllSizes(){
         ApiResponse<List<SizeResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.sizeService.handleGetAllSize());
         return apiResponse;
     }
 
     @PostMapping("/api/admin/sizes")
-    public ApiResponse<SizeResponse> createCategory(@RequestBody SizeRequest request){
+    public ApiResponse<SizeResponse> createSize(@RequestBody SizeRequest request){
         ApiResponse<SizeResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.sizeService.handleCreateSize(request));
         return apiResponse;
@@ -42,7 +42,7 @@ public class SizeController {
         return apiResponse;
     }
 
-    @GetMapping("/api/admin/sizes/{id}")
+    @GetMapping("/api/public/sizes/{id}")
     public ApiResponse<SizeResponse> getSizeById(@PathVariable("id") Long id){
         ApiResponse<SizeResponse> apiResponse = new ApiResponse<>();    
         apiResponse.setData(this.sizeService.handleGetSizeById(id));
@@ -50,10 +50,10 @@ public class SizeController {
     }
 
     @DeleteMapping("/api/admin/sizes/{id}")
-    public ApiResponse<String> deleteCategory(@PathVariable("id") Long id){
+    public ApiResponse<String> deleteSize(@PathVariable("id") Long id){
         ApiResponse<String> apiResponse = new ApiResponse<>();
         this.sizeService.handleDeleteSize(id);
-        apiResponse.setMessage("Deleted user successfully with id: " + id);
+        apiResponse.setMessage("Deleted size successfully with id: " + id);
         return apiResponse;
     }
 

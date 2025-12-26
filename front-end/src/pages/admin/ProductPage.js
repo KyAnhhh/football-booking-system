@@ -10,10 +10,11 @@ import {
 } from "../../services/productService";
 
 import { getAllBrandsForDropdown } from "../../services/brandService";
-import { getAllCategoriesForDropdown, getCategories } from "../../services/categoryService";
+import { getAllCategoriesForDropdown } from "../../services/categoryService";
 
 import ImagePage from "./ImagePage";
 import ProductVariantPage from "./ProductVariant";
+import "../../assets/styles/ProductPage.css"
 
 export default function ProductPage() {
   const [products, setProducts] = useState([]);
@@ -32,6 +33,31 @@ export default function ProductPage() {
     brandId: "",
     categoryId: ""
   });
+
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!form.name || form.name.trim().length < 3) {
+      newErrors.name = "Product name must be at least 3 characters";
+    }
+
+    if (form.description && form.description.length > 500) {
+      newErrors.description = "Description must be less than 500 characters";
+    }
+
+    if (!form.brandId) {
+      newErrors.brandId = "Please select a brand";
+    }
+
+    if (!form.categoryId) {
+      newErrors.categoryId = "Please select a category";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
 const loadData = async () => {
   try {
@@ -88,6 +114,8 @@ const loadData = async () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!validateForm()) return;
+
     const payload = {
       name: form.name,
       description: form.description,
@@ -124,11 +152,14 @@ const loadData = async () => {
 
   return (
     <div className="container mt-4">
-      <h2>Product Management</h2>
+      <div className="product-header">
+          <h2>Product Management</h2>
 
-      <Button className="mb-3" onClick={openCreate}>
-        + New Product
-      </Button>
+        <Button className="mb-3" onClick={openCreate}>
+          + New Product
+        </Button>
+      </div>
+
 
       <Table bordered hover>
         <thead>

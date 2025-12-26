@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Button, Modal, Form, Table } from "react-bootstrap";
 import swal from "sweetalert";
+
 import {
   createProductVariant,
   updateProductVariant,
   deleteProductVariant,
-  getAllProductVariant
+  getAllProductVariant,
 } from "../../services/productVariantService";
 
 export default function ProductVariantPage({ product, onClose }) {
@@ -14,10 +15,11 @@ export default function ProductVariantPage({ product, onClose }) {
 
   const [form, setForm] = useState({
     sizeId: "",
-    sizeCode: "",
     price: "",
-    stock: ""
+    stock: "",
   });
+
+  const [errors, setErrors] = useState({});
 
   const loadVariants = async () => {
     const data = await getAllProductVariant();
@@ -28,29 +30,60 @@ export default function ProductVariantPage({ product, onClose }) {
     loadVariants();
   }, [product.id]);
 
+  const validateVariant = () => {
+    const newErrors = {};
+
+    if (!form.sizeId) {
+      newErrors.sizeId = "Please select size";
+    }
+
+    if (!form.price || Number(form.price) <= 0) {
+      newErrors.price = "Price must be greater than 0";
+    }
+
+    if (form.stock === "" || Number(form.stock) < 0) {
+      newErrors.stock = "Stock must be 0 or greater";
+    }
+
+    const duplicated = variants.find(
+      v =>
+        v.sizeId === Number(form.sizeId) &&
+        (!editing || v.id !== editing.id)
+    );
+
+    if (duplicated) {
+      newErrors.sizeId = "This size already exists";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const openCreate = () => {
     setEditing(null);
-    setForm({ sizeId: "", sizeCode: "", price: "", stock: "" });
+    setForm({ sizeId: "", price: "", stock: "" });
+    setErrors({});
   };
 
   const openEdit = (v) => {
     setEditing(v);
     setForm({
       sizeId: v.sizeId,
-      sizeCode: v.sizeCode,
       price: v.price,
-      stock: v.stock
+      stock: v.stock,
     });
+    setErrors({});
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateVariant()) return;
 
     const payload = {
       productId: product.id,
-      sizeId: form.sizeId,
+      sizeId: Number(form.sizeId),
       price: Number(form.price),
-      stock: Number(form.stock)
+      stock: Number(form.stock),
     };
 
     if (editing) {
@@ -66,7 +99,7 @@ export default function ProductVariantPage({ product, onClose }) {
   };
 
   const handleDelete = async (id) => {
-    if (!(await swal({ text: "Delete variant?", buttons: true }))) return;
+    if (!(await swal({ text: "Delete this variant?", buttons: true }))) return;
     await deleteProductVariant(id);
     loadVariants();
   };
@@ -81,35 +114,50 @@ export default function ProductVariantPage({ product, onClose }) {
 
       <Modal.Body>
         <Form onSubmit={handleSubmit} className="mb-3">
-          <div className="d-flex gap-2">
-            <Form.Control
-              placeholder="Size (S, M, L)"
-              value={form.sizeId}
-              onChange={(e) =>
-                setForm({ ...form, sizeId: e.target.value })
-              }
-              required
-            />
+          <div className="d-flex gap-2 align-items-start">
+            <Form.Group>
+              <Form.Control
+                placeholder="Size ID"
+                value={form.sizeId}
+                isInvalid={!!errors.sizeId}
+                onChange={(e) =>
+                  setForm({ ...form, sizeId: e.target.value })
+                }
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.sizeId}
+              </Form.Control.Feedback>
+            </Form.Group>
 
-            <Form.Control
-              type="number"
-              placeholder="Price"
-              value={form.price}
-              onChange={(e) =>
-                setForm({ ...form, price: e.target.value })
-              }
-              required
-            />
+            <Form.Group>
+              <Form.Control
+                type="number"
+                placeholder="Price"
+                value={form.price}
+                isInvalid={!!errors.price}
+                onChange={(e) =>
+                  setForm({ ...form, price: e.target.value })
+                }
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.price}
+              </Form.Control.Feedback>
+            </Form.Group>
 
-            <Form.Control
-              type="number"
-              placeholder="Stock"
-              value={form.stock}
-              onChange={(e) =>
-                setForm({ ...form, stock: e.target.value })
-              }
-              required
-            />
+            <Form.Group>
+              <Form.Control
+                type="number"
+                placeholder="Stock"
+                value={form.stock}
+                isInvalid={!!errors.stock}
+                onChange={(e) =>
+                  setForm({ ...form, stock: e.target.value })
+                }
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.stock}
+              </Form.Control.Feedback>
+            </Form.Group>
 
             <Button type="submit">
               {editing ? "Update" : "Add"}
@@ -117,7 +165,7 @@ export default function ProductVariantPage({ product, onClose }) {
           </div>
         </Form>
 
-        <Table bordered>
+        <Table bordered hover>
           <thead>
             <tr>
               <th>Size</th>

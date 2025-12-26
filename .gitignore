@@ -23,6 +23,8 @@ back-end/src/main/resources/static/uploads/
 # ========================
 # Frontend (React)
 # ========================
+node_modules/
+
 front-end/node_modules/
 front-end/build/
 front-end/dist/

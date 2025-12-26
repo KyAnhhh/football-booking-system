@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, NavLink } from "react-router-dom";
+import {
+  BsSpeedometer2,
+  BsPeople,
+  BsBoxSeam,
+  BsTags,
+  BsGrid,
+  BsReceipt,
+  BsRulers,
+  BsHouseDoor
+} from "react-icons/bs";
+
 import "../assets/styles/AdminLayout.css";
 
 export default function AdminLayout() {
@@ -17,17 +28,66 @@ export default function AdminLayout() {
           {!collapsed && <h2 className="logo">⚽ Shop Bóng Đá</h2>}
         </div>
 
-        <nav>
+        <nav className="admin-nav">
           <ul>
-            <li><Link to="/admin">Dashboard</Link></li>
-            <li><Link to="/admin/users">Users</Link></li>
-            <li><Link to="/admin/products">Products</Link></li>
-            <li><Link to="/admin/brands">Brand</Link></li>
-            <li><Link to="/admin/categories">Category</Link></li>
-            <li><Link to="/admin/orders">Orders</Link></li>
-            <li><Link to="/">Quay về trang chủ</Link></li>
+            <li>
+              <NavLink to="/admin" end>
+                <BsSpeedometer2 />
+                <span>Dashboard</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink to="/admin/users">
+                <BsPeople />
+                <span>Users</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink to="/admin/products">
+                <BsBoxSeam />
+                <span>Products</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink to="/admin/brands">
+                <BsTags />
+                <span>Brand</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink to="/admin/categories">
+                <BsGrid />
+                <span>Category</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink to="/admin/orders">
+                <BsReceipt />
+                <span>Orders</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink to="/admin/sizes">
+                <BsRulers />
+                <span>Sizes</span>
+              </NavLink>
+            </li>
+
+            <li className="back-home">
+              <NavLink to="/">
+                <BsHouseDoor />
+                <span>Quay về trang chủ</span>
+              </NavLink>
+            </li>
           </ul>
         </nav>
+
       </aside>
 
       {/* Main Content */}

@@ -1,0 +1,105 @@
+.size-page {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+.size-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.size-page h3 {
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.size-page .btn {
+  border-radius: 6px;
+}
+
+.size-page .btn-primary {
+  background-color: #0d6efd;
+}
+
+.size-page .btn-danger {
+  background-color: #dc3545;
+}
+
+.size-table {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.size-table thead {
+  background: #f1f3f5;
+}
+
+.size-table th {
+  font-weight: 600;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.size-table td {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.size-table td b {
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.size-table .btn {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.size-empty {
+  color: #999;
+  font-style: italic;
+}
+
+.modal-content {
+  border-radius: 10px;
+}
+
+.modal-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.modal-footer {
+  border-top: 1px solid #eee;
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+.form-control {
+  border-radius: 6px;
+}
+
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: none;
+}
+
+.invalid-feedback {
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .size-table th,
+  .size-table td {
+    font-size: 13px;
+  }
+}

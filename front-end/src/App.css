@@ -1,0 +1,7 @@
+@import "../src/assets/styles/Variable.css";
+
+body {
+  background-color: var(--gray-100);
+  color: var(--gray-900);
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
