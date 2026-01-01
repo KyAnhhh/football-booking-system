@@ -43,8 +43,14 @@ public class CartItem {
     @JoinColumn(name = "size_id", nullable = false)
     private Size size;
 
+    @Column(name = "size_code_denorm", nullable = false)
+    private String sizeCode;
+
+    @Column(name = "product_thumbnail", nullable = false)
+    private String productThumbnail;
+
     @Column(nullable = false)
-    @Min(value = 1, message = "Stock không được âm")
+    @Min(value = 1)
     private Integer totalQuantity;
 
     @Column(nullable = false)

@@ -15,7 +15,6 @@ export default function Profile() {
         username: "",
         email: "",
         phone: "",
-        password: ""
     });
     const [editError, setEditError] = useState(null);
 
@@ -33,7 +32,6 @@ export default function Profile() {
                 username: data.username,
                 email: data.email,
                 phone: data.phone,
-                password: ""
             });
         } catch (err) {
             console.error("Error load profile:", err);
@@ -57,10 +55,6 @@ export default function Profile() {
                 email: editData.email,
                 phone: editData.phone,
             };
-
-            if (editData.password && editData.password.trim()) {
-                payload.password = editData.password;
-            }
 
             const result = await updateProfile(payload);
             setProfile(result);
@@ -95,7 +89,6 @@ export default function Profile() {
                             <p><strong>Họ và tên:</strong> {profile?.username}</p>
                             <p><strong>Email:</strong> {profile?.email}</p>
                             <p><strong>Số điện thoại:</strong> {profile?.phone}</p>
-                            <p><strong>Trạng thái:</strong> <span style={{ backgroundColor: "#e6f5e6", padding: "2px 6px", borderRadius: 3 }}>{profile?.status}</span></p>
                         </div>
                     </Card.Body>
                 </Card>
@@ -138,15 +131,6 @@ export default function Profile() {
                                 />
                             </Form.Group>
 
-                            <Form.Group className="mb-3">
-                                <Form.Label>Mật khẩu mới (tuỳ chọn)</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    value={editData.password}
-                                    onChange={(e) => setEditData({ ...editData, password: e.target.value })}
-                                    placeholder="Để trống nếu không đổi mật khẩu"
-                                />
-                            </Form.Group>
                         </Form>
                     </Card.Body>
                 </Card>

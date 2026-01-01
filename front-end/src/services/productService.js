@@ -36,11 +36,11 @@ export const getProducts = async (pageNo = 0, pageSize = 5, sortBy = "id", sortD
   return await handleResponse(response);
 };
 
-export const getProductById = async (id) => {
+export const getProductBySlug = async (slug) => {
   const headers = {
     "Content-Type": "application/json"
   };
-  const response = await fetch(`${API_URL_PUBLIC}/${id}`,{
+  const response = await fetch(`${API_URL_PUBLIC}/${slug}`,{
     method: "GET",
     headers
   });

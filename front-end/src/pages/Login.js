@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import { useState } from "react";
 import swal from 'sweetalert';
 import { useNavigate } from "react-router-dom";

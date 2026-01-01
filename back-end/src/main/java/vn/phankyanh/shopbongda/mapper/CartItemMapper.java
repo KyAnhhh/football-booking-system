@@ -17,6 +17,8 @@ public interface CartItemMapper {
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "productName", source = "productName")
     @Mapping(target = "totalQuantity", source = "totalQuantity")
+    @Mapping(target = "sizeCode", source = "size.code")
+    @Mapping(target = "productThumbnail", source = "productThumbnail")
     @Mapping(target = "priceAtAddedTime", source = "priceAtAddedTime")
     @Mapping(target = "totalPrice", expression = "java(item.getPriceAtAddedTime() != null ? item.getPriceAtAddedTime().multiply(java.math.BigDecimal.valueOf(item.getTotalQuantity())) : java.math.BigDecimal.ZERO)")
     CartItemResponse toCartItemResponse(CartItem item);

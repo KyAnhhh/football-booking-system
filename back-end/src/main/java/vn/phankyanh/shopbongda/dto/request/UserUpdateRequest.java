@@ -19,12 +19,5 @@ public class UserUpdateRequest {
 
     private String email;
 
-    private String password;
-
     private String phone;
-
-    private String status = "active";
-
-    @Enumerated(EnumType.STRING)
-    private Role role = Role.ROLE_CLIENT;
 }

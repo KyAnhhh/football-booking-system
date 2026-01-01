@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Cart;
 import vn.phankyanh.shopbongda.domain.CartItem;
+import vn.phankyanh.shopbongda.domain.ProductImage;
 import vn.phankyanh.shopbongda.domain.ProductVariant;
 import vn.phankyanh.shopbongda.domain.Size;
 import vn.phankyanh.shopbongda.domain.User;
@@ -31,6 +32,13 @@ public class CartService {
     private final ProductVariantRepository productVariantRepository;
     private final SizeRepository sizeRepository;
 
+    // get cart by userId
+    public CartResponse getCartByUser(Long userId) {
+        return cartRepository.findByUserId(userId)
+            .map(cartMapper::toCartResponse)
+            .orElseThrow(() -> new RuntimeException("Cart not found"));
+    }
+
     //add item to cart
     public CartResponse addItemToCart(Long userId, CartItemRequest request) {
 
@@ -39,57 +47,67 @@ public class CartService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Cart cart =  cartRepository.findByUserId(userId)
-            .orElseGet(() -> createNewCart(user));
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseGet(() -> createNewCart(user));
 
-        ProductVariant productVariant = productVariantRepository.findById(request.getProductVariantId())
-            .orElseThrow(() -> new RuntimeException("Product variant not found with id " + request.getProductVariantId()));
+        ProductVariant productVariant = productVariantRepository
+                .findById(request.getProductVariantId())
+                .orElseThrow(() -> new RuntimeException("Product variant not found"));
 
         Size size = sizeRepository.findById(request.getSizeId())
                 .orElseThrow(() -> new RuntimeException("Size not found"));
-        
-        if (!productVariant.getSize().equals(size)) {
-            throw new RuntimeException("Size does not belong to this variant");
-        }
 
-        CartItem cartItem = cartItemRepository.findByCartAndProductVariantAndSize(cart, productVariant, size)
-            .orElseGet(() -> createNewCartItem(cart, productVariant, size));
+        CartItem cartItem = cartItemRepository
+                .findByCartAndProductVariantAndSize(cart, productVariant, size)
+                .orElseGet(() -> cartItemRepository.save(
+                        createNewCartItem(cart, productVariant, size)
+                ));
 
-        // check kĩ stock khi thêm sản phẩm vào giỏ hàng
         int newQuantity = cartItem.getTotalQuantity() + request.getQuantity();
 
-        if(productVariant.getStock() < newQuantity){
-            throw new RuntimeException("No enough stock");
+        if (productVariant.getStock() < newQuantity) {
+            throw new RuntimeException("Not enough stock");
         }
 
         cartItem.setTotalQuantity(newQuantity);
-
         cartItemRepository.save(cartItem);
 
         recalculateCartTotal(cart);
+        cartRepository.save(cart);
 
         return cartMapper.toCartResponse(cart);
     }
 
+    // create cart
     private Cart createNewCart(User user) {
         Cart cart = Cart.builder()
                 .user(user)
                 .totalAmount(BigDecimal.ZERO)
                 .build();
-        System.out.println(cart.getItems());
         return cartRepository.save(cart);
     }
 
+    //  create cart_items
     private CartItem createNewCartItem(Cart cart, ProductVariant productVariant, Size size) {
+        String thumbnail = productVariant.getProduct()
+                .getImages()
+                .stream()
+                .filter(ProductImage::isPrimary)
+                .findFirst()
+                .map(ProductImage::getImageUrl)
+                .orElse(null);
+
         CartItem item = CartItem.builder()
                 .cart(cart)
                 .productVariant(productVariant)
                 .productId(productVariant.getProduct().getId())
                 .productName(productVariant.getProduct().getName())
                 .size(size)
-                .totalQuantity(0)
+                .sizeCode(size.getCode())
+                .productThumbnail(thumbnail)
+                .totalQuantity(1)
                 .priceAtAddedTime(productVariant.getPrice())
                 .build();
 
@@ -104,5 +122,22 @@ public class CartService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         cart.setTotalAmount(total);
+    }
+
+    public void removeItemFromCart(Long userId, Long cartItemId) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+
+        if (!cart.getItems().contains(cartItem)) {
+            throw new RuntimeException("Cart item does not belong to this cart");
+        }
+
+        cart.getItems().remove(cartItem);
+        cartItemRepository.delete(cartItem);
+        recalculateCartTotal(cart);
+        cartRepository.save(cart);
     }
 }

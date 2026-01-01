@@ -49,13 +49,12 @@ public class Cart {
     private User user;
 
     @Column(nullable = false)
-    @Min(value = 0, message = "Stock không được âm")
+    @Min(value = 0, message = "TotalAmount không được âm")
     private BigDecimal totalAmount;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<CartItem> items = new ArrayList<>();
-
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

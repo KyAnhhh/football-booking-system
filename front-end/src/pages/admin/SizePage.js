@@ -18,7 +18,7 @@ export default function SizePage() {
   const [form, setForm] = useState({
     code: "",
     name: "",
-    description: ""
+    description: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -59,7 +59,7 @@ export default function SizePage() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ code: "", name: "" });
+    setForm({ code: "", name: "", description: "" });
     setErrors({});
     setShowModal(true);
   };
@@ -82,6 +82,7 @@ export default function SizePage() {
     const payload = {
       code: form.code.toUpperCase(),
       name: form.name,
+      description: form.description,
     };
 
     try {
@@ -207,7 +208,7 @@ export default function SizePage() {
             </Form.Group>
             
             <Form.Group className="mt-2">
-              <Form.Label>Description (optional)</Form.Label>
+              <Form.Label>Description</Form.Label>
               <Form.Control
                 value={form.description}
                 onChange={(e) =>

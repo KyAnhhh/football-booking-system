@@ -36,4 +36,8 @@ public class ProductImage {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    public boolean isPrimary() {
+        return Boolean.TRUE.equals(isPrimary);
+    }
 }

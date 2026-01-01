@@ -17,6 +17,7 @@ import CategoryPage from "./pages/admin/CategoryPage";
 import OrderPage from "./pages/admin/OrderPage";
 import Profile from "./pages/client/Profile";
 import SizePage from "./pages/admin/SizePage";
+import Cart from "./pages/client/Cart";
 
 function App() {
   return (
@@ -81,6 +82,14 @@ function App() {
           element={
             <ClientLayout>
               <Profile />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ClientLayout>
+              <Cart />
             </ClientLayout>
           }
         />

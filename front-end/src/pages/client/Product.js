@@ -1,85 +1,138 @@
 import { useState, useEffect } from "react";
 import { getProducts } from "../../services/productService";
-import { Button, Form, Modal } from "react-bootstrap";
+import { addItemToCart } from "../../services/cartService";
+import { Badge, Button, Form, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import "../../assets/styles/Product.css";
 
 export default function Product() {
   const [products, setProducts] = useState([]);
+  const [pageData, setPageData] = useState(null);
+
   const [pageNo, setPageNo] = useState(0);
-  const [pageSize] = useState(8);
-  const [sortBy, setSortBy] = useState("id");
-  const [sortDir, setSortDir] = useState("asc");
+  const pageSize = 8;
+
   const [search, setSearch] = useState("");
 
-  const [pageData, setPageData] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+
   const navigate = useNavigate();
 
   const loadProducts = async () => {
     try {
-      const data = await getProducts(pageNo, pageSize, sortBy, sortDir, search);
-
-      if (data?.content) {
-        setProducts(data.content);
-        setPageData(data);
-      } else {
-        setProducts([]);
-      }
+      const data = await getProducts(pageNo, pageSize, "id", "asc", search);
+      setProducts(data?.content || []);
+      setPageData(data);
     } catch (err) {
-      console.error("Fetch failed:", err);
+      console.error(err);
     }
   };
 
   useEffect(() => {
     loadProducts();
-  }, [pageNo, sortBy, sortDir, search]);
+  }, [pageNo, search]);
 
-  const handleAddProduct = () => {
-    const token = localStorage.getItem("token")
-    if(!token){
+  const getMinPrice = (variants = []) =>
+    variants.length ? Math.min(...variants.map(v => v.price)) : 0;
+
+  const getTotalStock = (variants = []) =>
+    variants.reduce((sum, v) => sum + v.stock, 0);
+
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
       navigate("/login");
+      return;
     }
-  }
+
+    if (!selectedVariant) {
+      Swal.fire("Thiếu thông tin", "Vui lòng chọn size", "warning");
+      return;
+    }
+
+    try {
+      await addItemToCart({
+        productVariantId: selectedVariant.id,
+        sizeId: selectedVariant.sizeId,
+        quantity,
+      });
+
+      Swal.fire("Thành công", "Đã thêm vào giỏ hàng", "success");
+      setSelectedProduct(null);
+      setSelectedVariant(null);
+      setQuantity(1);
+    } catch (err) {
+      Swal.fire("Lỗi", err.message || "Không thể thêm vào giỏ hàng", "error");
+    }
+  };
+
   return (
     <div className="client-products">
-      <h2 className="title">⚽ Shop Đồ Bóng Đá – Sản Phẩm</h2>
+      <h2 className="title">⚽ Shop Đồ Bóng Đá</h2>
 
-      {/* Bộ lọc */}
+      {/* Search */}
       <div className="filter-bar">
         <Form.Control
-          type="text"
-          placeholder="Tìm sản phẩm theo tên..."
+          placeholder="Tìm theo tên sản phẩm..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
             setPageNo(0);
           }}
-          style={{ width: "250px" }}
         />
       </div>
 
-      {/* Card sản phẩm */}
       <div className="product-grid">
-        {products.map((p) => (
-          <div key={p.id} className="product-card" onClick={() => setSelectedProduct(p)}>
-            <img src={p.imageUrl} alt={p.name} />
-            <h4>{p.name}</h4>
-            <p className="price">{p.price.toLocaleString()} đ</p>
+        {products.map(p => (
+          <div
+            key={p.id}
+            className="product-card"
+            onClick={() => setSelectedProduct(p)}
+          >
+            <img
+              src={p.imageUrls?.[0] || "/no-image.png"}
+              alt={p.name}
+              className="product-image"
+            />
 
-            <Button variant="success">Xem chi tiết</Button>
+            <h4>{p.name}</h4>
+            <p className="price">
+              {getMinPrice(p.variants).toLocaleString()} đ
+            </p>
+
+            <Badge bg={getTotalStock(p.variants) > 0 ? "success" : "danger"}>
+              {getTotalStock(p.variants) > 0 ? "Còn hàng" : "Hết hàng"}
+            </Badge>
+
+            <Button
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedProduct(p);
+              }}
+            >
+              Xem chi tiết
+            </Button>
           </div>
         ))}
       </div>
 
-      {/* Phân trang */}
+      {/* Pagination */}
       {pageData && (
         <div className="pagination">
-          <Button disabled={pageNo === 0} onClick={() => setPageNo(pageNo - 1)}>
+          <Button
+            disabled={pageNo === 0}
+            onClick={() => setPageNo(pageNo - 1)}
+          >
             Prev
           </Button>
 
-          <span>Page {pageNo + 1} / {pageData.totalPages}</span>
+          <span>
+            Trang {pageNo + 1} / {pageData.totalPages}
+          </span>
 
           <Button
             disabled={pageNo + 1 >= pageData.totalPages}
@@ -90,32 +143,63 @@ export default function Product() {
         </div>
       )}
 
-      {/* Modal chi tiết */}
-      <Modal show={!!selectedProduct} onHide={() => setSelectedProduct(null)}>
+      <Modal
+        show={!!selectedProduct}
+        onHide={() => {
+          setSelectedProduct(null);
+          setSelectedVariant(null);
+        }}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>{selectedProduct?.name}</Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
           <img
-            src={selectedProduct?.imageUrl}
-            style={{ width: "100%", borderRadius: "10px" }}
+            src={selectedProduct?.imageUrls?.[0] || "/no-image.png"}
+            className="modal-image"
+            alt=""
           />
 
-          <h4 className="mt-3">{selectedProduct?.price?.toLocaleString()} đ</h4>
           <p>{selectedProduct?.description}</p>
 
-          <p><b>Stock:</b> {selectedProduct?.stock}</p>
-          <p><b>Giảm giá:</b> {selectedProduct?.discount}%</p>
-          <p><b>Kích thước:</b> {selectedProduct?.dimension}</p>
-          <p><b>Mô tả:</b> {selectedProduct?.description}</p>
+          <h6>Chọn size</h6>
+          <div className="size-group">
+            {selectedProduct?.variants.map(v => (
+              <Button
+                key={v.id}
+                variant={
+                  selectedVariant?.id === v.id
+                    ? "primary"
+                    : "outline-primary"
+                }
+                disabled={v.stock === 0}
+                onClick={() => setSelectedVariant(v)}
+              >
+                {v.sizeCode}
+              </Button>
+            ))}
+          </div>
+
+          <Form.Group className="mt-3">
+            <Form.Label>Số lượng</Form.Label>
+            <Form.Control
+              type="number"
+              min={1}
+              value={quantity}
+              onChange={(e) => setQuantity(+e.target.value)}
+            />
+          </Form.Group>
         </Modal.Body>
 
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setSelectedProduct(null)}>
             Đóng
           </Button>
-
-          <Button variant="primary" onClick={handleAddProduct}>Thêm vào giỏ hàng</Button>
+          <Button variant="success" onClick={handleAddToCart}>
+            Thêm vào giỏ hàng
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>

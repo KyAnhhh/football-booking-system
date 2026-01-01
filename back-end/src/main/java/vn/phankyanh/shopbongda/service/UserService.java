@@ -103,12 +103,6 @@ public class UserService {
             user.setPhone(request.getPhone());
         }
 
-        // Mật khẩu phải mã hoá
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            String hashed = passwordEncoder.encode(request.getPassword());
-            user.setPassword(hashed);
-        }
-
         return userMapper.toUserCreateResponse(userRepository.save(user));
     }
 

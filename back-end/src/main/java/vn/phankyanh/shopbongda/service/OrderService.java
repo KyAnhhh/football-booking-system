@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import vn.phankyanh.shopbongda.domain.Cart;
+import vn.phankyanh.shopbongda.domain.CartItem;
 import vn.phankyanh.shopbongda.domain.Order;
 import vn.phankyanh.shopbongda.domain.OrderItem;
 import vn.phankyanh.shopbongda.domain.OrderStatus;
@@ -21,10 +23,13 @@ import vn.phankyanh.shopbongda.domain.Payment;
 import vn.phankyanh.shopbongda.domain.ProductVariant;
 import vn.phankyanh.shopbongda.domain.ShippingAddress;
 import vn.phankyanh.shopbongda.domain.User;
+import vn.phankyanh.shopbongda.dto.request.CheckoutRequest;
 import vn.phankyanh.shopbongda.dto.request.OrderItemRequest;
 import vn.phankyanh.shopbongda.dto.request.OrderRequest;
 import vn.phankyanh.shopbongda.dto.response.OrderResponse;
 import vn.phankyanh.shopbongda.mapper.OrderMapper;
+import vn.phankyanh.shopbongda.repository.CartItemRepository;
+import vn.phankyanh.shopbongda.repository.CartRepository;
 import vn.phankyanh.shopbongda.repository.OrderRepository;
 import vn.phankyanh.shopbongda.repository.ProductVariantRepository;
 import vn.phankyanh.shopbongda.repository.ShippingAddressRepository;
@@ -36,6 +41,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final UserRepository userRepository;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
     private final ShippingAddressRepository shippingAddressRepository;
     private final PaymentService paymentService;
     private final ProductVariantRepository productVariantRepository;
@@ -173,7 +180,6 @@ public class OrderService {
             throw new RuntimeException("User không có quyền cập nhật đơn hàng này");
         }
         
-        // thiếu update sp mới và xóa sp cũ và tính tiền
         orderMapper.updateOrder(order , request);
         return orderRepository.save(order);
 
@@ -220,4 +226,99 @@ public class OrderService {
 
         this.orderRepository.save(order);
     }
+
+    @Transactional
+    public OrderResponse checkout(Long userId, CheckoutRequest request) {
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Cart cart = cartRepository.findByUserId(userId)
+            .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        List<CartItem> selectedItems = cart.getItems().stream()
+            .filter(item -> request.getCartItemIds().contains(item.getId()))
+            .toList();
+
+        if (selectedItems.isEmpty()) {
+            throw new RuntimeException("No cart items selected for checkout");
+        }
+
+        ShippingAddress shippingAddress = shippingAddressRepository
+            .findById(request.getShippingAddressId())
+            .orElseThrow(() -> new RuntimeException("Shipping address not found"));
+
+        Order order = Order.builder()
+            .user(user)
+            .shippingAddress(shippingAddress)
+            .status(OrderStatus.CHO_XAC_NHAN)
+            .createdAt(LocalDateTime.now())
+            .build();
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        for (CartItem cartItem : selectedItems) {
+
+            ProductVariant variant = cartItem.getProductVariant();
+
+            if (variant.getStock() < cartItem.getTotalQuantity()) {
+                throw new RuntimeException(
+                    "Not enough stock for product: " + cartItem.getProductName()
+                );
+            }
+
+            // Trừ stock
+            variant.setStock(variant.getStock() - cartItem.getTotalQuantity());
+            variant.setSoldQuantity(
+                variant.getSoldQuantity() + cartItem.getTotalQuantity()
+            );
+
+            BigDecimal itemTotal = cartItem.getPriceAtAddedTime()
+                .multiply(BigDecimal.valueOf(cartItem.getTotalQuantity()));
+
+            OrderItem orderItem = OrderItem.builder()
+                .order(order)
+                .productVariant(variant)
+                .productId(cartItem.getProductId())
+                .productName(cartItem.getProductName())
+                .sizeName(variant.getSize().getName())
+                .quantity(cartItem.getTotalQuantity())
+                .unitPrice(cartItem.getPriceAtAddedTime())
+                .total(itemTotal)
+                .imageUrl(variant.getProduct().getImages().isEmpty()
+                            ? null
+                            : variant.getProduct().getImages().get(0).getImageUrl())
+                .build();
+
+            orderItems.add(orderItem);
+            totalAmount = totalAmount.add(itemTotal);
+        }
+
+        order.setOrderItems(orderItems);
+
+        Payment payment = paymentService.createPayment(
+            totalAmount,
+            request.getPaymentMethod(),
+            "Checkout from cart"
+        );
+
+        order.setPayment(payment);
+        order.setTotalAmount(totalAmount);
+
+        orderRepository.save(order);
+
+        selectedItems.forEach(cartItemRepository::delete);
+        cart.getItems().removeAll(selectedItems);
+
+        BigDecimal cartTotal = cart.getItems().stream()
+            .map(i -> i.getPriceAtAddedTime()
+                .multiply(BigDecimal.valueOf(i.getTotalQuantity())))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        cart.setTotalAmount(cartTotal);
+
+        return orderMapper.toOrderResponse(order);
+    }
+
 }

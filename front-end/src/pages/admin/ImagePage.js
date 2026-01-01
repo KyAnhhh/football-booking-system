@@ -14,7 +14,6 @@ export default function ImagePage({ product, onClose }) {
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  /* ================= LOAD IMAGES ================= */
   const loadImages = async () => {
     if (!product?.id) return;
     const res = await getImageByProduct(product.id);
@@ -25,7 +24,6 @@ export default function ImagePage({ product, onClose }) {
     loadImages();
   }, [product?.id]);
 
-  /* ================= FILE VALIDATE ================= */
   const validateFiles = (fileList) => {
     if (!fileList || fileList.length === 0) {
       swal("Error", "Chưa chọn ảnh", "error");
@@ -45,7 +43,6 @@ export default function ImagePage({ product, onClose }) {
     return true;
   };
 
-  /* ================= HANDLE SELECT FILE ================= */
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
     if (!validateFiles(selectedFiles)) return;
@@ -59,7 +56,6 @@ export default function ImagePage({ product, onClose }) {
     setPreviews(previewUrls);
   };
 
-  /* ================= UPLOAD ================= */
   const handleUpload = async () => {
     if (!product?.id) {
       swal("Error", "Chưa có product", "error");
@@ -85,7 +81,6 @@ export default function ImagePage({ product, onClose }) {
     }
   };
 
-  /* ================= DELETE ================= */
   const handleDelete = async (id) => {
     const ok = await swal({
       title: "Xóa ảnh?",
@@ -102,13 +97,11 @@ export default function ImagePage({ product, onClose }) {
     swal("Deleted", "Ảnh đã bị xóa", "success");
   };
 
-  /* ================= SET PRIMARY ================= */
   const handleSetPrimary = async (id) => {
     await setPrimary(id);
     loadImages();
   };
 
-  /* ================= UI ================= */
   return (
     <div className="card mt-4">
       <div className="card-header d-flex justify-content-between">
@@ -119,7 +112,6 @@ export default function ImagePage({ product, onClose }) {
       </div>
 
       <div className="card-body">
-        {/* ===== Upload ===== */}
         <div className="mb-3">
           <input
             type="file"
@@ -158,7 +150,6 @@ export default function ImagePage({ product, onClose }) {
 
         <hr />
 
-        {/* ===== IMAGE LIST ===== */}
        <div className="row">
         {images.map((img) => (
           <div key={img.id} className="col-md-3 mb-3 text-center">

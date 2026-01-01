@@ -9,9 +9,8 @@ export default function Header() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
     if(token){
-      setUser({ token, role : role || "user" });
+      setUser({ token: "user" });
     } else{
       setUser(null);
     }
@@ -27,13 +26,11 @@ export default function Header() {
 
   const handleLogout = () => {
       localStorage.removeItem("token");
-      localStorage.removeItem("role");
       setUser(null);
-      window.location.href = "/login";
     };
 
     if(location.pathname.startsWith("/admin")){
-      return null; // Không hiển thị Header trên trang admin
+      return null;
     }
 
   return (

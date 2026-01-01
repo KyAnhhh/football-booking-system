@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class ProductVariantResponse {
     private Long id;
     private Long productId;
-    private String sizeId;
+    private Long sizeId;
     private String sizeCode;
     private BigDecimal price;
     private Integer stock;

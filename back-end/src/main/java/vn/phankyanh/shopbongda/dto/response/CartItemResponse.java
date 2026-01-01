@@ -15,6 +15,8 @@ public class CartItemResponse {
     private Long id;              // ID của CartItem
     private Long productId;
     private String productName;
+    private String sizeCode;
+    private String productThumbnail;
     private Integer totalQuantity;
     private BigDecimal priceAtAddedTime; // Giá khi thêm
     private BigDecimal totalPrice;       // totalQuantity * priceAtAddedTime

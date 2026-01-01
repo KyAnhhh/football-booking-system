@@ -89,7 +89,7 @@ export const getProfile = async () => {
   return await handleResponse(response);
 };
 
-export const updateProfile = async () => {
+export const updateProfile = async (profile) => {
   const headers = {
     "Content-Type": "application/json",
     ...getAuthHeader(),
@@ -98,6 +98,11 @@ export const updateProfile = async () => {
   const response = await fetch(`${API_URL_PUBLIC}/profile/update`, {
     method: "PUT",
     headers,
+    body: JSON.stringify({
+      username: profile.username,
+      email: profile.email,
+      phone: profile.phone
+    })
   });
 
   return await handleResponse(response);
