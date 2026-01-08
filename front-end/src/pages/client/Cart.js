@@ -76,7 +76,7 @@ export default function Cart() {
       return;
     }
 
-    navigate("/checkout", {
+    navigate("/cart/checkout", {
       state: { itemIds: selectedItems },
     });
   };

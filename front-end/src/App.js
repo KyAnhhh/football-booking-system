@@ -18,6 +18,7 @@ import OrderPage from "./pages/admin/OrderPage";
 import Profile from "./pages/client/Profile";
 import SizePage from "./pages/admin/SizePage";
 import Cart from "./pages/client/Cart";
+import Checkout from "./pages/client/Checkout";
 
 function App() {
   return (
@@ -90,6 +91,14 @@ function App() {
           element={
             <ClientLayout>
               <Cart />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/cart/checkout"
+          element={
+            <ClientLayout>
+              <Checkout />
             </ClientLayout>
           }
         />

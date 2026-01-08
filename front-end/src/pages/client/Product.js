@@ -41,6 +41,9 @@ export default function Product() {
   const getTotalStock = (variants = []) =>
     variants.reduce((sum, v) => sum + v.stock, 0);
 
+  const getSoldQuantity = (variants = []) =>
+    variants.reduce((sum, v) => sum + (v.soldQuantity || 0), 0);
+
   const handleAddToCart = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -103,9 +106,18 @@ export default function Product() {
               {getMinPrice(p.variants).toLocaleString()} đ
             </p>
 
-            <Badge bg={getTotalStock(p.variants) > 0 ? "success" : "danger"}>
+            <div className="product-card-badge">
+              <Badge bg={getTotalStock(p.variants) > 0 ? "success" : "danger"}>
               {getTotalStock(p.variants) > 0 ? "Còn hàng" : "Hết hàng"}
             </Badge>
+            
+            <Badge bg={getSoldQuantity(p.variants) > 0 ? "success" : "danger"}>
+              {"Đã bán: " + getSoldQuantity(p.variants)}
+            </Badge>
+            </div>
+
+
+            <div className="product-card-button">
 
             <Button
               variant="primary"
@@ -116,6 +128,16 @@ export default function Product() {
             >
               Xem chi tiết
             </Button>
+
+              <Button
+              variant="primary"
+              onClick={(e) => {
+                setSelectedProduct(p);
+              }}
+            >
+              Mua ngay
+            </Button>
+            </div>
           </div>
         ))}
       </div>

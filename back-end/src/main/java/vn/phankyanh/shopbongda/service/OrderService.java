@@ -172,6 +172,8 @@ public class OrderService {
         return orderMapper.toOrderResponse(this.orderRepository.save(order));
     }
 
+
+    //update
     public Order handleUpdateOrder(Long id, OrderRequest request, Long userId){
         Order order = this.orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not found with id: "+ id));
@@ -185,7 +187,7 @@ public class OrderService {
 
     }
     
-    //xóa
+    //delete
     public void handleDeleteOrder(Long id){
         if(!orderRepository.existsById(id)){
             throw new RuntimeException("Not found with id: "+ id);
@@ -227,8 +229,9 @@ public class OrderService {
         this.orderRepository.save(order);
     }
 
+    // checkout in cart
     @Transactional
-    public OrderResponse checkout(Long userId, CheckoutRequest request) {
+    public OrderResponse handleCheckout(Long userId, CheckoutRequest request) {
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));

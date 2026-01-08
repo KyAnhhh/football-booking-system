@@ -121,13 +121,12 @@ export default function OrderPage() {
         <thead>
           <tr>
             <th onClick={() => toggleSort("id")}>ID</th>
-            <th>User</th>
-            <th onClick={() => toggleSort("totalAmount")}>Total</th>
-            <th onClick={() => toggleSort("status")}>Status</th>
             <th>Receiver</th>
             <th>Phone</th>
             <th>Address</th>
             <th onClick={() => toggleSort("orderDate")}>Order Date</th>
+            <th onClick={() => toggleSort("totalAmount")}>Total</th>
+            <th onClick={() => toggleSort("status")}>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -136,13 +135,12 @@ export default function OrderPage() {
           {orders.map((o) => (
             <tr key={o.id}>
               <td>{o.id}</td>
-              <td>{o.userId}</td>
-              <td>{o.totalAmount.toLocaleString()} ₫</td>
-              <td>{o.status}</td>
               <td>{o.fullName}</td>
               <td>{o.phone}</td>
               <td>{o.address}</td>
               <td>{o.orderDate}</td>
+              <td>{o.totalAmount.toLocaleString()} ₫</td>
+              <td>{o.status}</td>
               <td>
                 <Button
                   size="sm"

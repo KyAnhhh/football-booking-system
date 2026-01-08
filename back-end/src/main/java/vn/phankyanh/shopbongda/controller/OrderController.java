@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Order;
 import vn.phankyanh.shopbongda.domain.OrderStatus;
+import vn.phankyanh.shopbongda.dto.request.CheckoutRequest;
 import vn.phankyanh.shopbongda.dto.request.OrderRequest;
 import vn.phankyanh.shopbongda.dto.response.ApiResponse;
 import vn.phankyanh.shopbongda.dto.response.OrderResponse;
@@ -84,6 +85,22 @@ public class OrderController {
         ApiResponse<String> apiResponse = new ApiResponse<>();
         this.orderService.handleDeleteOrder(id);
         apiResponse.setMessage("Deleted order with id: " + id);
+        return apiResponse;
+    }
+
+    @PutMapping("/api/public/orders/{orderId}/cancel")
+    public ApiResponse<Void> cancelOrder(@PathVariable("orderId") Long orderId) {
+        ApiResponse<Void> apiResponse = new ApiResponse<>();
+        this.orderService.handleCancelOrder(orderId);
+        apiResponse.setMessage("Order cancelled successfully");
+        return apiResponse;
+    }
+
+    @PutMapping("api/public/orders")
+    public ApiResponse<OrderResponse> handleCheckout(@AuthenticationPrincipal Jwt jwt, @RequestBody CheckoutRequest request) {
+        Long userId = jwt.getClaim("id");
+        ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.orderService.handleCheckout(userId, request));
         return apiResponse;
     }
 

@@ -1,6 +1,5 @@
 package vn.phankyanh.shopbongda.service;
 
-import java.text.ParseException;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -8,7 +7,6 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.ShippingAddress;
 import vn.phankyanh.shopbongda.domain.User;
-import vn.phankyanh.shopbongda.dto.JwtInfo;
 import vn.phankyanh.shopbongda.dto.request.ShippingAddressRequest;
 import vn.phankyanh.shopbongda.dto.response.ShippingAddressResponse;
 import vn.phankyanh.shopbongda.mapper.ShippingAddressMapper;
@@ -22,12 +20,9 @@ public class ShippingAddressService {
     private final ShippingAddressMapper shippingAddressMapper;
     private final UserRepository userRepository;
 
-    public ShippingAddressResponse handleCreateShippingAddress(ShippingAddressRequest request, String authHeader) throws ParseException {
-        String token = authHeader.replace("Bearer ", "");
-        JwtInfo info = JwtService.parseToken(token);
-
-        User user = userRepository.findById(info.getId())
-                .orElseThrow(() -> new RuntimeException("User not found with id " + info.getId()));
+    public ShippingAddressResponse handleCreateShippingAddress(ShippingAddressRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
         // ánh xạ với User
         ShippingAddress shippingAddress = shippingAddressMapper.toShippingAddress(request);
         shippingAddress.setUser(user);
@@ -35,7 +30,13 @@ public class ShippingAddressService {
         this.shippingAddressRepository.save(shippingAddress);
         return shippingAddressMapper.toResponse(shippingAddress);
     }
-    
+
+    public ShippingAddressResponse handleGetAddressOfMe(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+        return shippingAddressMapper.toResponse(user.getShippingAddresses().get(0));
+    }
+
     public List<ShippingAddressResponse> handleGetAllShippingAddress(){
         return this.shippingAddressRepository.findAll()
                 .stream()
@@ -50,6 +51,7 @@ public class ShippingAddressService {
         this.shippingAddressRepository.save(shippingAddress);
         return shippingAddressMapper.toResponse(shippingAddress);
     }
+
 
     public ShippingAddressResponse handleGetShippingAddressById(Long id){
         ShippingAddress shippingAddress = this.shippingAddressRepository.findById(id)

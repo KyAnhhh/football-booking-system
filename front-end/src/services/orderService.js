@@ -82,7 +82,9 @@ export const getMyOrders = async () => {
 };
 
 export const updateOrder = async (id, Order) => {
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
+  const headers = { 
+    "Content-Type": "application/json",
+    ...getAuthHeader() };
   const response = await fetch(`${API_URL_PUBLIC}/${id}`, {
     method: "PUT",
     headers,
@@ -93,7 +95,9 @@ export const updateOrder = async (id, Order) => {
 };
 
 export const updateOrderStatus = async (id, status) => {
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
+  const headers = { 
+    "Content-Type": "application/json", 
+    ...getAuthHeader() };
   const response = await fetch(`${API_URL_ADMIN}/${id}/status`, {
     method: "PUT",
     headers,
@@ -112,3 +116,28 @@ export const deleteOrder = async (id) => {
 
   return await handleResponse(response);
 };
+
+export const cancelOrder = async (orderId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  }
+  const response = await fetch(`${API_URL_PUBLIC}/${orderId}/cancel`, {
+    method: "PUT",
+    headers,
+  });
+  return await handleResponse(response);
+}
+
+export const checkout = async (request) => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  }
+  const response = await fetch(`${API_URL_PUBLIC}/checkout`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(request),
+  });
+  return await handleResponse(response);
+}

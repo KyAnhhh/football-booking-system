@@ -60,14 +60,21 @@
   margin-bottom: 8px;
 }
 
-.product-card .badge {
+.product-card .product-card-badge .badge {
   width: fit-content;
   margin-bottom: 10px;
+  margin-right: 2px;
 }
 
-.product-card button {
+.product-card .product-card-button button {
   margin-top: auto;
   border-radius: 20px;
+}
+
+.product-card-button {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
 }
 
 .pagination {
