@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL_ADMIN = "http://localhost:8080/api/admin/categories";
 const API_URL_PUBLIC = "http://localhost:8080/api/public/categories";
 
@@ -11,7 +13,7 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   return token
     ? {
         Authorization: `Bearer ${token}`,
@@ -31,14 +33,13 @@ export const getCategories = async (pageNo = 0, pageSize = 5, sortBy = "id", sor
   });
   if (search) params.append("search", search);
   
-  const response = await fetch(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
   return await handleResponse(response);
 };
 
-// Get all categories for dropdown (no pagination, public endpoint) 
 export const getAllCategoriesForDropdown = async () => {
   try {
-    const response = await fetch(`${API_URL_PUBLIC}`);
+    const response = await fetchWithAuth(`${API_URL_PUBLIC}`);
     const res = await handleResponse(response);
 
     if (Array.isArray(res)) return res;
@@ -57,7 +58,7 @@ export const getCategoryById = async (id) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`,{
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`,{
     method: "GET",
     headers
   });
@@ -66,7 +67,7 @@ export const getCategoryById = async (id) => {
 
 export const createCategory = async (Category) => {
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(API_URL_ADMIN, {
+  const response = await fetchWithAuth(API_URL_ADMIN, {
     method: "POST",
     headers,
     body: JSON.stringify(Category),
@@ -77,7 +78,7 @@ export const createCategory = async (Category) => {
 
 export const updateCategory = async (id, Category) => {
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
     headers,
     body: JSON.stringify(Category),
@@ -88,7 +89,7 @@ export const updateCategory = async (id, Category) => {
 
 export const deleteCategory = async (id) => {
   const headers = { ...getAuthHeader() };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
     headers,
   });

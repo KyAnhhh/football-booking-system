@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 
 import lombok.RequiredArgsConstructor;
+import vn.phankyanh.shopbongda.security.JwtAuthEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +34,7 @@ public class SecurityConfiguration {
 
     private final UserDetailsService userDetailsService;
     private final JwtDecoderConfiguration jwtDecoderConfiguration;
-
+    private final JwtAuthEntryPoint jwtAuthEntryPoint;
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -44,8 +45,7 @@ public class SecurityConfiguration {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
             String role = jwt.getClaimAsString("role");
-            if (role == null) role = "CLIENT"; // default nếu không có role
-            // Ensure authority has ROLE_ prefix
+            if (role == null) role = "CLIENT"; 
             if (!role.startsWith("ROLE_")) {
                 role = "ROLE_" + role;
             }
@@ -55,19 +55,12 @@ public class SecurityConfiguration {
                 .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        // public endpoints
                         .requestMatchers(public_list).permitAll()
-
-                         .requestMatchers(private_list).hasRole("ADMIN")
-                        //  .requestMatchers(private_list).authenticated()
-
-                            // Client endpoints
-                        // .requestMatchers().hasRole("CLIENT")
-
-                        // Các request còn lại cần phải login thì mới truy cập được
+                        .requestMatchers(private_list).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
+                        .authenticationEntryPoint(jwtAuthEntryPoint)
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoderConfiguration)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter)

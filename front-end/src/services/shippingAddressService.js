@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL_PUBLIC = "http://localhost:8080/api/public/shipping-addresses";
 
 const handleResponse = async (response) => {
@@ -9,12 +11,12 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export const createAddress = async (addressData, userId) => {
-  const response = await fetch(API_URL_PUBLIC, {
+  const response = await fetchWithAuth(API_URL_PUBLIC, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -26,7 +28,7 @@ export const createAddress = async (addressData, userId) => {
 };
 
 export const getAddressOfMe = async () => {
-    const response = await fetch(`${API_URL_PUBLIC}/me`, {
+    const response = await fetchWithAuth(`${API_URL_PUBLIC}/me`, {
         method: "GET",
         headers: {
             ...getAuthHeader(),
@@ -36,7 +38,7 @@ export const getAddressOfMe = async () => {
 }
 
 export const updateAddress = async (id, addressData) => {
-    const response = await fetch(`${API_URL_PUBLIC}/${id}`, {
+    const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -48,7 +50,7 @@ export const updateAddress = async (id, addressData) => {
 }
 
 export const deleteAddress = async (id) => {
-    const response = await fetch(`${API_URL_PUBLIC}/${id}`, {
+    const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`, {
         method: "DELETE",
         headers: {
             ...getAuthHeader(),

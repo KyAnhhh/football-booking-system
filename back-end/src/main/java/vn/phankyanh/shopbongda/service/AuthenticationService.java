@@ -17,6 +17,7 @@ import vn.phankyanh.shopbongda.dto.TokenPayload;
 import vn.phankyanh.shopbongda.dto.request.LoginRequest;
 import vn.phankyanh.shopbongda.dto.response.LoginResponse;
 import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
+import vn.phankyanh.shopbongda.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RedisTokenRepository redisTokenRepository;
+    private final UserRepository userRepository;
 
     public LoginResponse login(LoginRequest request){
         UsernamePasswordAuthenticationToken  authenticationToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
@@ -64,6 +66,7 @@ public class AuthenticationService {
                 .build();
 
     }
+
     public void logout(String token) throws ParseException {
         JwtInfo jwtInfo = jwtService.parseToken(token);
         String jwtId = jwtInfo.getJwtId();
@@ -83,4 +86,27 @@ public class AuthenticationService {
         log.info("Logout success");
     }
 
+    public LoginResponse refresh(String refreshToken) throws Exception {
+        JwtInfo jwtInfo = jwtService.parseToken(refreshToken);
+
+        if(jwtInfo == null || jwtInfo.getExpiredTime().before(new Date())) {
+            throw new Exception("Invalid refresh token");
+        }
+
+        redisTokenRepository.findById(jwtInfo.getJwtId())
+        .ifPresent(t -> {
+            throw new RuntimeException("Refresh token revoked");
+        });
+
+        User user = userRepository.findById(jwtInfo.getId())
+            .orElseThrow(() -> new Exception("User not found"));
+
+        TokenPayload newAccess = jwtService.generateAccessToken(user);
+
+        return LoginResponse.builder()
+                .accessToken(newAccess.getToken())
+                .refreshToken(refreshToken) // vẫn giữ nguyên
+                .role(user.getRole().name())
+                .build();
+    }
 }

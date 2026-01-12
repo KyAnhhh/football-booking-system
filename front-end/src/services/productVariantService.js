@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL_ADMIN = "http://localhost:8080/api/admin/product-variants";
 const API_URL_PUBLIC = "http://localhost:8080/api/public/product-variants";
 
@@ -11,7 +13,7 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   return token
     ? {
         Authorization: `Bearer ${token}`,
@@ -21,7 +23,7 @@ function getAuthHeader() {
 
 export const createProductVariant = async (productVariant) => {
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(API_URL_ADMIN, {
+  const response = await fetchWithAuth(API_URL_ADMIN, {
     method: "POST",
     headers,
     body: JSON.stringify(productVariant),
@@ -32,7 +34,7 @@ export const createProductVariant = async (productVariant) => {
 
 export const updateProductVariant = async (id, productVariant) => {
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
     headers,
     body: JSON.stringify(productVariant),
@@ -46,7 +48,7 @@ export const getAllProductVariant = async () => {
         "Content-Type": "application/json",
         ...getAuthHeader(),
     };
-    const response = await fetch(API_URL_PUBLIC, {
+    const response = await fetchWithAuth(API_URL_PUBLIC, {
         method: "GET",
         headers
     });
@@ -58,7 +60,7 @@ export const getProductVariant = async (id) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL_PUBLIC}/${id}`,{
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`,{
     method: "GET",
     headers
   });
@@ -70,7 +72,7 @@ export const deleteProductVariant = async (id) => {
         "Content-Type": "application/json",
         ...getAuthHeader(),
     };
-    const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+    const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
         method: "DELETE",
         headers
     });

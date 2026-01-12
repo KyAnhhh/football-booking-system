@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL_ADMIN = "http://localhost:8080/api/admin/product-images";
 const API_URL_ADMIN_UPLOAD = "http://localhost:8080/api/admin/products";
 const API_URL_PUBLIC = "http://localhost:8080/api/public/products";
@@ -12,7 +14,7 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   return token
     ? {
         Authorization: `Bearer ${token}`,
@@ -28,7 +30,7 @@ export const uploadProductImages = async (productId, files, primaryIndex) => {
     formData.append("primaryIndex", primaryIndex);
   }
 
-  const response = await fetch(`${API_URL_ADMIN_UPLOAD}/${productId}/images`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN_UPLOAD}/${productId}/images`, {
     method: "POST",
     headers: {
       ...getAuthHeader()
@@ -40,7 +42,7 @@ export const uploadProductImages = async (productId, files, primaryIndex) => {
 };
 
 export const getImageByProduct = async (productId) => {
-    const response = await fetch(`${API_URL_PUBLIC}/${productId}/images`, {
+    const response = await fetchWithAuth(`${API_URL_PUBLIC}/${productId}/images`, {
         method: "GET",
         headers: {
       ...getAuthHeader()
@@ -54,7 +56,7 @@ export const setPrimary = async (imageId) => {
         "Content-Type": "application/json",
         ...getAuthHeader(),
     };
-    const response = await fetch(`${API_URL_ADMIN}/${imageId}/primary`, {
+    const response = await fetchWithAuth(`${API_URL_ADMIN}/${imageId}/primary`, {
         method: "PUT",
         headers
     });
@@ -65,7 +67,7 @@ export const deleteImage = async (imageId) => {
     const headers = {
         ...getAuthHeader(),
     };
-    const response = await fetch(`${API_URL_ADMIN}/${imageId}`, {
+    const response = await fetchWithAuth(`${API_URL_ADMIN}/${imageId}`, {
         method: "DELETE",
         headers
     });

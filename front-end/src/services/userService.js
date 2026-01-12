@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL_ADMIN = "http://localhost:8080/api/admin/users";
 const API_URL_PUBLIC = "http://localhost:8080/api/public/users";
 
@@ -12,7 +14,7 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   return token
     ? {
         Authorization: `Bearer ${token}`,
@@ -28,7 +30,7 @@ export const getUsers = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDir
 
   const url = `${API_URL_ADMIN}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}&search=${search}`;
 
-  const response = await fetch(url, { headers });
+  const response = await fetchWithAuth(url, { headers });
   return await handleResponse(response);
 };
 
@@ -37,7 +39,7 @@ export const createUser = async (user) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL_ADMIN}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}`, {
     method: "POST",
     headers,
     body: JSON.stringify(user),
@@ -52,7 +54,7 @@ export const updateUser = async (id, user) => {
     ...getAuthHeader(),
   };
 
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
     headers,
     body: JSON.stringify(user),
@@ -67,7 +69,7 @@ export const deleteUser = async (id) => {
     ...getAuthHeader(),
   };
 
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
     headers,
   });
@@ -81,7 +83,7 @@ export const getProfile = async () => {
     ...getAuthHeader(),
   };
 
-  const response = await fetch(`${API_URL_PUBLIC}/profile`, {
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/profile`, {
     method: "GET",
     headers,
   });
@@ -95,7 +97,7 @@ export const updateProfile = async (profile) => {
     ...getAuthHeader(),
   };
 
-  const response = await fetch(`${API_URL_PUBLIC}/profile/update`, {
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/profile/update`, {
     method: "PUT",
     headers,
     body: JSON.stringify({

@@ -44,4 +44,8 @@ public class AuthenticationController {
         authenticationService.logout(token);
     }   
 
+    @PostMapping("/refresh")
+    LoginResponse refresh(@RequestBody String refreshToken) throws Exception {
+        return authenticationService.refresh(refreshToken);
+    }
 }

@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL_PUBLIC = `http://localhost:8080/api/public/carts`;
 
 const handleResponse = async (response) => {
@@ -10,7 +12,7 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   return token
     ? {
         Authorization: `Bearer ${token}`,
@@ -23,7 +25,7 @@ export const getCartByUser = async () => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL_PUBLIC}/items/me`, {
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/items/me`, {
     method: "GET",
     headers,
   });
@@ -36,7 +38,7 @@ export const addItemToCart = async (request) => {
          "Content-Type": "application/json",
             ...getAuthHeader(),
     }
-    const response = await fetch(`${API_URL_PUBLIC}/items`, {
+    const response = await fetchWithAuth(`${API_URL_PUBLIC}/items`, {
         method: "POST",
         headers,
         body: JSON.stringify(request),
@@ -50,7 +52,7 @@ export const removeCartItem = async (cartItemId) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL_PUBLIC}/items/${cartItemId}`, {
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/items/${cartItemId}`, {
     method: "DELETE",
     headers,
   });

@@ -19,6 +19,7 @@ import Profile from "./pages/client/Profile";
 import SizePage from "./pages/admin/SizePage";
 import Cart from "./pages/client/Cart";
 import Checkout from "./pages/client/Checkout";
+import ProductDetail from "./pages/client/ProductDetail";
 
 function App() {
   return (
@@ -59,6 +60,14 @@ function App() {
           element={
             <ClientLayout>
               <Product />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/products/product-details/:id"
+          element={
+            <ClientLayout>
+              <ProductDetail />
             </ClientLayout>
           }
         />

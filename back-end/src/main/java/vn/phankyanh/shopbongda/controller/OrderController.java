@@ -96,7 +96,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @PutMapping("api/public/orders")
+    @PutMapping("/api/public/orders/checkout")
     public ApiResponse<OrderResponse> handleCheckout(@AuthenticationPrincipal Jwt jwt, @RequestBody CheckoutRequest request) {
         Long userId = jwt.getClaim("id");
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();

@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL_ADMIN = "http://localhost:8080/api/admin/products";
 const API_URL_PUBLIC = "http://localhost:8080/api/public/products";
 
@@ -12,7 +14,7 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   return token
     ? {
         Authorization: `Bearer ${token}`,
@@ -32,15 +34,15 @@ export const getProducts = async (pageNo = 0, pageSize = 5, sortBy = "id", sortD
   });
   if (search) params.append("search", search);
   
-  const response = await fetch(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
   return await handleResponse(response);
 };
 
-export const getProductBySlug = async (slug) => {
+export const getProductById = async (id) => {
   const headers = {
     "Content-Type": "application/json"
   };
-  const response = await fetch(`${API_URL_PUBLIC}/${slug}`,{
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`,{
     method: "GET",
     headers
   });
@@ -53,7 +55,7 @@ export const createProduct = async (product) => {
       "Content-Type": "application/json",
       ...getAuthHeader()
     };
-    const response = await fetch(API_URL_ADMIN, {
+    const response = await fetchWithAuth(API_URL_ADMIN, {
       method: "POST",
       headers,
       body: JSON.stringify(product),
@@ -65,7 +67,7 @@ export const createProduct = async (product) => {
 export const updateProduct = async (id, product) => {
 
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
     headers,
     body: JSON.stringify(product),
@@ -76,7 +78,7 @@ export const updateProduct = async (id, product) => {
 
 export const deleteProduct = async (id) => {
   const headers = { ...getAuthHeader() };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
     headers,
   });

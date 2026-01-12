@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL_ADMIN = "http://localhost:8080/api/admin/brands";
 const API_URL_PUBLIC = "http://localhost:8080/api/public/brands";
 
@@ -11,7 +13,7 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   return token
     ? {
         Authorization: `Bearer ${token}`,
@@ -31,14 +33,14 @@ export const getBrands = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir
   });
   if (search) params.append("search", search);
   
-  const response = await fetch(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
   return await handleResponse(response);
 };
 
 // Get all brands for dropdown (no pagination, public endpoint)
 export const getAllBrandsForDropdown = async () => {
   try {
-    const response = await fetch(`${API_URL_PUBLIC}`);
+    const response = await fetchWithAuth(`${API_URL_PUBLIC}`);
     const res = await handleResponse(response);
 
     // res có thể là Page hoặc List
@@ -58,7 +60,7 @@ export const getBrandById = async (id) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`,{
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`,{
     method: "GET",
     headers
   });
@@ -67,7 +69,7 @@ export const getBrandById = async (id) => {
 
 export const createBrand = async (Brand) => {
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(API_URL_ADMIN, {
+  const response = await fetchWithAuth(API_URL_ADMIN, {
     method: "POST",
     headers,
     body: JSON.stringify(Brand),
@@ -78,7 +80,7 @@ export const createBrand = async (Brand) => {
 
 export const updateBrand = async (id, Brand) => {
   const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
     headers,
     body: JSON.stringify(Brand),
@@ -89,7 +91,7 @@ export const updateBrand = async (id, Brand) => {
 
 export const deleteBrand = async (id) => {
   const headers = { ...getAuthHeader() };
-  const response = await fetch(`${API_URL_ADMIN}/${id}`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
     headers,
   });

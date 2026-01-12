@@ -59,20 +59,30 @@ public class CartService {
         Size size = sizeRepository.findById(request.getSizeId())
                 .orElseThrow(() -> new RuntimeException("Size not found"));
 
-        CartItem cartItem = cartItemRepository
-                .findByCartAndProductVariantAndSize(cart, productVariant, size)
-                .orElseGet(() -> cartItemRepository.save(
-                        createNewCartItem(cart, productVariant, size)
-                ));
+       CartItem cartItem = cartItemRepository
+        .findByCartAndProductVariantAndSize(cart, productVariant, size)
+        .orElse(null);
 
+        if (cartItem == null) {
+        if (productVariant.getStock() < request.getQuantity()) {
+                throw new RuntimeException("Not enough stock");
+        }
+
+        cartItem = createNewCartItem(cart, productVariant, size);
+        cartItem.setTotalQuantity(request.getQuantity()); 
+        cartItemRepository.save(cartItem);
+
+        } else {
         int newQuantity = cartItem.getTotalQuantity() + request.getQuantity();
 
         if (productVariant.getStock() < newQuantity) {
-            throw new RuntimeException("Not enough stock");
+                throw new RuntimeException("Not enough stock");
         }
 
         cartItem.setTotalQuantity(newQuantity);
         cartItemRepository.save(cartItem);
+        }
+
 
         recalculateCartTotal(cart);
         cartRepository.save(cart);
@@ -107,7 +117,7 @@ public class CartService {
                 .size(size)
                 .sizeCode(size.getCode())
                 .productThumbnail(thumbnail)
-                .totalQuantity(1)
+                .totalQuantity(0)
                 .priceAtAddedTime(productVariant.getPrice())
                 .build();
 

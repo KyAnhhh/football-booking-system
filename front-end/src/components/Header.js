@@ -8,7 +8,7 @@ export default function Header() {
   const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if(token){
       setUser({ token: "user" });
     } else{
@@ -25,7 +25,8 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-      localStorage.removeItem("token");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       setUser(null);
     };
 

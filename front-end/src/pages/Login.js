@@ -28,7 +28,8 @@ export default function Login() {
       }
 
       if (res.ok) {
-        localStorage.setItem("token", data.accessToken);
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
         const decode = jwtDecode(data.accessToken);
         
         if (decode.role && decode.role.includes("ADMIN")){
