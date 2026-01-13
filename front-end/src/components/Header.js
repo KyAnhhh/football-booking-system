@@ -28,6 +28,7 @@ export default function Header() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       setUser(null);
+      window.location.href = "/";
     };
 
     if(location.pathname.startsWith("/admin")){

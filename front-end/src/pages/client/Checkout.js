@@ -13,7 +13,12 @@ const phoneRegex = /^(0|\+84)[0-9]{9}$/;
 
 const calculateShippingFee = (items) => {
   if (items.length === 0) return 0;
-  const totalQty = items.reduce((sum, i) => sum + i.totalQuantity, 0);
+
+  const totalQty = items.reduce(
+    (sum, i) => sum + i.totalQuantity,
+    0
+  );
+
   if (totalQty <= 2) return 20000;
   if (totalQty <= 5) return 30000;
   return 40000;
@@ -39,6 +44,7 @@ const validateCheckout = ({
     if (!selectedAddressId)
       return "Vui lòng chọn địa chỉ giao hàng";
   }
+
   return null;
 };
 
@@ -77,6 +83,10 @@ const CheckoutItems = ({ cartItems, selectedItemIds, toggleItem }) => (
   </div>
 );
 
+const orderDateObj = new Date(Date.now());
+const deliveryDateObj = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+const orderDayOnly = orderDateObj.toLocaleDateString('vi-VN');
+const deliveryDayOnly = deliveryDateObj.toLocaleDateString('vi-VN');
 const CheckoutAddress = ({
   addresses,
   useNewAddress,
@@ -157,6 +167,8 @@ const CheckoutAddress = ({
       <option value="BANK_TRANSFER">Chuyển khoản</option>
       <option value="E_WALLET">Ví điện tử</option>
     </select>
+    <h3>Thời gian đặt hàng: {orderDayOnly}</h3>
+    <h3>Thời gian giao hàng dự kiến: {deliveryDayOnly} </h3>
   </div>
 );
 
@@ -168,7 +180,6 @@ const CheckoutSummary = ({ items, loading, onCheckout }) => {
 
   const shippingFee = calculateShippingFee(items);
   const total = subTotal + shippingFee;
-
   return (
     <div className="checkout-card checkout-summary">
       <h3>Đơn hàng</h3>
@@ -200,13 +211,6 @@ const CheckoutSummary = ({ items, loading, onCheckout }) => {
 };
 
 export default function Checkout() {
-  const location = useLocation();
-
-  const {
-    mode = "CART",
-    itemIds = [],
-  } = location.state || {};
-
   const [cartItems, setCartItems] = useState([]);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
 
@@ -214,6 +218,9 @@ export default function Checkout() {
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
 
+  const location = useLocation();
+  const checkoutItemIds = location.state?.itemIds || [];
+  
   const [newAddress, setNewAddress] = useState({
     fullName: "",
     phone: "",
@@ -223,31 +230,25 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    getCartByUser().then((res) => {
-      const allItems = res.items || [];
+    useEffect(() => {
+      getCartByUser().then((res) => {
+        const allItems = res.items || [];
 
-      if (mode === "BUY_NOW") {
-        const buyNowItems = allItems.filter((i) =>
-          itemIds.includes(i.id)
-        );
-        setCartItems(buyNowItems);
-        setSelectedItemIds(buyNowItems.map((i) => i.id));
-      } else {
-        setCartItems(allItems);
-        setSelectedItemIds(
-          itemIds.length ? itemIds : allItems.map((i) => i.id)
-        );
-      }
-    });
+        const filteredItems = checkoutItemIds.length
+          ? allItems.filter((i) => checkoutItemIds.includes(i.id))
+          : allItems;
 
-    getAddressOfMe().then((res) => {
-      if (res) {
-        setAddresses([res]);
-        setSelectedAddressId(res.id);
-      }
-    });
-  }, []);
+        setCartItems(filteredItems);
+        setSelectedItemIds(filteredItems.map((i) => i.id));
+      });
+
+      getAddressOfMe().then((res) => {
+        if (res) {
+          setAddresses([res]);
+          setSelectedAddressId(res.id);
+        }
+      });
+    }, [checkoutItemIds]);
 
   const toggleItem = (id) => {
     setSelectedItemIds((prev) =>
@@ -303,7 +304,7 @@ export default function Checkout() {
 
   return (
     <div className="checkout-container">
-      <h2>Checkout</h2>
+      <h2>Trang thanh toán</h2>
 
       <div className="checkout-grid">
         <div className="checkout-left">
