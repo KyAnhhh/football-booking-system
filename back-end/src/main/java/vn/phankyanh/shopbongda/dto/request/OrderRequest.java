@@ -17,9 +17,10 @@ public class OrderRequest {
     @NotNull
     private Long shippingAddressId;
 
-    @NotNull
     @DecimalMin("0.0")
     private BigDecimal shippingCost;
+
+    private String paymentMethod;
 
     @NotNull
     @Size(min = 1, message = "Order phải có ít nhất 1 sản phẩm")

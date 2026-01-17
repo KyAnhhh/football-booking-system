@@ -6,7 +6,19 @@ const API_URL_ADMIN = "http://localhost:8080/api/admin/orders";
 const handleResponse = async (response) => {
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(errText || "Lỗi không xác định từ server");
+    let errorMsg = "Lỗi không xác định từ server";
+    
+    if (errText) {
+      try {
+        const errorJson = JSON.parse(errText);
+        errorMsg = errorJson.message || errorJson.error || errText;
+      } catch (e) {
+        // Nếu không phải JSON, dùng plain text
+        errorMsg = errText;
+      }
+    }
+    
+    throw new Error(errorMsg);
   }
   const result = await response.json();
   return result.data ?? result.message;

@@ -16,6 +16,6 @@ public class OrderItemRequest {
     private Long productVariantId;
 
     @NotNull
-    @Min(2)
+    @Min(1)
     private Integer quantity;
 }

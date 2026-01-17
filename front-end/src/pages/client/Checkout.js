@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { useLocation } from "react-router-dom";
 import { getCartByUser } from "../../services/cartService";
-import { checkout } from "../../services/orderService";
+import { checkout, createOrder } from "../../services/orderService";
 import {
   getAddressOfMe,
   createAddress,
@@ -219,7 +219,8 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
 
   const location = useLocation();
-  const checkoutItemIds = location.state?.itemIds || [];
+  const checkoutMode = location.state?.mode || "CART_CHECKOUT";
+  const buyNowProduct = location.state?.product || null;
   
   const [newAddress, setNewAddress] = useState({
     fullName: "",
@@ -230,25 +231,44 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-      getCartByUser().then((res) => {
-        const allItems = res.items || [];
-
+  useEffect(() => {
+    const checkoutItemIds = location.state?.itemIds || [];
+    
+    const loadCheckoutData = async () => {
+      if (checkoutMode === "BUY_NOW" && buyNowProduct) {
+        setCartItems([{
+          id: `temp_${buyNowProduct.productVariantId}`,
+          productId: buyNowProduct.productId,
+          productName: buyNowProduct.productName,
+          productThumbnail: buyNowProduct.productThumbnail,
+          productVariantId: buyNowProduct.productVariantId,
+          sizeName: buyNowProduct.sizeName,
+          priceAtAddedTime: buyNowProduct.priceAtAddedTime,
+          totalQuantity: buyNowProduct.totalQuantity,
+        }]);
+        setSelectedItemIds([`temp_${buyNowProduct.productVariantId}`]);
+      } else {
+        const cartRes = await getCartByUser();
+        const allItems = cartRes.items || [];
         const filteredItems = checkoutItemIds.length
           ? allItems.filter((i) => checkoutItemIds.includes(i.id))
           : allItems;
-
         setCartItems(filteredItems);
         setSelectedItemIds(filteredItems.map((i) => i.id));
-      });
+      }
+    };
 
-      getAddressOfMe().then((res) => {
-        if (res) {
-          setAddresses([res]);
-          setSelectedAddressId(res.id);
-        }
-      });
-    }, [checkoutItemIds]);
+    const loadAddresses = async () => {
+      const res = await getAddressOfMe();
+      if (res) {
+        setAddresses([res]);
+        setSelectedAddressId(res.id);
+      }
+    };
+
+    loadCheckoutData();
+    loadAddresses();
+  }, [checkoutMode, buyNowProduct, location.state?.itemIds]);
 
   const toggleItem = (id) => {
     setSelectedItemIds((prev) =>
@@ -280,22 +300,45 @@ export default function Checkout() {
         addressId = res.id;
       }
 
-      const res = await checkout({
-        shippingAddressId: addressId,
-        paymentMethod,
-        cartItemIds: selectedItemIds,
-      });
+      let response;
+      if (checkoutMode === "BUY_NOW") {
+        const totalQty = buyNowProduct.totalQuantity;
+        let shippingCost = 0;
+        if (totalQty <= 2) shippingCost = 20000;
+        else if (totalQty <= 5) shippingCost = 30000;
+        else shippingCost = 40000;
+        response = await createOrder({
+          shippingAddressId: addressId,
+          paymentMethod,
+          items: [{
+            productVariantId: buyNowProduct.productVariantId,
+            quantity: buyNowProduct.totalQuantity,
+          }],
+          shippingCost: shippingCost,
+        });
+      } else {
+        const requestBody = {
+          shippingAddressId: addressId,
+          paymentMethod,
+          cartItemIds: selectedItemIds.map(id => Number(id)),
+        };
+        console.log("Checkout request body:", requestBody);
+        response = await checkout(requestBody);
+      }
 
       Swal.fire({
         icon: "success",
         title: "Đặt hàng thành công 🎉",
-        text: `Mã đơn hàng: ${res.id}`,
+        text: `Mã đơn hàng: ${response.id}`,
+      }).then(() => {
+        window.location.href = `/`;
       });
     } catch (e) {
+      console.error("Checkout error:", e);
       Swal.fire({
         icon: "error",
         title: "Checkout thất bại",
-        text: e?.response?.message || "Có lỗi xảy ra",
+        text: e?.message || e?.response?.message || "Có lỗi xảy ra",
       });
     } finally {
       setLoading(false);

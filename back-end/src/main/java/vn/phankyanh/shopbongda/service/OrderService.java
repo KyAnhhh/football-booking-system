@@ -163,8 +163,11 @@ public class OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(shippingCost);
 
-        // do chưa cần tới payment qua các phương thức banking nên sử dụng payment đc khởi tạo mặc định trước
-        Payment payment = paymentService.createPayment(totalAmount, "Tiền mặt", "Giao hàng tận nơi");
+        // Sử dụng paymentMethod từ request, mặc định là "Tiền mặt"
+        String paymentMethod = request.getPaymentMethod() != null 
+                ? request.getPaymentMethod() 
+                : "Tiền mặt";
+        Payment payment = paymentService.createPayment(totalAmount, paymentMethod, "Giao hàng tận nơi");
 
         order.setPayment(payment);
         order.setTotalAmount(totalAmount);
