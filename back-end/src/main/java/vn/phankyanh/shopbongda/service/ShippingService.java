@@ -27,7 +27,7 @@ public class ShippingService {
             return BigDecimal.ZERO;          // free ship
         }
 
-        if (totalQty >= 6) {
+        if (totalQty >= 5) {
             return BigDecimal.valueOf(30000);
         }
 

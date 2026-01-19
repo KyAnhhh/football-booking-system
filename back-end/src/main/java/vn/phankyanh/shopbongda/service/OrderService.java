@@ -46,6 +46,7 @@ public class OrderService {
     private final ShippingAddressRepository shippingAddressRepository;
     private final PaymentService paymentService;
     private final ProductVariantRepository productVariantRepository;
+    private final ShippingService shippingService;
 
     public Page<OrderResponse> handleGetAllOrder(int pageNo, int pageSize, String sortBy, String sortDir, String search, OrderStatus status) {
         Sort sort = sortDir.equalsIgnoreCase("desc")
@@ -103,19 +104,12 @@ public class OrderService {
         ShippingAddress shippingAddress = shippingAddressRepository.findById(request.getShippingAddressId())
                 .orElseThrow(() -> new RuntimeException("Address not found"));
 
-        BigDecimal shippingCost = request.getShippingCost() != null
-                ? request.getShippingCost()
-                : BigDecimal.ZERO;
-
         Order order = Order.builder()
                 .user(user)
                 .shippingAddress(shippingAddress)
-                .shippingCost(shippingCost)
                 .status(OrderStatus.CHO_XAC_NHAN)
                 .orderDate(LocalDateTime.now())
                 .build();
-        
-
 
         List<OrderItem> orderItems = new ArrayList<>();
 
@@ -157,6 +151,9 @@ public class OrderService {
             
         }
         order.setOrderItems(orderItems);
+
+        BigDecimal shippingCost = shippingService.calculate(orderItems, shippingAddress);
+        order.setShippingCost(shippingCost);
 
         BigDecimal totalAmount = orderItems.stream()
                 .map(OrderItem::getTotal)
@@ -251,12 +248,12 @@ public class OrderService {
         }
 
         ShippingAddress shippingAddress = shippingAddressRepository
-            .findById(request.getShippingAddressId())
+            .findByIdAndUserId(request.getShippingAddressId(), userId)
             .orElseThrow(() -> new RuntimeException("Shipping address not found"));
-
         Order order = Order.builder()
             .user(user)
             .shippingAddress(shippingAddress)
+            .orderDate(LocalDateTime.now())
             .status(OrderStatus.CHO_XAC_NHAN)
             .createdAt(LocalDateTime.now())
             .build();
@@ -280,6 +277,10 @@ public class OrderService {
                 variant.getSoldQuantity() + cartItem.getTotalQuantity()
             );
 
+            BigDecimal unitPrice = variant.getPrice();
+            BigDecimal discountAmount = BigDecimal.ZERO;
+            BigDecimal finalPrice = unitPrice.subtract(discountAmount);
+
             BigDecimal itemTotal = cartItem.getPriceAtAddedTime()
                 .multiply(BigDecimal.valueOf(cartItem.getTotalQuantity()));
 
@@ -290,6 +291,8 @@ public class OrderService {
                 .productName(cartItem.getProductName())
                 .sizeName(variant.getSize().getName())
                 .quantity(cartItem.getTotalQuantity())
+                .discountAmount(discountAmount)
+                .finalPrice(finalPrice)
                 .unitPrice(cartItem.getPriceAtAddedTime())
                 .total(itemTotal)
                 .imageUrl(variant.getProduct().getImages().isEmpty()
@@ -303,14 +306,21 @@ public class OrderService {
 
         order.setOrderItems(orderItems);
 
+        BigDecimal shippingCost = shippingService.calculate(orderItems, shippingAddress);
+
+        BigDecimal finalTotalAmount = totalAmount.add(shippingCost);
+
         Payment payment = paymentService.createPayment(
-            totalAmount,
+            finalTotalAmount,
             request.getPaymentMethod(),
             "Checkout from cart"
         );
+        
+        order.setShippingCost(shippingCost);
 
         order.setPayment(payment);
-        order.setTotalAmount(totalAmount);
+
+        order.setTotalAmount(finalTotalAmount);
 
         orderRepository.save(order);
 

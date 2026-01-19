@@ -49,7 +49,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @GetMapping("/api/public/orders/{id}")
+    @GetMapping("/api/public/orders/{id:\\d+}")
     public ApiResponse<OrderResponse> getOrderById(@PathVariable("id") Long id, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
@@ -65,7 +65,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @PutMapping("/api/public/orders/checkout")
+    @PostMapping("/api/public/orders/checkout-cart")
     public ApiResponse<OrderResponse> handleCheckout(@AuthenticationPrincipal Jwt jwt, @RequestBody CheckoutRequest request) {
         Long userId = jwt.getClaim("id");
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
@@ -73,7 +73,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @PutMapping("/api/public/orders/{id}")
+    @PutMapping("/api/public/orders/{id:\\d+}")
     public ApiResponse<Order> updateOrder(@PathVariable("id") Long id, @RequestBody OrderRequest request, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<Order> apiResponse = new ApiResponse<>();
@@ -81,14 +81,14 @@ public class OrderController {
         return apiResponse;
     }
 
-    @PutMapping("/api/admin/orders/{id}/status")
+    @PutMapping("/api/admin/orders/{id:\\d+}/status")
     public ApiResponse<OrderResponse> updateOrderStatus(@PathVariable("id") Long id, @RequestBody OrderStatus status){
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.orderService.handleUpdateOrderStatus(id, status));
         return apiResponse;
     }
 
-    @DeleteMapping("/api/admin/orders/{id}")
+    @DeleteMapping("/api/admin/orders/{id:\\d+}")
     public ApiResponse<String> deleteOrder(@PathVariable("id") Long id){
         ApiResponse<String> apiResponse = new ApiResponse<>();
         this.orderService.handleDeleteOrder(id);

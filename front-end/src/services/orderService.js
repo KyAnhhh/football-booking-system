@@ -148,8 +148,8 @@ export const checkout = async (request) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   }
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/checkout`, {
-    method: "PUT",
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/checkout-cart`, {
+    method: "POST",
     headers,
     body: JSON.stringify(request),
   });

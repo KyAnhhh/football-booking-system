@@ -19,9 +19,9 @@ const calculateShippingFee = (items) => {
     0
   );
 
-  if (totalQty <= 2) return 20000;
-  if (totalQty <= 5) return 30000;
-  return 40000;
+  if (totalQty >= 10) return 0;
+  if (totalQty >= 5) return 30000;
+  return 50000;
 };
 
 const validateCheckout = ({
@@ -304,9 +304,9 @@ export default function Checkout() {
       if (checkoutMode === "BUY_NOW") {
         const totalQty = buyNowProduct.totalQuantity;
         let shippingCost = 0;
-        if (totalQty <= 2) shippingCost = 20000;
-        else if (totalQty <= 5) shippingCost = 30000;
-        else shippingCost = 40000;
+        if (totalQty >= 10) shippingCost = 0;
+        else if (totalQty >= 5) shippingCost = 30000;
+        else shippingCost = 50000;
         response = await createOrder({
           shippingAddressId: addressId,
           paymentMethod,

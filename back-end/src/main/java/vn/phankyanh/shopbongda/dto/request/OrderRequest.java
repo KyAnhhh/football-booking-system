@@ -1,9 +1,7 @@
 package vn.phankyanh.shopbongda.dto.request;
 
-import java.math.BigDecimal;
 import java.util.List;
 
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -17,8 +15,8 @@ public class OrderRequest {
     @NotNull
     private Long shippingAddressId;
 
-    @DecimalMin("0.0")
-    private BigDecimal shippingCost;
+    // @DecimalMin("0.0")
+    // private BigDecimal shippingCost;
 
     private String paymentMethod;
 
