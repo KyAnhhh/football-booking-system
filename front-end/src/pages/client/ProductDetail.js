@@ -40,6 +40,7 @@ export default function ProductDetail() {
             sizeName: selectedVariant.sizeCode,
             priceAtAddedTime: selectedVariant.price,
             totalQuantity: quantity,
+            discount: product.discount || 0
           },
         },
       });

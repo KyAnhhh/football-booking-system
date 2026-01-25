@@ -173,13 +173,26 @@ const CheckoutAddress = ({
 );
 
 const CheckoutSummary = ({ items, loading, onCheckout }) => {
-  const subTotal = items.reduce(
-    (sum, i) => sum + i.priceAtAddedTime * i.totalQuantity,
-    0
-  );
+  const subTotal = items.reduce((sum, i) => {
+  const discountPercent = i.discount || 0;
+  const priceAfterDiscount =
+    i.priceAtAddedTime * (100 - discountPercent) / 100;
 
-  const shippingFee = calculateShippingFee(items);
-  const total = subTotal + shippingFee;
+  return sum + priceAfterDiscount * i.totalQuantity;
+}, 0);
+
+const totalDiscount = items.reduce((sum, i) => {
+  const discountPercent = i.discount || 0;
+  return (
+    sum +
+    (i.priceAtAddedTime * discountPercent / 100) *
+      i.totalQuantity
+  );
+}, 0);
+
+const shippingFee = calculateShippingFee(items);
+const total = subTotal + shippingFee;
+
   return (
     <div className="checkout-card checkout-summary">
       <h3>Đơn hàng</h3>
@@ -192,6 +205,11 @@ const CheckoutSummary = ({ items, loading, onCheckout }) => {
       <div className="summary-row">
         <span>Phí vận chuyển</span>
         <span>{shippingFee.toLocaleString()} ₫</span>
+      </div>
+
+      <div className="summary-row discount">
+        <span>Giảm giá</span>
+        <span>-{totalDiscount.toLocaleString()} ₫</span>
       </div>
 
       <div className="summary-total">
@@ -245,11 +263,20 @@ export default function Checkout() {
           sizeName: buyNowProduct.sizeName,
           priceAtAddedTime: buyNowProduct.priceAtAddedTime,
           totalQuantity: buyNowProduct.totalQuantity,
+          discount: buyNowProduct.discount || 0
         }]);
         setSelectedItemIds([`temp_${buyNowProduct.productVariantId}`]);
       } else {
+
         const cartRes = await getCartByUser();
-        const allItems = cartRes.items || [];
+
+        const allItems = (cartRes.items || []).map(item => ({
+          ...item,
+          discount: item.discount ?? 0
+        }));
+
+        setCartItems(allItems);
+
         const filteredItems = checkoutItemIds.length
           ? allItems.filter((i) => checkoutItemIds.includes(i.id))
           : allItems;

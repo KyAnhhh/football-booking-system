@@ -19,5 +19,6 @@ public class CartItemResponse {
     private String productThumbnail;
     private Integer totalQuantity;
     private BigDecimal priceAtAddedTime; // Giá khi thêm
-    private BigDecimal totalPrice;       // totalQuantity * priceAtAddedTime
+    private BigDecimal totalPrice;       // totalQuantity * 
+    private Integer discount;
 }

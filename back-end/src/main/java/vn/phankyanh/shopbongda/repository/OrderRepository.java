@@ -1,5 +1,6 @@
 package vn.phankyanh.shopbongda.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,5 +50,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
               OR o.shippingAddress.phone LIKE CONCAT('%', :keyword, '%')
            """)
     Page<Order> search(@Param("keyword") String keyword, Pageable pageable);
+
+
+    //dashboard
+       @Query("SELECT COUNT(o) FROM Order o")
+       Long countOrders();
+
+       @Query("""
+       SELECT COALESCE(SUM(o.totalAmount), 0)
+       FROM Order o
+       WHERE o.status = 'COMPLETED'
+       """)
+       BigDecimal sumRevenue();
 
 }

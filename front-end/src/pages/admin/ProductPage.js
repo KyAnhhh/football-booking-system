@@ -30,6 +30,7 @@ export default function ProductPage() {
   const [form, setForm] = useState({
     name: "",
     description: "",
+    discount: "",
     brandId: "",
     categoryId: ""
   });
@@ -94,6 +95,7 @@ const loadData = async () => {
     setForm({
       name: "",
       description: "",
+      discount: "",
       brandId: "",
       categoryId: ""
     });
@@ -105,6 +107,7 @@ const loadData = async () => {
     setForm({
       name: p.name,
       description: p.description,
+      discount: p.discount,
       brandId: p.brand?.id || "",
       categoryId: p.category?.id || ""
     });
@@ -119,6 +122,7 @@ const loadData = async () => {
     const payload = {
       name: form.name,
       description: form.description,
+      discount: form.discount,
       brandId: Number(form.brandId),
       categoryId: Number(form.categoryId)
     };
@@ -166,6 +170,7 @@ const loadData = async () => {
           <tr>
             <th>#</th>
             <th>Name</th>
+            <th>Discount</th>
             <th>Brand</th>
             <th>Category</th>
             <th width="320">Actions</th>
@@ -176,6 +181,7 @@ const loadData = async () => {
             <tr key={p.id}>
               <td>{i + 1}</td>
               <td>{p.name}</td>
+              <td>{p.discount}</td>
               <td>{p.brandName}</td>
               <td>{p.categoryName}</td>
               <td>
@@ -251,6 +257,16 @@ const loadData = async () => {
                 value={form.description}
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
+                }
+              />
+            </Form.Group>
+
+            <Form.Group className="mt-2">
+              <Form.Label>Discount</Form.Label>
+              <Form.Control
+                value={form.discount}
+                onChange={(e) =>
+                  setForm({ ...form, discount: e.target.value })
                 }
               />
             </Form.Group>

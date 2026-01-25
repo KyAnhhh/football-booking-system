@@ -72,14 +72,6 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images;
 
-    // @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    // private List<ProductVariant> variants = new ArrayList<>();
-
-    // @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    // private List<ProductImage> images = new ArrayList<>();
-
-
-    // review và wishlist bị query n+1 => fix sau khi hoàn chỉnh các variants
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<Review> review;
 
