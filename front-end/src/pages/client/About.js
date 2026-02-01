@@ -31,7 +31,7 @@ export default function About() {
    {
      year: "2017",
      title: "First Store",
-     description: "Mở cửa hàng đầu tiên tại TP.HCM"
+     description: "Mở cửa hàng đầu tiên tại TP.CẦN THƠ"
    },
    {
      year: "2020",
@@ -105,10 +105,10 @@ export default function About() {
            <div className="about-image">
              <div className="image-container">
                <img
-                 src="https://images.unsplash.com/photo-1552673594-d42f73b99e14?w=600&fit=crop"
-                 alt="Đội ngũ Shop Bóng Đá"
-                 className="about-img"
-               />
+                src="https://images.pexels.com/photos/6077805/pexels-photo-6077805.jpeg"
+                alt="Shop đồ bóng đá"
+                className="about-img"
+              />
                <div className="image-overlay">
                  <div className="overlay-content">
                    <h3>Đội Ngũ Chuyên Nghiệp</h3>
@@ -176,33 +176,6 @@ export default function About() {
              </div>
              <h3>Lê Văn C</h3>
              <p>Chuyên gia sản phẩm</p>
-           </div>
-         </div>
-       </div>
-     </section>
-
-     {/* Values Section */}
-     <section className="values-section">
-       <div className="container">
-         <div className="section-header">
-           <div className="section-icon">🎯</div>
-           <h2>Giá Trị Cốt Lõi</h2>
-         </div>
-         <div className="values-grid">
-           <div className="value-card">
-             <div className="value-icon">🔥</div>
-             <h3>Đam Mê</h3>
-             <p>Chúng tôi sống và thở bằng bóng đá</p>
-           </div>
-           <div className="value-card">
-             <div className="value-icon">⭐</div>
-             <h3>Chất Lượng</h3>
-             <p>Chỉ bán hàng chính hãng 100%</p>
-           </div>
-           <div className="value-card">
-             <div className="value-icon">🤝</div>
-             <h3>Tin Cậy</h3>
-             <p>Đồng hành cùng bạn mọi trận đấu</p>
            </div>
          </div>
        </div>

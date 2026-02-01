@@ -1,13 +1,19 @@
 package vn.phankyanh.shopbongda.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.domain.Order;
 import vn.phankyanh.shopbongda.domain.Payment;
+import vn.phankyanh.shopbongda.domain.PaymentStatus;
+import vn.phankyanh.shopbongda.dto.response.PaymentResponse;
+import vn.phankyanh.shopbongda.mapper.PaymentMapper;
 import vn.phankyanh.shopbongda.repository.OrderRepository;
 import vn.phankyanh.shopbongda.repository.PaymentRepository;
 
@@ -17,22 +23,28 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final PaymentMapper paymentMapper;
 
-    public Payment createPayment(BigDecimal totalAmount, String method, String type) {
-        Payment payment = Payment.builder()
-                .totalAmount(totalAmount)
-                .status("Chưa thanh toán")
-                .method(method)
-                .type(type)
-                .build();
-        return paymentRepository.save(payment);
+    public Page<PaymentResponse> handleGetAllPayment(int pageNo, int pageSize, String sortBy, String sortDir, String search){
+        Sort.Direction direction = sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+        
+        Page<Payment> paymentPage;
+        if(search != null && !search.isEmpty()){
+            paymentPage = paymentRepository.findByPaymentStatus(search, pageable);
+        } else {
+            paymentPage = paymentRepository.findAll(pageable);
+        }
+        return paymentPage.map(paymentMapper::toPaymentResponse);
     }
 
-    public Payment updatePaymentStatus(Long paymentId, String status) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
-        payment.setStatus(status);
-        return paymentRepository.save(payment);
+    //delete
+    public void handleDeletePayment(Long id) {
+        if (!paymentRepository.existsById(id)) {
+            throw new RuntimeException("Payment not found");
+        }
+        this.paymentRepository.deleteById(id);
     }
 
     public Payment getPaymentById(Long id) {
@@ -61,15 +73,42 @@ public class PaymentService {
         }
 
          // cập nhật payment
-        payment.setStatus("Đã thanh toán");
+        payment.setPaymentStatus(PaymentStatus.PAID);
         payment.setPaymentDate(LocalDateTime.now());
-
-        // cập nhật order
-        // order.setStatus("Đã giao hàng"); // nếu bạn muốn chuyển sang giao hàng
-        // order.setDeliveryDate(LocalDateTime.now());
 
         orderRepository.save(order);
 
         return paymentRepository.save(payment);
     }
+
+    // @Transactional
+    // public void updatePaymentStatus(Long orderId, PaymentStatus newStatus) {
+
+    //     Order order = orderRepository.findByIdWithPayment(orderId)
+    //             .orElseThrow(() -> new RuntimeException("Order not found"));
+
+    //     Payment payment = order.getPayment();
+    //     if (payment == null) {
+    //         throw new RuntimeException("Order has no payment");
+    //     }
+
+    //     // chỉ cho phép xác nhận PAID
+    //     if (newStatus != PaymentStatus.PAID) {
+    //         throw new RuntimeException("Only PAID status is allowed");
+    //     }
+
+    //     // chỉ update khi đang UNPAID
+    //     if (payment.getPaymentStatus() != PaymentStatus.UNPAID) {
+    //         throw new RuntimeException("Payment already processed");
+    //     }
+
+    //     // chỉ cho phép khi SHIPPING hoặc DELIVERED
+    //     if (order.getOrderStatus() != OrderStatus.SHIPPING
+    //             && order.getOrderStatus() != OrderStatus.DELIVERED) {
+    //         throw new RuntimeException("Cannot confirm payment at this order status");
+    //     }
+
+    //     payment.setPaymentStatus(PaymentStatus.PAID);
+    //     payment.setPaymentDate(LocalDateTime.now());
+    // }
 }

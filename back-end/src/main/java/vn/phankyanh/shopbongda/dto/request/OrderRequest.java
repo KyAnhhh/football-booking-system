@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.phankyanh.shopbongda.domain.PaymentMethod;
 
 @Data
 @NoArgsConstructor
@@ -15,10 +16,7 @@ public class OrderRequest {
     @NotNull
     private Long shippingAddressId;
 
-    // @DecimalMin("0.0")
-    // private BigDecimal shippingCost;
-
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
 
     @NotNull
     @Size(min = 1, message = "Order phải có ít nhất 1 sản phẩm")

@@ -24,7 +24,12 @@ public class OrderResponse {
     private BigDecimal shippingCost;
     private BigDecimal totalAmount;
 
-    private String status;
+    private String orderStatus;
+
+    private String paymentStatus;
+
+    private String paymentMethod;
+
     private LocalDateTime orderDate;
     private LocalDateTime deliveryDate;
 

@@ -106,3 +106,15 @@
     white-space: nowrap;
   }
 }
+.action-badge {
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+
+.action-badge.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

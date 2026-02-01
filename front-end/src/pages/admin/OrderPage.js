@@ -6,6 +6,7 @@ import {
 } from "../../services/orderService";
 import { Modal, Button, Form } from "react-bootstrap";
 import "../../assets/styles/OrderPage.css";
+import Swal from "sweetalert2";
 
 export default function OrderPage() {
   const [orders, setOrders] = useState([]);
@@ -25,6 +26,16 @@ export default function OrderPage() {
   const [status, setStatus] = useState("");
   const [confirmOrder, setConfirmOrder] = useState(null);
 
+  const [payingId, setPayingId] = useState(null);
+
+  const orderStatusColor = {
+    PENDING: "bg-secondary",
+    CONFIRMED: "bg-primary",
+    SHIPPING: "bg-info",
+    DELIVERED: "bg-success",
+    CANCELLED: "bg-danger",
+  };
+
   const loadOrders = async () => {
     try {
       const data = await getOrders(
@@ -38,15 +49,20 @@ export default function OrderPage() {
       setOrders(data.content);
       setPageData(data);
     } catch (err) {
-      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to load orders",
+        text: err.response?.data?.message || "An error occurred while loading orders.",
+      });
     }
   };
 
   useEffect(() => {
     loadOrders();
-  }, [pageNo, sortBy, sortDir, search, statusFilter]);
+  }, [pageNo, pageSize, sortBy, sortDir, search, statusFilter]);
 
   const toggleSort = (field) => {
+    setPageNo(0);
     if (sortBy === field) {
       setSortDir(sortDir === "asc" ? "desc" : "asc");
     } else {
@@ -66,27 +82,42 @@ export default function OrderPage() {
   };
 
   const openStatusModal = (order) => {
+    if (order.orderStatus === "DELIVERED") return;
     setSelectedOrder(order);
-    setStatus(order.status);
+    setStatus(order.orderStatus);
     setShow(true);
   };
 
   const handleUpdateStatus = async (e) => {
     e.preventDefault();
+    if (!selectedOrder) return;
     try {
       await updateOrderStatus(selectedOrder.id, status);
       await loadOrders();
       setShow(false);
     } catch (err) {
-      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Update status failed",
+        text: err.response?.data?.message || "Failed to update order status.",
+      });
     }
   };
 
   const confirmDelete = async () => {
-    await deleteOrder(confirmOrder.id);
-    await loadOrders();
-    setConfirmOrder(null);
-  };
+    try {
+      await deleteOrder(confirmOrder.id);
+      await loadOrders();
+      setConfirmOrder(null);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Delete failed",
+        text: err.response?.data?.message || "Failed to delete order",
+      });
+      setConfirmOrder(null);
+    }
+};
 
   return (
     <div className="order-page">
@@ -108,11 +139,11 @@ export default function OrderPage() {
             style={{ width: "200px" }}
           >
             <option value="">All Status</option>
-            <option value="CHO_XAC_NHAN">Chờ xác nhận</option>
-            <option value="DA_XAC_NHAN">Đã xác nhận</option>
-            <option value="DANG_GIAO">Đang giao</option>
-            <option value="DA_GIAO">Đã giao</option>
-            <option value="DA_HUY">Đã huỷ</option>
+            <option value="PENDING">Chờ xác nhận</option>
+            <option value="CONFIRMED">Đã xác nhận</option>
+            <option value="SHIPPING">Đang giao</option>
+            <option value="DELIVERED">Đã giao</option>
+            <option value="CANCELLED">Đã huỷ</option>
           </Form.Select>
         </div>
       </div>
@@ -126,8 +157,9 @@ export default function OrderPage() {
             <th>Address</th>
             <th onClick={() => toggleSort("orderDate")}>Order Date</th>
             <th onClick={() => toggleSort("totalAmount")}>Total</th>
-            <th onClick={() => toggleSort("status")}>Status</th>
+            <th onClick={() => toggleSort("orderStatus")}>Order Status</th>
             <th>Actions</th>
+
           </tr>
         </thead>
 
@@ -139,24 +171,33 @@ export default function OrderPage() {
               <td>{o.phone}</td>
               <td>{o.address}</td>
               <td>{o.orderDate}</td>
-              <td>{o.totalAmount.toLocaleString()} ₫</td>
-              <td>{o.status}</td>
+              <td>{o.totalAmount.toLocaleString()}</td>
               <td>
-                <Button
-                  size="sm"
-                  variant="warning"
+                <span className={`badge ${orderStatusColor[o.orderStatus]}`}>
+                  {o.orderStatus}
+                </span>
+              </td>
+
+              <td>
+                <span
+                  className={`badge bg-warning action-badge ${
+                    o.orderStatus === "DELIVERED" ? "disabled" : ""
+                  }`}
                   onClick={() => openStatusModal(o)}
                 >
                   Update
-                </Button>{" "}
-                <Button
-                  size="sm"
-                  variant="danger"
+                </span>
+
+                <span
+                  className={`badge bg-danger action-badge ${
+                    o.orderStatus === "DELIVERED" ? "disabled" : ""
+                  }`}
                   onClick={() => setConfirmOrder(o)}
                 >
                   Delete
-                </Button>
+                </span>
               </td>
+
             </tr>
           ))}
         </tbody>
@@ -189,18 +230,20 @@ export default function OrderPage() {
           <Modal.Title>Update Order Status</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+            <p>
+            Order ID: <b>#{selectedOrder?.id}</b>
+          </p>
           <Form onSubmit={handleUpdateStatus}>
             <Form.Select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="CHO_XAC_NHAN">Chờ xác nhận</option>
-              <option value="DA_XAC_NHAN">Đã xác nhận</option>
-              <option value="DANG_GIAO">Đang giao</option>
-              <option value="DA_GIAO">Đã giao</option>
-              <option value="DA_HUY">Đã huỷ</option>
+              <option value="PENDING">Chờ xác nhận</option>
+              <option value="CONFIRMED">Đã xác nhận</option>
+              <option value="SHIPPING">Đang giao</option>
+              <option value="DELIVERED">Đã giao</option>
+              <option value="CANCELLED">Đã huỷ</option>
             </Form.Select>
-
             <Button type="submit" className="mt-3" variant="success">
               Update
             </Button>

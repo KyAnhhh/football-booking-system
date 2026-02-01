@@ -28,7 +28,7 @@ public class CategoryController {
     @GetMapping("/api/public/categories")
     public ApiResponse<Page<CategoryResponse>> getAllCategory(
         @RequestParam(defaultValue = "0") int pageNo,
-        @RequestParam(defaultValue = "5") int pageSize,
+        @RequestParam(defaultValue = "10") int pageSize,
         @RequestParam(defaultValue = "id") String sortBy,
         @RequestParam(defaultValue = "asc") String sortDir,
         @RequestParam(required = false) String search

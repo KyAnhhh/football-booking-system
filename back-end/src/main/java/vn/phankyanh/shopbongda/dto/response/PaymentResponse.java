@@ -1,27 +1,35 @@
 package vn.phankyanh.shopbongda.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import vn.phankyanh.shopbongda.domain.OrderStatus;
+
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentResponse {
-    private Long id;
+    private Long paymentId;
 
-    private String type;
+    private String paymentStatus;
 
-    private String status;
+    private String paymentMethod;
 
     private BigDecimal totalAmount;
 
-    private String method;
+    private LocalDateTime paymentDate;
+
+    private Long orderId;
 
     private String transactionCode;
 
-    private LocalDateTime paymentDate;
+    private OrderStatus orderStatus;
 
     private LocalDateTime createdAt;
 

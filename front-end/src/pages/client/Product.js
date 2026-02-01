@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getProducts } from "../../services/productService";
 import "../../assets/styles/Product.css";
@@ -52,10 +53,24 @@ export default function Product() {
               <div className="product-info">
                 <h4 className="product-name">{p.name}</h4>
 
-                <p className="price">
-                  {minPrice ? minPrice.toLocaleString() + " đ" : "Liên hệ"}
-                </p>
+                <div className="price-wrapper">
+                  {p.discount && (
+                    <span className="price-old">
+                      {minPrice?.toLocaleString()}đ
+                    </span>
+                  )}
+
+                  <span className="price-new">
+                    {minPrice
+                      ? (p.discount
+                          ? (minPrice - (minPrice * p.discount) / 100)
+                          : minPrice
+                        ).toLocaleString() + "đ"
+                      : "Liên hệ"}
+                  </span>
+                </div>
               </div>
+
 
               <div className="product-actions">
                 <button

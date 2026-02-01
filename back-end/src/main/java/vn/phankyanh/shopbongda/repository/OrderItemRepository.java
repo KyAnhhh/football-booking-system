@@ -18,7 +18,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     SELECT COALESCE(SUM(oi.quantity), 0)
     FROM OrderItem oi
     JOIN oi.order o
-    WHERE o.status = 'DA_GIAO'
+    WHERE o.orderStatus = 'DELIVERED'
     """)
     Long sumProductsSold();
 
@@ -26,9 +26,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     SELECT COALESCE(SUM(oi.total), 0)
     FROM OrderItem oi
     JOIN oi.order o
-    WHERE o.status = 'DA_GIAO'
+    WHERE o.orderStatus = 'DELIVERED'
     """)
     BigDecimal getTotalRevenue();
-
 
 }

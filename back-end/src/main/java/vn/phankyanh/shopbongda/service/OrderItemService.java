@@ -15,7 +15,6 @@ import vn.phankyanh.shopbongda.dto.response.OrderItemResponse;
 import vn.phankyanh.shopbongda.mapper.OrderItemMapper;
 import vn.phankyanh.shopbongda.repository.OrderItemRepository;
 
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -41,7 +40,7 @@ public class OrderItemService {
             throw new RuntimeException("Truy cập bị từ chối");
         }
 
-        if (!order.getStatus().equals(OrderStatus.CHO_XAC_NHAN)) {
+        if (!order.getOrderStatus().equals(OrderStatus.PENDING)) {
             throw new RuntimeException("Không thể cập nhật đơn hàng sau khi đơn hàng đang được xử lý");
         }
 
@@ -77,7 +76,7 @@ public class OrderItemService {
             throw new RuntimeException("Access denied");
         }
 
-        if (!order.getStatus().equals(OrderStatus.CHO_XAC_NHAN)) {
+        if (!order.getOrderStatus().equals(OrderStatus.PENDING)) {
             throw new RuntimeException("Cannot delete order item after order processing");
         }
 

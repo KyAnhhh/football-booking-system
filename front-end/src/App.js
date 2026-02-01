@@ -20,6 +20,7 @@ import SizePage from "./pages/admin/SizePage";
 import Cart from "./pages/client/Cart";
 import Checkout from "./pages/client/Checkout";
 import ProductDetail from "./pages/client/ProductDetail";
+import PaymentPage from "./pages/admin/PaymentPage";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="categories" element={<CategoryPage />} />
           <Route path="orders" element={<OrderPage />} />
           <Route path="sizes" element={<SizePage />} />
+          <Route path="payments" element={<PaymentPage />} />
         </Route>
 
         {/* Client routes */}

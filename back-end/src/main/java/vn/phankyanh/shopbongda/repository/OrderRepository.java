@@ -25,23 +25,31 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
               "WHERE o.id = :id")
        Optional<Order> findByIdWithOrderItems(@Param("id") Long id);
        
+       @Query("""
+       SELECT o FROM Order o
+       LEFT JOIN FETCH o.payment p
+       LEFT JOIN FETCH o.orderItems oi
+       WHERE o.id = :id
+       """)
+       Optional<Order> findByIdWithPayment(@Param("id") Long id);
+
        @Query("SELECT DISTINCT o FROM Order o " +
               "LEFT JOIN FETCH o.orderItems oi " +
               "LEFT JOIN FETCH oi.productVariant p")
        List<Order> findAllWithOrderItems();
 
-       // Lọc theo status
-    Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+       // Lọc theo orderStatus
+    Page<Order> findByOrderStatus(OrderStatus orderStatus, Pageable pageable);
 
-    // Lọc theo status + tìm theo fullName trong shippingAddress
+    // Lọc theo orderStatus + tìm theo fullName trong shippingAddress
     @Query("""
            SELECT o FROM Order o
-           WHERE o.status = :status
+           WHERE o.orderStatus = :orderStatus
            AND LOWER(o.shippingAddress.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
            """)
-    Page<Order> findByStatusAndShippingFullName(@Param("status") OrderStatus status,
-                                                @Param("keyword") String keyword,
-                                                Pageable pageable);
+    Page<Order> findByOrderStatusAndShippingFullName(@Param("orderStatus") OrderStatus orderStatus,
+                                                     @Param("keyword") String keyword,
+                                                     Pageable pageable);
 
     // Tìm kiếm theo fullName hoặc phone trong shippingAddress
     @Query("""
@@ -59,7 +67,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
        @Query("""
        SELECT COALESCE(SUM(o.totalAmount), 0)
        FROM Order o
-       WHERE o.status = 'COMPLETED'
+       WHERE o.orderStatus = 'COMPLETED'
        """)
        BigDecimal sumRevenue();
 

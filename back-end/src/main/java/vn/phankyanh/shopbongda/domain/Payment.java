@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -29,17 +30,19 @@ public class Payment {
     @Column(nullable = false, length = 100)
     private String type;
 
-    @Column(nullable = false, length = 100)
-    private String status;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus paymentStatus;
 
     @DecimalMin(value = "0.0", inclusive = true, message = "TotalAmount không được âm")
     @Column(nullable = false)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
-    // Hiện tại chỉ hỗ trợ thanh toán tiền mặt khi giao hàng
-    // Sau này có thể mở rộng thêm các phương thức khác (MOMO, chuyển khoản, v.v.)
-    @Column(nullable = false, length = 50)
-    private String method;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentMethod paymentMethod;
 
     @Column(nullable = false, unique = true, length = 100)
     private String transactionCode;
@@ -62,8 +65,8 @@ public class Payment {
                 ? this.transactionCode
                 : "PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         this.type = "Giao hàng tận nơi";
-        this.method = "Tiền mặt"; // Thanh toán khi nhận hàng
-        this.status = "Chưa thanh toán";
+        this.paymentMethod = PaymentMethod.COD; // Thanh toán khi nhận hàng
+        this.paymentStatus = PaymentStatus.UNPAID;
         this.paymentDate = null; // vì chưa thanh toán
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();

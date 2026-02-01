@@ -46,7 +46,7 @@ public class Order {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status;
+    private OrderStatus orderStatus;
 
     @NotNull
     @DecimalMin("0.0")

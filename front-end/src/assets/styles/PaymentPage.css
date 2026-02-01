@@ -1,0 +1,46 @@
+.payment-page {
+  padding: 20px;
+  background: #f4f6f9;
+  min-height: 100vh;
+}
+
+.payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.payment-table {
+  width: 100%;
+  background: #fff;
+  border-collapse: collapse;
+}
+
+.payment-table th,
+.payment-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.payment-table th {
+  background: #f1f1f1;
+  cursor: pointer;
+}
+
+.payment-table tr:hover {
+  background: #fafafa;
+}
+
+.pagination-section {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}

@@ -27,7 +27,7 @@ public class BrandController {
     @GetMapping("/api/public/brands")
     public ApiResponse<Page<BrandResponse>> getAllBrand(
         @RequestParam(defaultValue = "0") int pageNo,
-        @RequestParam(defaultValue = "5") int pageSize,
+        @RequestParam(defaultValue = "10") int pageSize,
         @RequestParam(defaultValue = "id") String sortBy,
         @RequestParam(defaultValue = "asc") String sortDir,
         @RequestParam(required = false) String search

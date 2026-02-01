@@ -79,6 +79,13 @@ export default function AdminLayout() {
               </NavLink>
             </li>
 
+            <li>
+              <NavLink to="/admin/payments">
+                <BsReceipt />
+                <span>Payments</span>
+              </NavLink>
+            </li>
+
             <li className="back-home">
               <NavLink to="/">
                 <BsHouseDoor />

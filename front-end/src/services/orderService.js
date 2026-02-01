@@ -46,17 +46,14 @@ export const getOrders = async (
     ...getAuthHeader(),
   };
 
-  const params = new URLSearchParams({
-    pageNo: String(pageNo),
-    pageSize: String(pageSize),
-    sortBy,
-    sortDir,
-  });
 
-  if (search) params.append("search", search);
-  if (status) params.append("status", status);
+  let url = `${API_URL_ADMIN}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`;
+  
 
-  const response = await fetchWithAuth(`${API_URL_ADMIN}?${params.toString()}`, {
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (status) url += `&status=${encodeURIComponent(status)}`;
+
+  const response = await fetchWithAuth(url, {
     headers,
   });
 
@@ -108,11 +105,11 @@ export const updateOrder = async (id, Order) => {
   return await handleResponse(response);
 };
 
-export const updateOrderStatus = async (id, status) => {
+export const updateOrderStatus = async (orderId, status) => {
   const headers = { 
     "Content-Type": "application/json", 
     ...getAuthHeader() };
-  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}/status`, {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${orderId}/status`, {
     method: "PUT",
     headers,
     body: JSON.stringify( status ),

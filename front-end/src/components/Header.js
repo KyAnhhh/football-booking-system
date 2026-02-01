@@ -45,9 +45,9 @@ export default function Header() {
 
         <nav className={`fs-nav ${open ? "open" : ""}`} aria-label="Primary">
           <a className="fs-nav-link" href="/">Trang chủ</a>
+          <a className="fs-nav-link" href="/about">Giới thiệu</a>
           <a className="fs-nav-link" href="/products">Sản phẩm</a>
           <a className="fs-nav-link" href="/collections">Bộ sưu tập</a>
-          <a className="fs-nav-link" href="/about">Giới thiệu</a>
           <a className="fs-nav-link" href="/contact">Liên hệ</a>
           <a className="fs-nav-link" href="/service">Dịch vụ</a>
         </nav>

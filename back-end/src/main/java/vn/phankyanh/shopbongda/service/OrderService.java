@@ -20,6 +20,7 @@ import vn.phankyanh.shopbongda.domain.Order;
 import vn.phankyanh.shopbongda.domain.OrderItem;
 import vn.phankyanh.shopbongda.domain.OrderStatus;
 import vn.phankyanh.shopbongda.domain.Payment;
+import vn.phankyanh.shopbongda.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.domain.ProductVariant;
 import vn.phankyanh.shopbongda.domain.ShippingAddress;
 import vn.phankyanh.shopbongda.domain.User;
@@ -31,6 +32,7 @@ import vn.phankyanh.shopbongda.mapper.OrderMapper;
 import vn.phankyanh.shopbongda.repository.CartItemRepository;
 import vn.phankyanh.shopbongda.repository.CartRepository;
 import vn.phankyanh.shopbongda.repository.OrderRepository;
+import vn.phankyanh.shopbongda.repository.PaymentRepository;
 import vn.phankyanh.shopbongda.repository.ProductVariantRepository;
 import vn.phankyanh.shopbongda.repository.ShippingAddressRepository;
 import vn.phankyanh.shopbongda.repository.UserRepository;
@@ -44,8 +46,8 @@ public class OrderService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ShippingAddressRepository shippingAddressRepository;
-    private final PaymentService paymentService;
     private final ProductVariantRepository productVariantRepository;
+    private final PaymentRepository paymentRepository;
     private final ShippingService shippingService;
 
     public Page<OrderResponse> handleGetAllOrder(int pageNo, int pageSize, String sortBy, String sortDir, String search, OrderStatus status) {
@@ -59,10 +61,10 @@ public class OrderService {
 
         if (status != null && search != null && !search.trim().isEmpty()) {
             // Nếu có status + search
-            ordersPage = orderRepository.findByStatusAndShippingFullName(status, search.trim(), pageable);
+            ordersPage = orderRepository.findByOrderStatusAndShippingFullName(status, search.trim(), pageable);
         } else if (status != null) {
             // Chỉ filter theo status
-            ordersPage = orderRepository.findByStatus(status, pageable);
+            ordersPage = orderRepository.findByOrderStatus(status, pageable);
         } else if (search != null && !search.trim().isEmpty()) {
             // Chỉ search theo keyword
             ordersPage = orderRepository.search(search.trim(), pageable);
@@ -107,7 +109,7 @@ public class OrderService {
         Order order = Order.builder()
                 .user(user)
                 .shippingAddress(shippingAddress)
-                .status(OrderStatus.CHO_XAC_NHAN)
+                .orderStatus(OrderStatus.PENDING)
                 .orderDate(LocalDateTime.now())
                 .build();
 
@@ -160,14 +162,17 @@ public class OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(shippingCost);
 
-        // Sử dụng paymentMethod từ request, mặc định là "Tiền mặt"
-        String paymentMethod = request.getPaymentMethod() != null 
-                ? request.getPaymentMethod() 
-                : "Tiền mặt";
-        Payment payment = paymentService.createPayment(totalAmount, paymentMethod, "Giao hàng tận nơi");
+        order.setTotalAmount(totalAmount);
+
+        // Sử dụng paymentMethod từ request
+        Payment payment = Payment.builder()
+                        .totalAmount(totalAmount)
+                        .paymentMethod(request.getPaymentMethod())
+                        .paymentStatus(PaymentStatus.UNPAID)
+                        .type("Giao hàng tận nơi")
+                        .build();
 
         order.setPayment(payment);
-        order.setTotalAmount(totalAmount);
 
         return orderMapper.toOrderResponse(this.orderRepository.save(order));
     }
@@ -196,28 +201,39 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse handleUpdateOrderStatus(Long orderId, OrderStatus status) {
+    public OrderResponse handleUpdateOrderStatus(Long orderId, OrderStatus newStatus) {
 
-        Order order = orderRepository.findByIdWithOrderItems(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        Order order = orderRepository.findByIdWithPayment(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        order.setStatus(status);
-        order.setUpdatedAt(LocalDateTime.now());
-       
-        return orderMapper.toOrderResponse(orderRepository.save(order));
+        order.setOrderStatus(newStatus);
+
+        if (newStatus == OrderStatus.DELIVERED) {
+
+            Payment payment = order.getPayment();
+            if (payment != null && payment.getPaymentStatus() == PaymentStatus.UNPAID) {
+                payment.setPaymentStatus(PaymentStatus.PAID);
+                payment.setPaymentDate(LocalDateTime.now());
+            }
+
+            order.setDeliveryDate(LocalDateTime.now());
+        }
+
+        return orderMapper.toOrderResponse(order);
     }
 
-    //Hủy đơn hàng khi status !CHO_XAC_NHAN     
+
+    //Hủy đơn hàng khi status !PENDING     
     @Transactional
     public void handleCancelOrder(Long orderId) {
 
         Order order = orderRepository.findByIdWithOrderItems(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
-        if(!order.getStatus().equals(OrderStatus.CHO_XAC_NHAN)){
+        if(!order.getOrderStatus().equals(OrderStatus.PENDING)){
             throw new RuntimeException("Không thể hủy đơn hàng này");
         }
-        order.setStatus(OrderStatus.DA_HUY);
+        order.setOrderStatus(OrderStatus.CANCELLED);
         order.setUpdatedAt(LocalDateTime.now());
 
         for(OrderItem item : order.getOrderItems()) {
@@ -254,7 +270,7 @@ public class OrderService {
             .user(user)
             .shippingAddress(shippingAddress)
             .orderDate(LocalDateTime.now())
-            .status(OrderStatus.CHO_XAC_NHAN)
+            .orderStatus(OrderStatus.PENDING)
             .createdAt(LocalDateTime.now())
             .build();
 
@@ -310,11 +326,12 @@ public class OrderService {
 
         BigDecimal finalTotalAmount = totalAmount.add(shippingCost);
 
-        Payment payment = paymentService.createPayment(
-            finalTotalAmount,
-            request.getPaymentMethod(),
-            "Checkout from cart"
-        );
+        Payment payment = Payment.builder()
+            .totalAmount(finalTotalAmount)
+            .paymentMethod(request.getPaymentMethod())
+            .paymentStatus(PaymentStatus.UNPAID)
+            .type("Giao hàng tận nơi")
+            .build();
         
         order.setShippingCost(shippingCost);
 
