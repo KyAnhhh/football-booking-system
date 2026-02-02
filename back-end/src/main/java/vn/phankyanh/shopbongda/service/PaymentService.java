@@ -81,34 +81,4 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    // @Transactional
-    // public void updatePaymentStatus(Long orderId, PaymentStatus newStatus) {
-
-    //     Order order = orderRepository.findByIdWithPayment(orderId)
-    //             .orElseThrow(() -> new RuntimeException("Order not found"));
-
-    //     Payment payment = order.getPayment();
-    //     if (payment == null) {
-    //         throw new RuntimeException("Order has no payment");
-    //     }
-
-    //     // chỉ cho phép xác nhận PAID
-    //     if (newStatus != PaymentStatus.PAID) {
-    //         throw new RuntimeException("Only PAID status is allowed");
-    //     }
-
-    //     // chỉ update khi đang UNPAID
-    //     if (payment.getPaymentStatus() != PaymentStatus.UNPAID) {
-    //         throw new RuntimeException("Payment already processed");
-    //     }
-
-    //     // chỉ cho phép khi SHIPPING hoặc DELIVERED
-    //     if (order.getOrderStatus() != OrderStatus.SHIPPING
-    //             && order.getOrderStatus() != OrderStatus.DELIVERED) {
-    //         throw new RuntimeException("Cannot confirm payment at this order status");
-    //     }
-
-    //     payment.setPaymentStatus(PaymentStatus.PAID);
-    //     payment.setPaymentDate(LocalDateTime.now());
-    // }
 }

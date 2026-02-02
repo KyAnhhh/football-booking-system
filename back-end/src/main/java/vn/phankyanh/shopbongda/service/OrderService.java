@@ -86,6 +86,18 @@ public class OrderService {
         return  orderMapper.toOrderResponse(order);
     }
 
+    public OrderResponse getOrderForQr(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != OrderStatus.PENDING) {
+            throw new RuntimeException("Order not payable");
+        }
+
+        return orderMapper.toOrderResponse(order);
+    }
+
+
     public List<OrderResponse> handleGetMyOrders(Long userId) {
 
         List<Order> orders = orderRepository.findByUserId(userId);
@@ -110,6 +122,7 @@ public class OrderService {
                 .user(user)
                 .shippingAddress(shippingAddress)
                 .orderStatus(OrderStatus.PENDING)
+                .paymentMethod(request.getPaymentMethod())
                 .orderDate(LocalDateTime.now())
                 .build();
 
@@ -271,6 +284,7 @@ public class OrderService {
             .shippingAddress(shippingAddress)
             .orderDate(LocalDateTime.now())
             .orderStatus(OrderStatus.PENDING)
+            .paymentMethod(request.getPaymentMethod())
             .createdAt(LocalDateTime.now())
             .build();
 

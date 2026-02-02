@@ -70,7 +70,9 @@ public class OrderController {
         Long userId = jwt.getClaim("id");
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.orderService.handleCheckout(userId, request));
+        System.out.println(">>> paymentMethod = " + request.getPaymentMethod());
         return apiResponse;
+        
     }
 
     @PutMapping("/api/public/orders/{id:\\d+}")

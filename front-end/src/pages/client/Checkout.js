@@ -104,9 +104,11 @@ const CheckoutAddress = ({
     <label className="radio-group">
       <input
         type="radio"
+        name="addressType"
         checked={!useNewAddress}
         onChange={() => setUseNewAddress(false)}
       />
+      <span className="custom-radio"></span>
       Địa chỉ đã lưu
     </label>
 
@@ -126,9 +128,11 @@ const CheckoutAddress = ({
     <label className="radio-group">
       <input
         type="radio"
+        name="addressType"
         checked={useNewAddress}
         onChange={() => setUseNewAddress(true)}
       />
+      <span className="custom-radio"></span>
       Thêm địa chỉ mới
     </label>
 
@@ -159,24 +163,46 @@ const CheckoutAddress = ({
     )}
 
     <h3>Thanh toán</h3>
-    <select
-      value={paymentMethod}
-      onChange={(e) => setPaymentMethod(e.target.value)}
-    >
-      <option value="COD">Thanh toán khi nhận hàng</option>
-      <option value="BANK_TRANSFER">Chuyển khoản</option>
-      <option value="E_WALLET">Ví điện tử</option>
-    </select>
+    <div className="payment-methods">
+      <label className={`payment-card ${paymentMethod === "COD" ? "active" : ""}`}>
+        <input
+          type="radio"
+          name="paymentMethod"
+          value="COD"
+          checked={paymentMethod === "COD"}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+        />
+        <div>
+          <strong>COD</strong>
+          <p>Thanh toán khi nhận hàng</p>
+        </div>
+      </label>
+
+      <label className={`payment-card ${paymentMethod === "BANKING" ? "active" : ""}`}>
+        <input
+          type="radio"
+          name="paymentMethod"
+          value="BANKING"
+          checked={paymentMethod === "BANKING"}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+        />
+        <div>
+          <strong>Chuyển khoản</strong>
+          <p>Ngân hàng / QR</p>
+        </div>
+      </label>
+    </div>
     <h3>Thời gian đặt hàng: {orderDayOnly}</h3>
     <h3>Thời gian giao hàng dự kiến: {deliveryDayOnly} </h3>
   </div>
 );
 
-const CheckoutSummary = ({ items, loading, onCheckout }) => {
+const CheckoutSummary = ({ items, loading, onCheckout, paymentMethod, showQR }) => {
   const subTotal = items.reduce((sum, i) => {
   const discountPercent = i.discount || 0;
   const priceAfterDiscount =
     i.priceAtAddedTime * (100 - discountPercent) / 100;
+    
 
   return sum + priceAfterDiscount * i.totalQuantity;
 }, 0);
@@ -220,9 +246,13 @@ const total = subTotal + shippingFee;
       <button
         className="checkout-btn"
         onClick={onCheckout}
-        disabled={loading}
+        disabled={loading || showQR}
       >
-        {loading ? "Đang xử lý..." : "Đặt hàng"}
+        {loading ? "Đang xử lý..." 
+          : paymentMethod === "COD" 
+          ? "Đặt hàng" 
+          : "Tạo đơn & hiển thị QR"
+        }
       </button>
     </div>
   );
@@ -248,6 +278,11 @@ export default function Checkout() {
 
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
+
+  const [showQR, setShowQR] = useState(false);
+
+  const [orderId, setOrderId] = useState(null);
+
 
   useEffect(() => {
     const checkoutItemIds = location.state?.itemIds || [];
@@ -343,6 +378,7 @@ export default function Checkout() {
           }],
           shippingCost: shippingCost,
         });
+        setOrderId(response.id);
       } else {
         const requestBody = {
           shippingAddressId: addressId,
@@ -351,15 +387,29 @@ export default function Checkout() {
         };
         console.log("Checkout request body:", requestBody);
         response = await checkout(requestBody);
+
+        setOrderId(response.id);
       }
 
       Swal.fire({
-        icon: "success",
-        title: "Đặt hàng thành công 🎉",
-        text: `Mã đơn hàng: ${response.id}`,
+        icon: paymentMethod === "BANKING" ? "info" : "success",
+        title:
+          paymentMethod === "BANKING"
+            ? "Đơn hàng đã được tạo"
+            : "Đặt hàng thành công 🎉",
+        text:
+          paymentMethod === "BANKING"
+            ? "Vui lòng quét mã QR để thanh toán đơn hàng"
+            : "Đơn hàng của bạn đã được đặt thành công. Shop sẽ sớm liên hệ!",
+        confirmButtonText: "OK"
       }).then(() => {
-        window.location.href = `/`;
+        if (paymentMethod === "BANKING") {
+          setShowQR(true);
+        } else {
+          window.location.href = "/";
+        }
       });
+
     } catch (e) {
       console.error("Checkout error:", e);
       Swal.fire({
@@ -371,6 +421,14 @@ export default function Checkout() {
       setLoading(false);
     }
   };
+  const handleConfirmTransfer = async () => {
+    Swal.fire({
+      icon: "info",
+      title: "Đã ghi nhận",
+      text: "Đơn hàng của bạn đang được xử lý."
+    });
+    window.location.href = "/";
+  }
 
   return (
     <div className="checkout-container">
@@ -403,7 +461,39 @@ export default function Checkout() {
           )}
           loading={loading}
           onCheckout={handleCheckout}
+          paymentMethod={paymentMethod}
+          showQR={showQR}
         />
+
+        {/* Hiển thị QR-CODE */}
+        {paymentMethod === "BANKING" && showQR && orderId && (
+          <div className="checkout-card qr-box">
+            <h3>Quét mã QR để thanh toán</h3>
+
+            <p className="qr-status">
+              ⏳ Trạng thái: <b>Chờ thanh toán</b>
+            </p>
+
+            <p style={{ color: "#666", fontSize: 14 }}>
+              Đơn hàng đã được tạo, vui lòng hoàn tất chuyển khoản
+            </p>
+            <img
+              src={`http://localhost:8080/api/public/order/${orderId}/generate-qr`}
+              alt="QR thanh toán"
+              style={{ width: 250 }}
+            />
+            <button
+              className="checkout-btn"
+              style={{ marginTop: 16 }}
+              onClick={handleConfirmTransfer}
+            >
+              Tôi đã chuyển khoản
+            </button>
+            <p>
+              Nội dung chuyển khoản: <b>Đơn hàng #{orderId}</b>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -53,7 +53,13 @@ export default function ProductDetail() {
       quantity,
     });
 
-    Swal.fire("Thành công", "Đã thêm vào giỏ hàng", "success");
+    Swal.fire({
+      title: "Thành công",
+      text: "Đã thêm vào giỏ hàng",
+      icon: "success",
+      timer: 1500,
+    },
+  );
   };
   
   return (

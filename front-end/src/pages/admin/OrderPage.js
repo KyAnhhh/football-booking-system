@@ -158,6 +158,7 @@ export default function OrderPage() {
             <th onClick={() => toggleSort("orderDate")}>Order Date</th>
             <th onClick={() => toggleSort("totalAmount")}>Total</th>
             <th onClick={() => toggleSort("orderStatus")}>Order Status</th>
+            <th>Payment Method</th>
             <th>Actions</th>
 
           </tr>
@@ -177,6 +178,7 @@ export default function OrderPage() {
                   {o.orderStatus}
                 </span>
               </td>
+              <td>{o.paymentMethod}</td>
 
               <td>
                 <span

@@ -65,9 +65,9 @@ public class Payment {
                 ? this.transactionCode
                 : "PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         this.type = "Giao hàng tận nơi";
-        this.paymentMethod = PaymentMethod.COD; // Thanh toán khi nhận hàng
+        this.paymentMethod = this.paymentMethod != null ? this.paymentMethod : PaymentMethod.COD; // Chỉ set COD nếu chưa có giá trị
         this.paymentStatus = PaymentStatus.UNPAID;
-        this.paymentDate = null; // vì chưa thanh toán
+        this.paymentDate = this.paymentMethod == PaymentMethod.COD ? null : this.paymentDate; // vì chưa thanh toán
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
