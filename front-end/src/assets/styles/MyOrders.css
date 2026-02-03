@@ -1,0 +1,17 @@
+.my-orders {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 0 16px;
+}
+
+.my-orders h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.empty-orders {
+  text-align: center;
+  color: #777;
+  margin-top: 40px;
+  font-size: 16px;
+}

@@ -1,3 +1,4 @@
+/* ================= HEADER ================= */
 .fs-header {
   width: 100%;
   background: linear-gradient(90deg, #003b88 0%, #0074d9 100%);
@@ -8,18 +9,17 @@
   box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
 }
 
-/* inner container */
 .fs-header-inner {
   max-width: 1200px;
   margin: 0 auto;
   padding: 12px 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
   justify-content: space-between;
+  gap: 12px;
 }
 
-/* logo */
+/* ================= LOGO ================= */
 .fs-logo {
   display: flex;
   align-items: center;
@@ -30,7 +30,6 @@
 
 .fs-logo-ball {
   font-size: 1.25rem;
-  line-height: 1;
 }
 
 .fs-logo-text {
@@ -39,11 +38,11 @@
   letter-spacing: 0.4px;
 }
 
-/* desktop nav */
+/* ================= NAV DESKTOP ================= */
 .fs-nav {
   display: flex;
-  gap: 22px;
   align-items: center;
+  gap: 22px;
   flex: 1;
   justify-content: center;
 }
@@ -54,37 +53,40 @@
   font-weight: 500;
   padding: 8px 10px;
   border-radius: 8px;
-  transition: background 180ms ease, color 180ms ease, transform 120ms ease;
+  transition: background 0.18s ease, transform 0.12s ease;
   white-space: nowrap;
-  font-size: 0.98rem;
 }
 
 .fs-nav-link:hover,
 .fs-nav-link:focus {
   background: rgba(255,255,255,0.06);
-  color: #e6f3ff;
   transform: translateY(-2px);
   outline: none;
 }
 
-/* action icons */
+/* ================= ACTIONS ================= */
 .fs-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* icon chung */
 .fs-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 8px;
   border-radius: 10px;
-  text-decoration: none;
   color: white;
-  transition: background 150ms ease, transform 120ms ease;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
 }
 
+/* hover CHUNG (cart, hamburger) */
 .fs-icon-btn:hover,
 .fs-icon-btn:focus {
   background: rgba(255,255,255,0.06);
@@ -92,7 +94,93 @@
   outline: none;
 }
 
-/* menu toggle hidden on desktop */
+/* ================= CART ================= */
+.fs-cart-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* ================= USER MENU ================= */
+.fs-user-menu {
+  position: relative;
+}
+
+/* USER ICON: không nền – không border – không transform */
+.fs-user-menu .fs-icon-btn {
+  background: transparent;
+  box-shadow: none;
+}
+
+.fs-user-menu .fs-icon-btn:hover,
+.fs-user-menu .fs-icon-btn:focus,
+.fs-user-menu .fs-icon-btn:active {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ================= USER DROPDOWN ================= */
+.fs-user-dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  min-width: 200px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 999;
+  animation: dropdownFade 0.2s ease;
+}
+
+.fs-user-dropdown.show {
+  display: flex;
+}
+
+.fs-user-dropdown a,
+.fs-user-dropdown button {
+  padding: 12px 16px;
+  font-size: 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.fs-user-dropdown a {
+  color: #333;
+  text-decoration: none;
+}
+
+.fs-user-dropdown a:hover,
+.fs-user-dropdown button:hover {
+  background: #f2f6ff;
+}
+
+.fs-user-dropdown button {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+/* ================= LOGIN BUTTON ================= */
+.fs-login-btn {
+  background: white;
+  color: #0a3d91;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.fs-login-btn:hover {
+  background: #f2f6ff;
+  color: #0044cc;
+}
+
+/* ================= HAMBURGER ================= */
 .fs-menu-toggle {
   display: none;
   background: transparent;
@@ -103,17 +191,20 @@
   cursor: pointer;
 }
 
-/* mobile menu (dropdown) */
+/* ================= MOBILE MENU ================= */
 .fs-mobile-menu {
   display: none;
   flex-direction: column;
   gap: 6px;
-  padding: 12px 20px 18px 20px;
-  background: linear-gradient(180deg, rgba(0,64,136,0.95), rgba(0,84,170,0.98));
+  padding: 12px 20px 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(0,64,136,0.95),
+    rgba(0,84,170,0.98)
+  );
   border-top: 1px solid rgba(255,255,255,0.04);
 }
 
-/* mobile link style */
 .fs-mobile-link {
   color: white;
   text-decoration: none;
@@ -122,71 +213,54 @@
   font-weight: 600;
 }
 
-.fs-mobile-link:hover,
-.fs-mobile-link:focus {
+.fs-mobile-link:hover {
   background: rgba(255,255,255,0.04);
-  color: #e6f3ff;
-  outline: none;
 }
 
-/* small screens behavior */
-@media (max-width: 768px) {
-  .fs-header-inner { padding: 12px 16px; }
-
-  .fs-nav { display: none; }
-
-  .fs-menu-toggle { display: inline-flex; }
-
-  .fs-actions { gap: 6px; }
-
-  .fs-mobile-menu { display: none; }
-
-  .fs-mobile-menu.show { display: flex; animation: slideDown 180ms ease; }
-}
-
-/* small animation */
-@keyframes slideDown {
-  from { transform: translateY(-6px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-/* accessibility focus ring */
-.fs-nav-link:focus,
-.fs-icon-btn:focus,
-.fs-menu-toggle:focus,
-.fs-mobile-link:focus {
-  box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
-}
-
-/* very small screens: compact logo text */
-@media (max-width: 420px) {
-  .fs-logo-text { font-size: 1rem; }
-  .fs-nav-link { font-size: 0.95rem; padding: 7px 8px; }
-}
-.fs-login-btn {
-  background: white;
-  color: #0a3d91;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 20px;
+.admin-link {
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-}
-
-.fs-login-btn:hover {
-  background: #f2f6ff;
-  color: #0044cc;
-}
-
-.fs-login-btn.logout {
-  background: transparent;
-  color: white;
-  border: 1px solid white;
-}
-
-.fs-login-btn.logout:hover {
-  background: white;
   color: #0a3d91;
+}
+
+.admin-link:hover {
+  background: #eef4ff;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .fs-nav {
+    display: none;
+  }
+
+  .fs-menu-toggle {
+    display: inline-flex;
+  }
+
+  .fs-mobile-menu.show {
+    display: flex;
+    animation: slideDown 0.18s ease;
+  }
+}
+
+/* ================= ANIMATION ================= */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }

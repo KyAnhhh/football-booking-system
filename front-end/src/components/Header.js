@@ -1,20 +1,46 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "../assets/styles/Header.css";
 import { useLocation } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState(null);
+
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+
   const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if(token){
-      setUser({ token: "user" });
+      const decode = jwtDecode(token);
+      setUser({
+        id: decode.id,
+        username: decode.sub,
+        role: decode.role.replace("ROLE_", "")
+      })
     } else{
       setUser(null);
     }
   }, []);
+
+  useEffect(() => {
+  function handleClickOutside(e) {
+    if (
+      userMenuRef.current &&
+      !userMenuRef.current.contains(e.target)
+    ) {
+      setUserMenuOpen(false);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
+
 
   useEffect(() => {
     function onResize() {
@@ -54,7 +80,7 @@ export default function Header() {
 
         {/* Actions */}
         <div className="fs-actions">
-          <a className="fs-icon-btn" href="/cart" aria-label="Cart">
+          <a className="fs-icon-btn fs-cart-btn" href="/cart" aria-label="Cart">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path d="M6 6h15l-1.5 9h-11L6 6z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
               <circle cx="10" cy="20" r="1" fill="currentColor"/>
@@ -64,13 +90,41 @@ export default function Header() {
 
           {user ? (
             <>
-              <a className="fs-icon-btn" href="/profile" aria-label="Profile">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path d="M20 21v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </a>
-              <button className="fs-login-btn logout" onClick={handleLogout}>Đăng xuất</button>
+              <div className="fs-user-menu" ref={userMenuRef}>
+                <button
+                  className="fs-icon-btn"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  aria-label="User menu"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M20 21v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                    />
+                    <circle
+                      cx="12"
+                      cy="7"
+                      r="4"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                    />
+                  </svg>
+                </button>
+
+                <div className={`fs-user-dropdown ${userMenuOpen ? "show" : ""}`}>
+                  <a href="/profile">Thông tin cá nhân</a>
+                  <a href="/my-orders">Đơn hàng của tôi</a>
+                    {user?.role === "ADMIN" && (
+                      <a href="/admin" className="admin-link">
+                        🔧 Quản trị hệ thống
+                      </a>
+                    )}
+                  <button onClick={handleLogout}>Đăng xuất</button>
+                </div>
+              </div>
+
+
             </>
           ) : (
             <a className="fs-login-btn" href="/login">Đăng nhập</a>

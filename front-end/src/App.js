@@ -21,6 +21,9 @@ import Cart from "./pages/client/Cart";
 import Checkout from "./pages/client/Checkout";
 import ProductDetail from "./pages/client/ProductDetail";
 import PaymentPage from "./pages/admin/PaymentPage";
+import MyOrders from "./pages/client/MyOrders";
+import Collection from "./pages/client/Collection";
+import Service from "./pages/client/Service";
 
 function App() {
   return (
@@ -102,6 +105,30 @@ function App() {
           element={
             <ClientLayout>
               <Cart />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/collections"
+          element={
+            <ClientLayout>
+              <Collection />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/service"
+          element={
+            <ClientLayout>
+              <Service />
+            </ClientLayout>
+          }
+        />
+        <Route
+          path="/my-orders"
+          element={
+            <ClientLayout>
+              <MyOrders />
             </ClientLayout>
           }
         />
