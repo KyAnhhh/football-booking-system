@@ -37,6 +37,7 @@ public class Brand {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "brand", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Product> products;
 
     @PrePersist

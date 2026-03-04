@@ -1,3 +1,5 @@
+import { data } from "react-router-dom";
+
 const API_URL = "http://localhost:8080/api/auth";
 
     export const login = async(credentials) => {
@@ -14,6 +16,23 @@ const API_URL = "http://localhost:8080/api/auth";
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(credentials),
         });    
+    }
+
+    export const forgotPassword = async(email) => {
+        return await fetch(`${API_URL}/forgot-password`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ email }),
+        });
+    }
+
+    // token và newPassword thì sẽ gửi bằng @RequestParam
+    export const resetPassword = async(request) => {
+        return await fetch(`${API_URL}/reset-password`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(request),
+        });
     }
 
     export const refresh = async () => {

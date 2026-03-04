@@ -24,6 +24,8 @@ import PaymentPage from "./pages/admin/PaymentPage";
 import MyOrders from "./pages/client/MyOrders";
 import Collection from "./pages/client/Collection";
 import Service from "./pages/client/Service";
+import ForgotPassword from "./pages/Forgot-Password";
+import ResetPassword from "./pages/Reset-Password";
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Admin routes */}
         <Route

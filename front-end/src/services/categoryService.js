@@ -21,7 +21,7 @@ function getAuthHeader() {
     : {};
 }
 
-export const getCategories = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
+export const getCategories = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDir = "asc", search = "") => {
   const headers = {
     "Content-Type": "application/json",
   };

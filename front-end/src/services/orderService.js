@@ -35,7 +35,7 @@ function getAuthHeader() {
 
 export const getOrders = async (
   pageNo = 0,
-  pageSize = 5,
+  pageSize = 10,
   sortBy = "id",
   sortDir = "asc",
   search = "",

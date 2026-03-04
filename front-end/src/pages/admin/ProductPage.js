@@ -27,6 +27,15 @@ export default function ProductPage() {
   const [selectedImageProduct, setSelectedImageProduct] = useState(null);
   const [selectedVariantProduct, setSelectedVariantProduct] = useState(null);
 
+      // Paging + Sorting + Search
+  const [pageNo, setPageNo] = useState(0);
+  const [pageSize] = useState(10);
+  const [sortBy, setSortBy] = useState("id");
+  const [sortDir, setSortDir] = useState("asc");
+  const [search, setSearch] = useState("");
+
+  const [pageData, setPageData] = useState(null);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -63,19 +72,21 @@ export default function ProductPage() {
 const loadData = async () => {
   try {
     const [pRes, bRes, cRes] = await Promise.all([
-      getProducts(),
+      getProducts(pageNo, pageSize, sortBy, sortDir, search),
       getAllBrandsForDropdown(),
       getAllCategoriesForDropdown()
     ]);
-
-    if (Array.isArray(pRes)) {
-      setProducts(pRes);
-    } else if (Array.isArray(pRes?.content)) {
-      setProducts(pRes.content);
-    } else {
-      console.error("Product API response invalid:", pRes);
-      setProducts([]);
-    }
+    
+      if (pRes && typeof pRes === "object" && Array.isArray(pRes.content)) {
+        setProducts(pRes.content);
+        setPageData(pRes);
+      } else if (Array.isArray(pRes)) {
+        setProducts(pRes);
+        setPageData(null);
+      } else {
+        setProducts([]);
+        setPageData(null);
+      }
 
     setBrands(Array.isArray(bRes) ? bRes : []);
     setCategories(Array.isArray(cRes) ? cRes : []);
@@ -88,7 +99,7 @@ const loadData = async () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [pageNo, sortBy, sortDir, search]);
 
   const openCreate = () => {
     setEditingProduct(null);
@@ -156,13 +167,26 @@ const loadData = async () => {
 
   return (
     <div className="container mt-4">
-      <div className="product-header">
-          <h2>Product Management</h2>
+ <div className="product-header d-flex justify-content-between align-items-center">
+  <h2>Product Management</h2>
 
-        <Button className="mb-3" onClick={openCreate}>
-          + New Product
-        </Button>
-      </div>
+  <div className="d-flex gap-2">
+    <Form.Control
+      type="text"
+      placeholder="Search product..."
+      value={search}
+      onChange={(e) => {
+        setSearch(e.target.value);
+        setPageNo(0);
+      }}
+      style={{ width: "250px" }}
+    />
+
+    <Button onClick={openCreate}>
+      + New Product
+    </Button>
+  </div>
+</div>
 
 
       <Table bordered hover>
@@ -179,7 +203,7 @@ const loadData = async () => {
         <tbody>
           {products.map((p, i) => (
             <tr key={p.id}>
-              <td>{i + 1}</td>
+              <td>{pageNo * pageSize + i + 1}</td>
               <td>{p.name}</td>
               <td>{p.discount}</td>
               <td>{p.brandName}</td>
@@ -214,6 +238,28 @@ const loadData = async () => {
           ))}
         </tbody>
       </Table>
+
+      {pageData && (
+  <div className="pagination-section d-flex justify-content-center align-items-center mt-3">
+    <Button
+      disabled={pageNo === 0}
+      onClick={() => setPageNo(pageNo - 1)}
+    >
+      Prev
+    </Button>
+
+    <span style={{ margin: "0 15px" }}>
+      Page {pageNo + 1} / {pageData.page?.totalPages}
+    </span>
+
+    <Button
+      disabled={pageNo + 1 >= pageData.page?.totalPages}
+      onClick={() => setPageNo(pageNo + 1)}
+    >
+      Next
+    </Button>
+  </div>
+)}
 
       {selectedImageProduct && (
         <ImagePage

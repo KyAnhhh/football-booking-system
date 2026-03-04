@@ -182,3 +182,25 @@
     width: 100%;
   }
 }
+
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.pagination button {
+  padding: 6px 14px;
+  border: none;
+  background: #111;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.pagination button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}

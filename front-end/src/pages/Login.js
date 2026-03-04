@@ -75,6 +75,9 @@ export default function Login() {
           {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
 
+        <p className="forgot-password-text">
+          <a href="/forgot-password">Quên mật khẩu?</a>
+        </p>
         <p className="signup-text">
           Không có tài khoản? <a href="/register">Đăng ký</a>
         </p>

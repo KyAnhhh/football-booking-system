@@ -33,7 +33,8 @@ export const uploadProductImages = async (productId, files, primaryIndex) => {
   const response = await fetchWithAuth(`${API_URL_ADMIN_UPLOAD}/${productId}/images`, {
     method: "POST",
     headers: {
-      ...getAuthHeader()
+      // ...getAuthHeader()
+      Authorization: getAuthHeader().Authorization
     },
     body: formData
   });

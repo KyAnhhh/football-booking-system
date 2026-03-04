@@ -8,13 +8,16 @@ export default function Product() {
   const [products, setProducts] = useState([]);
   const [pageNo, setPageNo] = useState(0);
   const [search, setSearch] = useState("");
+  const [totalPages, setTotalPages] = useState(0);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    getProducts(pageNo, 8, "id", "asc", search).then((res) => {
-      setProducts(res.content || []);
-    });
+    getProducts(pageNo, 10, "id", "asc", search).then((res) => {
+      console.log("API response:", res);
+    setProducts(res.content || []);
+    setTotalPages(res.page?.totalPages || 0);
+  });
   }, [pageNo, search]);
 
   return (
@@ -95,6 +98,25 @@ export default function Product() {
             </div>
           );
         })}
+      </div>
+      <div className="pagination">
+        <button
+          disabled={pageNo === 0}
+          onClick={() => setPageNo((prev) => prev - 1)}
+        >
+          ← Trước
+        </button>
+
+        <span>
+          Trang {pageNo + 1} / {totalPages}
+        </span>
+
+        <button
+          disabled={pageNo + 1 >= totalPages}
+          onClick={() => setPageNo((prev) => prev + 1)}
+        >
+          Sau →
+        </button>
       </div>
     </div>
   );

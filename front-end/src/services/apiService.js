@@ -10,14 +10,20 @@ const processQueue = (token) => {
 
 export const fetchWithAuth = async (url, options = {}) => {
   const accessToken = localStorage.getItem("accessToken");
+  const isFormData = options.body instanceof FormData;
 
   const response = await fetch(url, {
     ...options,
+    // headers: {
+    //   "Content-Type": "application/json",
+    //   ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+    //   ...options.headers,
+    // }
     headers: {
-      "Content-Type": "application/json",
-      ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-      ...options.headers,
-    }
+  ...( !isFormData && { "Content-Type": "application/json" } ),
+  ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+  ...options.headers,
+}
   });
 
   // chỉ xử lý 401,403 KHÔNG áp dụng cho refresh API

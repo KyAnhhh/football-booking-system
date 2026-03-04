@@ -145,6 +145,14 @@
   transition: color 0.3s ease;
 }
 
+.forgot-password-text a {
+  margin-top: 1.5rem;
+  color: #60A5FA;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
 .signup-text a:hover {
   color: #3B82F6;
   text-decoration: underline;

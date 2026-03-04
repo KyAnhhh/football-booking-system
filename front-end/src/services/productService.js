@@ -22,19 +22,47 @@ function getAuthHeader() {
     : {};
 }
 
-export const getProducts = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
+// export const getProducts = async (pageNo = 0, pageSize = 12, sortBy = "id", sortDir = "asc", search = "") => {
+//   const headers = {
+//     "Content-Type": "application/json"
+//   };
+//   const params = new URLSearchParams({
+//     pageNo,
+//     pageSize,
+//     sortBy,
+//     sortDir
+//   });
+//   if (search) params.append("search", search);
+  
+//   const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
+//   return await handleResponse(response);
+// };
+
+export const getProducts = async (
+  pageNo,
+  pageSize,
+  sortBy = "id",
+  sortDir = "asc",
+  search = ""
+) => {
   const headers = {
     "Content-Type": "application/json"
   };
-  const params = new URLSearchParams({
-    pageNo,
-    pageSize,
-    sortBy,
-    sortDir
-  });
+
+const params = new URLSearchParams({
+  pageNo: pageNo,
+  pageSize: pageSize,
+  sortBy: sortBy,
+  sortDir: sortDir
+});
+
   if (search) params.append("search", search);
-  
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
+
+  const response = await fetchWithAuth(
+    `${API_URL_PUBLIC}?${params.toString()}`,
+    { headers }
+  );
+
   return await handleResponse(response);
 };
 
