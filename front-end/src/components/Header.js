@@ -14,7 +14,8 @@ export default function Header() {
   const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    // const token = sessionStorage.getItem("accessToken");
+    const token = sessionStorage.getItem("accessToken");
     if(token){
       const decode = jwtDecode(token);
       setUser({
@@ -51,8 +52,8 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("refreshToken");
       setUser(null);
       window.location.href = "/";
     };

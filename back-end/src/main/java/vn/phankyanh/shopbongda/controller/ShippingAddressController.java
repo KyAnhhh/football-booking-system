@@ -42,11 +42,13 @@ public class ShippingAddressController {
     @GetMapping("/api/public/shipping-addresses/me")
     public ApiResponse<ShippingAddressResponse> getAddressOfMe(@AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
+        
+        ShippingAddressResponse address = shippingAddressService.handleGetAddressOfMe(userId);
+
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.shippingAddressService.handleGetAddressOfMe(userId));
+        apiResponse.setData(address);
         return apiResponse;
     }
-    
 
     @GetMapping("/api/public/shipping-addresses/{id}")
     public ApiResponse<ShippingAddressResponse> getShippingAddressById(@PathVariable("id") Long id){

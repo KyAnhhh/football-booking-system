@@ -141,8 +141,17 @@ public class OrderService {
             variant.setSoldQuantity(variant.getSoldQuantity() + itemRequest.getQuantity());
 
 
+            // BigDecimal unitPrice = variant.getPrice();
+            // BigDecimal discountAmount = BigDecimal.ZERO;
+            // BigDecimal finalPrice = unitPrice.subtract(discountAmount);
             BigDecimal unitPrice = variant.getPrice();
-            BigDecimal discountAmount = BigDecimal.ZERO;
+
+            Integer discount = variant.getProduct().getDiscount();
+
+            BigDecimal discountAmount = unitPrice
+                    .multiply(BigDecimal.valueOf(discount))
+                    .divide(BigDecimal.valueOf(100));
+
             BigDecimal finalPrice = unitPrice.subtract(discountAmount);
             BigDecimal total = finalPrice.multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
 

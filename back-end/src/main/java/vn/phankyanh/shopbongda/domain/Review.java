@@ -14,7 +14,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+@Table(
+    name = "reviews",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "product_id"})
+    }
+) // tránh spam review của 1 user cho 1 product
 @Getter
 @Setter
 @NoArgsConstructor
@@ -44,8 +49,6 @@ public class Review {
     @NotBlank(message = "Comment không được để trống")
     private String comment;
 
-    @NotBlank(message = "Status không được để trống")
-    private String status;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

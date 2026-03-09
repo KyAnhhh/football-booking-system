@@ -34,6 +34,9 @@ public class ShippingAddressService {
     public ShippingAddressResponse handleGetAddressOfMe(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+        if(user.getShippingAddresses() == null || user.getShippingAddresses().isEmpty()) {
+            return null; // Trả về null nếu user chưa có địa chỉ giao hàng nào
+        }
         return shippingAddressMapper.toResponse(user.getShippingAddresses().get(0));
     }
 

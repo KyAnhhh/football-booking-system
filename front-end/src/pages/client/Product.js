@@ -14,7 +14,6 @@ export default function Product() {
 
   useEffect(() => {
     getProducts(pageNo, 10, "id", "asc", search).then((res) => {
-      console.log("API response:", res);
     setProducts(res.content || []);
     setTotalPages(res.page?.totalPages || 0);
   });

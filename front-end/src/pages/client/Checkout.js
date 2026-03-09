@@ -30,14 +30,17 @@ const validateCheckout = ({
   newAddress,
   selectedAddressId,
 }) => {
+
   if (selectedItemIds.length === 0)
     return "Vui lòng chọn ít nhất 1 sản phẩm";
 
   if (useNewAddress) {
     if (!newAddress.fullName || newAddress.fullName.length < 2)
       return "Họ tên không hợp lệ";
+
     if (!phoneRegex.test(newAddress.phone))
       return "Số điện thoại không hợp lệ";
+
     if (!newAddress.address || newAddress.address.length < 5)
       return "Địa chỉ không hợp lệ";
   } else {
@@ -113,17 +116,25 @@ const CheckoutAddress = ({
     </label>
 
     {!useNewAddress && (
-      <select
-        value={selectedAddressId || ""}
-        onChange={(e) => setSelectedAddressId(Number(e.target.value))}
-      >
-        {addresses.map((addr) => (
-          <option key={addr.id} value={addr.id}>
-            {addr.fullName} – {addr.address}
-          </option>
-        ))}
-      </select>
-    )}
+    <>
+      {addresses.length > 0 ? (
+        <select
+          value={selectedAddressId || ""}
+          onChange={(e) => setSelectedAddressId(Number(e.target.value))}
+        >
+          {addresses.map((addr) => (
+            <option key={addr.id} value={addr.id}>
+              {addr.fullName} – {addr.address}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <p style={{ color: "#888", marginTop: "8px" }}>
+          Bạn chưa có địa chỉ. Hãy chọn "Thêm địa chỉ mới".
+        </p>
+      )}
+    </>
+  )}
 
     <label className="radio-group">
       <input
@@ -310,8 +321,6 @@ export default function Checkout() {
           discount: item.discount ?? 0
         }));
 
-        setCartItems(allItems);
-
         const filteredItems = checkoutItemIds.length
           ? allItems.filter((i) => checkoutItemIds.includes(i.id))
           : allItems;
@@ -321,10 +330,19 @@ export default function Checkout() {
     };
 
     const loadAddresses = async () => {
-      const res = await getAddressOfMe();
-      if (res) {
-        setAddresses([res]);
-        setSelectedAddressId(res.id);
+      try {
+        const res = await getAddressOfMe();
+
+        if (res?.data) {
+          setAddresses([res.data]);
+          setSelectedAddressId(res.data.id);
+        } else {
+          setAddresses([]);
+        }
+
+      } catch (error) {
+        console.error("Lỗi khi tải địa chỉ:", error);
+        setAddresses([]);
       }
     };
 

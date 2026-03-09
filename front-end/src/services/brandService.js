@@ -13,7 +13,7 @@ const handleResponse = async (response) => {
 };
 
 function getAuthHeader() {
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
   return token
     ? {
         Authorization: `Bearer ${token}`,

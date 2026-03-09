@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 export default function ProtectedRoute({ role, children }) {
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("accessToken");
 
   if (!token) {
     // Nếu chưa login → redirect login
@@ -19,7 +19,7 @@ export default function ProtectedRoute({ role, children }) {
     // console.log("ProtectedRoute - Decoded role:", userRole);
   } catch (err) {
     console.error("Invalid token:", err);
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     return <Navigate to="/login" />;
   }
 

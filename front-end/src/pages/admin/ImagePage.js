@@ -105,7 +105,7 @@ export default function ImagePage({ product, onClose }) {
   return (
     <div className="card mt-4">
       <div className="card-header d-flex justify-content-between">
-        <strong>Images of: {product?.name}</strong>
+        <strong>Ảnh: {product?.name}</strong>
         <button className="btn btn-sm btn-secondary" onClick={onClose}>
           Close
         </button>

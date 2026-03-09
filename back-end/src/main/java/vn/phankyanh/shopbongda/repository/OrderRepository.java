@@ -71,4 +71,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
        """)
        BigDecimal sumRevenue();
 
+       @Query("""
+       SELECT COUNT(o) > 0
+       FROM Order o
+       JOIN o.orderItems oi
+       WHERE o.user.id = :userId
+       AND oi.productVariant.product.id = :productId
+       AND o.orderStatus = vn.phankyanh.shopbongda.domain.OrderStatus.DELIVERED
+""")
+       boolean existsDeliveredOrderProduct(Long userId,
+                                          Long productId);
 }

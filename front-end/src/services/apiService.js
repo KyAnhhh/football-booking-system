@@ -9,7 +9,7 @@ const processQueue = (token) => {
 };
 
 export const fetchWithAuth = async (url, options = {}) => {
-  const accessToken = localStorage.getItem("accessToken");
+  const accessToken = sessionStorage.getItem("accessToken");
   const isFormData = options.body instanceof FormData;
 
   const response = await fetch(url, {
@@ -40,8 +40,8 @@ export const fetchWithAuth = async (url, options = {}) => {
 
       const data = await refreshRes.json();
 
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      sessionStorage.setItem("accessToken", data.accessToken);
+      sessionStorage.setItem("refreshToken", data.refreshToken);
 
       processQueue(data.accessToken);
       isRefreshing = false;
@@ -59,8 +59,8 @@ export const fetchWithAuth = async (url, options = {}) => {
     } catch (err) {
       isRefreshing = false;
       pendingRequests = [];
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("refreshToken");
       window.location.href = "/login";
       throw err;
     }

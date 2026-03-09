@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import "../../assets/styles/Home.css";
 import { Link } from "react-router-dom";
 
@@ -26,7 +26,6 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-bg-animation">
           <div className="floating-ball ball-1"></div>
@@ -44,7 +43,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Top Brands Section */}
       <section className="top-brands-section animate-on-scroll">
         <div className="container">
           <h2 className="section-title">Thương Hiệu Hàng Đầu</h2>
@@ -81,7 +79,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
       <section className="why-choose-us-section animate-on-scroll">
         <div className="container">
           <h2 className="section-title">Tại Sao Chọn Chúng Tôi?</h2>
@@ -108,7 +105,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ Section */}
       <section className="faq-section animate-on-scroll">
         <div className="container">
           <h2 className="section-title">Câu Hỏi Thường Gặp</h2>
@@ -135,7 +131,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="features-section animate-on-scroll">
         <div className="container">
           <h2 className="section-title">Ưu Điểm Nổi Bật</h2>

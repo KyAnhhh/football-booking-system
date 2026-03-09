@@ -1,5 +1,3 @@
-import { data } from "react-router-dom";
-
 const API_URL = "http://localhost:8080/api/auth";
 
     export const login = async(credentials) => {
@@ -36,7 +34,7 @@ const API_URL = "http://localhost:8080/api/auth";
     }
 
     export const refresh = async () => {
-        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshToken = sessionStorage.getItem("refreshToken");
         if (!refreshToken) {
             throw new Error("No refresh token found");
         }
