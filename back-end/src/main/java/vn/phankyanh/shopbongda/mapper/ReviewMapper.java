@@ -13,6 +13,7 @@ public interface ReviewMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "product", ignore = true)
+    @Mapping(target= "orderItem", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Review toReview(ReviewRequest request);

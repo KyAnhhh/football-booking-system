@@ -140,6 +140,23 @@ export const cancelOrder = async (orderId) => {
   return await handleResponse(response);
 }
 
+export const confirmReceived = async (orderId) => {
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+  }
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${orderId}/confirm-receipt`, {
+    method: "PUT",
+    headers,
+  });
+  if(!response.ok){
+    throw new Error("Xác nhận đã nhận hàng thất bại");
+
+  }
+  return await handleResponse(response);
+}
+
+
 export const checkout = async (request) => {
   const headers = {
     "Content-Type": "application/json",

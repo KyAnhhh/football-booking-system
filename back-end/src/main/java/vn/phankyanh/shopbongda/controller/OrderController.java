@@ -98,6 +98,15 @@ public class OrderController {
         return apiResponse;
     }
 
+    @PutMapping("/api/public/orders/{orderId}/confirm-receipt")
+    public ApiResponse<Void> confirmReceipt(@PathVariable("orderId") Long orderId, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("id");
+        ApiResponse<Void> apiResponse = new ApiResponse<>();
+        this.orderService.handleConfirmReceive(orderId, userId);
+        apiResponse.setMessage("Order receipt confirmed successfully");
+        return apiResponse;
+    }
+    
     @PutMapping("/api/public/orders/{orderId}/cancel")
     public ApiResponse<Void> cancelOrder(@PathVariable("orderId") Long orderId) {
         ApiResponse<Void> apiResponse = new ApiResponse<>();

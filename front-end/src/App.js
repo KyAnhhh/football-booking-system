@@ -26,6 +26,8 @@ import Collection from "./pages/client/Collection";
 import Service from "./pages/client/Service";
 import ForgotPassword from "./pages/Forgot-Password";
 import ResetPassword from "./pages/Reset-Password";
+import ReviewSection from "./components/review/ReviewSection";
+import Review from "./pages/client/Review";
 
 function App() {
   return (
@@ -64,6 +66,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/products"
           element={
@@ -72,6 +75,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/products/product-details/:id"
           element={
@@ -80,6 +84,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/about"
           element={
@@ -88,6 +93,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/contact"
           element={
@@ -96,6 +102,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/profile"
           element={
@@ -104,6 +111,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/cart"
           element={
@@ -112,6 +120,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/collections"
           element={
@@ -120,6 +129,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/service"
           element={
@@ -128,6 +138,7 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/my-orders"
           element={
@@ -136,11 +147,30 @@ function App() {
             </ClientLayout>
           }
         />
+
         <Route
           path="/cart/checkout"
           element={
             <ClientLayout>
               <Checkout />
+            </ClientLayout>
+          }
+        />
+
+        <Route
+          path="/orders/:orderId/review/:productId"
+          element={
+            <ClientLayout>
+              <ReviewSection />
+            </ClientLayout>
+          }
+        />
+
+        <Route
+          path="/review/:id"
+          element={
+            <ClientLayout>
+              <Review />
             </ClientLayout>
           }
         />

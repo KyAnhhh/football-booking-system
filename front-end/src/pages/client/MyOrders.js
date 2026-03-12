@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { getMyOrders } from "../../services/orderService";
-import OrderCard from "./OrderCard";
+import OrderCard from "../../components/order/OrderCard";
 import "../../assets/styles/MyOrders.css"
-
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
@@ -11,7 +10,6 @@ export default function MyOrders() {
     async function fetchOrders() {
       try {
         const data = await getMyOrders();
-        console.log("MY ORDERS:", data);
 
         setOrders(Array.isArray(data) ? data : []);
       } catch (error) {

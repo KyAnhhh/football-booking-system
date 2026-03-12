@@ -14,7 +14,6 @@ export default function Header() {
   const location = useLocation();
 
   useEffect(() => {
-    // const token = sessionStorage.getItem("accessToken");
     const token = sessionStorage.getItem("accessToken");
     if(token){
       const decode = jwtDecode(token);

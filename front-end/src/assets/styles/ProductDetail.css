@@ -1,4 +1,3 @@
-/* ===== WRAPPER ===== */
 .product-detail {
   max-width: 1200px;
   margin: 40px auto;
@@ -8,7 +7,6 @@
   gap: 48px;
 }
 
-/* ===== GALLERY ===== */
 .gallery {
   display: flex;
   flex-direction: column;
@@ -43,7 +41,6 @@
   transform: scale(1.05);
 }
 
-/* ===== INFO ===== */
 .info h2 {
   font-size: 28px;
   font-weight: 600;
@@ -57,7 +54,6 @@
   margin-bottom: 24px;
 }
 
-/* ===== SIZE ===== */
 .info h6 {
   font-size: 16px;
   margin-bottom: 8px;
@@ -96,7 +92,6 @@
   cursor: not-allowed;
 }
 
-/* ===== QUANTITY ===== */
 .info input[type="number"] {
   width: 120px;
   padding: 10px;
@@ -105,7 +100,6 @@
   margin-bottom: 24px;
 }
 
-/* ===== ACTIONS ===== */
 .actions {
   display: flex;
   gap: 16px;
@@ -141,7 +135,12 @@
   background: #c62828;
 }
 
-/* ===== RESPONSIVE ===== */
+.review-area{
+  margin-top:40px;
+  padding-top:20px;
+  border-top:1px solid #eee;
+}
+
 @media (max-width: 900px) {
   .product-detail {
     grid-template-columns: 1fr;

@@ -4,6 +4,8 @@ import { getProductById } from "../../services/productService";
 import { addItemToCart } from "../../services/cartService";
 import Swal from "sweetalert2";
 import "../../assets/styles/ProductDetail.css";
+import ReviewSection from "../../components/review/ReviewSection";
+import { checkCanReview } from "../../services/reviewService";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -19,9 +21,12 @@ export default function ProductDetail() {
       setProduct(res);
       setMainImage(res.imageUrls?.[0]);
     });
+    console.log("ProductDetail id:", id);
+  console.log("ProductDetail product:", product);
   }, [id]);
 
-  if (!product) return null;
+  if (!product)
+    return <p>Đang tải sản phẩm...</p>;
 
   const addToCart = async (buyNow = false) => {
     if (!selectedVariant) {
@@ -65,13 +70,14 @@ export default function ProductDetail() {
   return (
     <div className="product-detail">
       <div className="gallery">
-        <img src={mainImage} className="main-image" />
+        <img src={mainImage} className="main-image" alt={product.name} />
 
         <div className="thumbs">
-          {product.imageUrls.map((img) => (
+          {product.imageUrls?.map((img) => (
             <img
               key={img}
               src={img}
+              alt="product thumbnail"
               onClick={() => setMainImage(img)}
             />
           ))}
@@ -116,6 +122,11 @@ export default function ProductDetail() {
           </button>
         </div>
       </div>
+          {product && (
+            <div className="review-area">
+              <ReviewSection productId={product.id} />
+            </div>
+          )}
     </div>
   );
 }

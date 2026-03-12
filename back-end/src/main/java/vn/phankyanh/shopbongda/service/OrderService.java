@@ -376,5 +376,20 @@ public class OrderService {
 
         return orderMapper.toOrderResponse(order);
     }
+    public void handleConfirmReceive(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("User không có quyền cập nhật đơn hàng này");
+        }
+
+        if (order.getOrderStatus() != OrderStatus.DELIVERED) {
+            throw new RuntimeException("Chỉ có thể xác nhận nhận hàng khi đơn đã được giao");
+        }
+
+        order.setOrderStatus(OrderStatus.COMPLETED);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+    }
 }

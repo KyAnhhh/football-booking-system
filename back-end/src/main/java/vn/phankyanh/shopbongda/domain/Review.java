@@ -14,12 +14,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-    name = "reviews",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "product_id"})
-    }
-) // tránh spam review của 1 user cho 1 product
+@Table(name = "reviews")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -40,6 +35,10 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_item_id", nullable = false)
+    private OrderItem orderItem; // để biết user đã mua sản phẩm này chưa, có quyền review hay không
 
     @NotNull(message = "Rating không được để trống")
     @Min(value = 1, message = "Rating phải từ 1 đến 5")
