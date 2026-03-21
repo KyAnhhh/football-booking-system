@@ -445,7 +445,9 @@ export default function Checkout() {
       title: "Đã ghi nhận",
       text: "Đơn hàng của bạn đang được xử lý."
     });
-    window.location.href = "/";
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 3000);
   }
 
   return (

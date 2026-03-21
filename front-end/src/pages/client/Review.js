@@ -85,7 +85,7 @@ export default function ReviewPage() {
     <div className="review-page">
       <h2>Đánh giá sản phẩm</h2>
 
-      <div className="product-review-info">
+      {/* <div className="product-review-info">
         <img
           src={orderItem.product?.imageUrls?.[0]}
           alt={orderItem.product?.name}
@@ -95,7 +95,7 @@ export default function ReviewPage() {
           <h3>{orderItem.product?.name}</h3>
           <p>Số lượng: {orderItem.quantity}</p>
         </div>
-      </div>
+      </div> */}
 
       {!canReview ? (
         <p>Bạn không thể đánh giá sản phẩm này hoặc bạn đã đánh giá rồi.</p>

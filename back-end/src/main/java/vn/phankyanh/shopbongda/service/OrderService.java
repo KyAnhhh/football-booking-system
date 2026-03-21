@@ -49,6 +49,7 @@ public class OrderService {
     private final ProductVariantRepository productVariantRepository;
     private final PaymentRepository paymentRepository;
     private final ShippingService shippingService;
+    private final EmailService emailService;
 
     public Page<OrderResponse> handleGetAllOrder(int pageNo, int pageSize, String sortBy, String sortDir, String search, OrderStatus status) {
         Sort sort = sortDir.equalsIgnoreCase("desc")
@@ -228,7 +229,21 @@ public class OrderService {
         Order order = orderRepository.findByIdWithPayment(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
+        if(order.getOrderStatus() == OrderStatus.DELIVERED){
+            throw new RuntimeException("Order already delivered");
+        }
+
+        if(!isValidStatusTransition(order.getOrderStatus(), newStatus)) {
+            throw new RuntimeException("Invalid orderstatus transition");
+        }
+
+        if (order.getOrderStatus() == newStatus) {
+            return orderMapper.toOrderResponse(order);
+        }
+
         order.setOrderStatus(newStatus);
+
+        boolean shouldSendEmail = false;
 
         if (newStatus == OrderStatus.DELIVERED) {
 
@@ -239,6 +254,36 @@ public class OrderService {
             }
 
             order.setDeliveryDate(LocalDateTime.now());
+
+            shouldSendEmail = true;
+            
+
+        } else if(newStatus == OrderStatus.SHIPPING){
+
+            shouldSendEmail = true;
+
+        } else if (newStatus == OrderStatus.CANCELLED) {
+            // Hoàn trả stock
+            for (OrderItem item : order.getOrderItems()) {
+                ProductVariant variant = item.getProductVariant();
+                variant.setStock(variant.getStock() + item.getQuantity());
+                variant.setSoldQuantity(Math.max(0, variant.getSoldQuantity() - item.getQuantity()));
+            }
+
+            // Nếu đơn hàng bị hủy và chưa thanh toán, cập nhật trạng thái thanh toán thành thất bại
+            Payment payment = order.getPayment();
+            if (payment != null && payment.getPaymentStatus() == PaymentStatus.UNPAID) {
+                payment.setPaymentStatus(PaymentStatus.FAILED);
+                payment.setPaymentDate(LocalDateTime.now());
+            }
+            shouldSendEmail = true;
+        }
+
+        if(shouldSendEmail){
+            emailService.sendEmailWhenOrderStatusChange(
+                order.getUser().getEmail(), 
+                order.getId(), 
+                newStatus);
         }
 
         return orderMapper.toOrderResponse(order);
@@ -391,5 +436,18 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.COMPLETED);
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
+    }
+
+    private boolean isValidStatusTransition(OrderStatus current, OrderStatus newStatus) {
+        if (current == OrderStatus.PENDING) {
+            return newStatus == OrderStatus.CONFIRMED || newStatus == OrderStatus.CANCELLED;
+        }else if(current == OrderStatus.CONFIRMED) {
+            return newStatus == OrderStatus.SHIPPING;
+        } else if (current == OrderStatus.SHIPPING) {
+            return newStatus == OrderStatus.DELIVERED;
+        } else if (current == OrderStatus.DELIVERED) {
+            return newStatus == OrderStatus.COMPLETED;
+        }
+        return false;
     }
 }
