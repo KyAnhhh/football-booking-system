@@ -16,6 +16,7 @@ import vn.phankyanh.shopbongda.dto.JwtInfo;
 import vn.phankyanh.shopbongda.dto.TokenPayload;
 import vn.phankyanh.shopbongda.dto.request.LoginRequest;
 import vn.phankyanh.shopbongda.dto.response.LoginResponse;
+import vn.phankyanh.shopbongda.exception.AuthException;
 import vn.phankyanh.shopbongda.repository.RedisTokenRepository;
 import vn.phankyanh.shopbongda.repository.UserRepository;
 
@@ -40,22 +41,6 @@ public class AuthenticationService {
         TokenPayload accessPayload= jwtService.generateAccessToken(user);
         TokenPayload refreshPayload = jwtService.generateRefreshToken(user);
 
-        try {
-            long expireSeconds = (refreshPayload.getExpiredTime().getTime() - System.currentTimeMillis()) / 1000;
-            if (expireSeconds <= 0) {
-                throw new IllegalStateException("Refresh token has already expired");
-            }
-            RedisToken redisToken = RedisToken.builder()
-                    .jwtId(refreshPayload.getJwtId())
-                    .expiredTime(expireSeconds)
-                    .build();
-            log.info("Saving RedisToken: jwtId={}, expiredTime={}", redisToken.getJwtId(), redisToken.getExpiredTime());
-            redisTokenRepository.save(redisToken);
-        } catch (Exception e) {
-            log.error("Save RedisToken failed", e);
-            throw e;
-        }
-
         log.info("Login success: {}", user.getEmail());
 
         //trả ra token và role
@@ -67,45 +52,63 @@ public class AuthenticationService {
 
     }
 
-    public void logout(String token) throws ParseException {
-        JwtInfo jwtInfo = jwtService.parseToken(token);
+    public void logout(String accessToken) throws ParseException {
+        JwtInfo jwtInfo = jwtService.parseToken(accessToken);
         String jwtId = jwtInfo.getJwtId();
-        Date issueTime = jwtInfo.getIssueTime();
+        // Date issueTime = jwtInfo.getIssueTime();
         Date expiredTime = jwtInfo.getExpiredTime();
 
         if(expiredTime.before(new Date())){
             return;
         }
 
+        long expireSeconds = (expiredTime.getTime() - System.currentTimeMillis()) / 1000;
+        
+        if (expireSeconds <= 0) return;
+        
         RedisToken redisToken = RedisToken.builder()
                 .jwtId(jwtId)
-                .expiredTime(expiredTime.getTime() - issueTime.getTime())
+                .expiredTime(expireSeconds)
                 .build();
 
         redisTokenRepository.save(redisToken);
-        log.info("Logout success");
+        log.info("Logout success for jwtId: {}", jwtId);
     }
 
     public LoginResponse refresh(String refreshToken) throws Exception {
         JwtInfo jwtInfo = jwtService.parseToken(refreshToken);
 
         if(jwtInfo == null || jwtInfo.getExpiredTime().before(new Date())) {
-            throw new Exception("Invalid refresh token");
+            throw new AuthException("Invalid refresh token");
         }
 
-        redisTokenRepository.findById(jwtInfo.getJwtId())
-        .ifPresent(t -> {
-            throw new RuntimeException("Refresh token revoked");
-        });
+        if(redisTokenRepository.existsById(jwtInfo.getJwtId())) {
+            throw new AuthException("Refresh token revoked");
+        }
 
         User user = userRepository.findById(jwtInfo.getId())
-            .orElseThrow(() -> new Exception("User not found"));
+            .orElseThrow(() -> new AuthException("User not found"));
 
+        // revoke old refresh token
+        long expireSeconds = (jwtInfo.getExpiredTime().getTime() - System.currentTimeMillis()) / 1000;
+
+        if (expireSeconds > 0) {
+            redisTokenRepository.save(
+                RedisToken.builder()
+                    .jwtId(jwtInfo.getJwtId())
+                    .expiredTime(expireSeconds)
+                    .build()
+            );
+        }
+        
         TokenPayload newAccess = jwtService.generateAccessToken(user);
+        TokenPayload newRefresh = jwtService.generateRefreshToken(user);
+        
+        log.info("Refresh token rotated for user: {}", user.getEmail());
 
         return LoginResponse.builder()
                 .accessToken(newAccess.getToken())
-                .refreshToken(refreshToken) // vẫn giữ nguyên
+                .refreshToken(newRefresh.getToken())
                 .role(user.getRole().name())
                 .build();
     }

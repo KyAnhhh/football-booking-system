@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import "../assets/styles/Header.css";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { Link } from "react-router-dom";
+import { logout } from "../services/authService";
 
 export default function Header() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState(null);
 
@@ -15,17 +18,30 @@ export default function Header() {
 
   useEffect(() => {
     const token = sessionStorage.getItem("accessToken");
-    if(token){
-      const decode = jwtDecode(token);
-      setUser({
-        id: decode.id,
-        username: decode.sub,
-        role: decode.role.replace("ROLE_", "")
-      })
-    } else{
+
+    if (token) {
+      try {
+        const decode = jwtDecode(token);
+
+        if (decode.exp * 1000 < Date.now()) {
+          sessionStorage.removeItem("accessToken");
+          sessionStorage.removeItem("refreshToken");
+          setUser(null);
+          return;
+        }
+
+        setUser({
+          id: decode.id,
+          username: decode.sub,
+          role: decode.role.replace("ROLE_", "")
+        });
+      } catch (e) {
+        setUser(null);
+      }
+    } else {
       setUser(null);
     }
-  }, []);
+  }, [location]);
 
   useEffect(() => {
   function handleClickOutside(e) {
@@ -50,43 +66,52 @@ export default function Header() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
       sessionStorage.removeItem("accessToken");
       sessionStorage.removeItem("refreshToken");
       setUser(null);
-      window.location.href = "/";
-    };
-
-    if(location.pathname.startsWith("/admin")){
-      return null;
+      navigate("/login");
+      setUserMenuOpen(false);
+      setOpen(false);
     }
+  };
+
+  if (location.pathname === "/admin" || location.pathname.startsWith("/admin/")) {
+    return null;
+  }
 
   return (
     <header className="fs-header">
       <div className="fs-header-inner">
-        <a href="/" className="fs-logo" aria-label="FootballShop Home">
-          <span className="fs-logo-ball" aria-hidden>⚽</span>
+        <Link to="/" className="fs-logo" aria-label="FootballShop Home">
+          <span className="fs-logo-ball">⚽</span>
           <span className="fs-logo-text">Football Shop</span>
-        </a>
+        </Link>
 
-        <nav className={`fs-nav ${open ? "open" : ""}`} aria-label="Primary">
-          <a className="fs-nav-link" href="/">Trang chủ</a>
-          <a className="fs-nav-link" href="/about">Giới thiệu</a>
-          <a className="fs-nav-link" href="/products">Sản phẩm</a>
-          <a className="fs-nav-link" href="/collections">Bộ sưu tập</a>
-          <a className="fs-nav-link" href="/contact">Liên hệ</a>
-          <a className="fs-nav-link" href="/service">Dịch vụ</a>
+        <nav className={`fs-nav ${open ? "open" : ""}`}>
+          <Link className="fs-nav-link" to="/">Trang chủ</Link>
+          <Link className="fs-nav-link" to="/about">Giới thiệu</Link>
+          <Link className="fs-nav-link" to="/products">Sản phẩm</Link>
+          <Link className="fs-nav-link" to="/collections">Bộ sưu tập</Link>
+          <Link className="fs-nav-link" to="/contact">Liên hệ</Link>
+          <Link className="fs-nav-link" to="/service">Dịch vụ</Link>
         </nav>
 
         {/* Actions */}
         <div className="fs-actions">
-          <a className="fs-icon-btn fs-cart-btn" href="/cart" aria-label="Cart">
+          <Link className="fs-icon-btn fs-cart-btn" to="/cart" aria-label="Cart">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path d="M6 6h15l-1.5 9h-11L6 6z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
               <circle cx="10" cy="20" r="1" fill="currentColor"/>
               <circle cx="18" cy="20" r="1" fill="currentColor"/>
             </svg>
-          </a>
+          </Link>
 
           {user ? (
             <>
@@ -113,13 +138,15 @@ export default function Header() {
                 </button>
 
                 <div className={`fs-user-dropdown ${userMenuOpen ? "show" : ""}`}>
-                  <a href="/profile">Thông tin cá nhân</a>
-                  <a href="/my-orders">Đơn hàng của tôi</a>
-                    {user?.role === "ADMIN" && (
-                      <a href="/admin" className="admin-link">
-                        🔧 Quản trị hệ thống
-                      </a>
-                    )}
+                  <Link to="/profile">Thông tin cá nhân</Link>
+                  <Link to="/my-orders">Đơn hàng của tôi</Link>
+
+                  {user?.role === "ADMIN" && (
+                    <Link to="/admin" className="admin-link">
+                      🔧 Quản trị hệ thống
+                    </Link>
+                  )}
+
                   <button onClick={handleLogout}>Đăng xuất</button>
                 </div>
               </div>
@@ -127,7 +154,7 @@ export default function Header() {
 
             </>
           ) : (
-            <a className="fs-login-btn" href="/login">Đăng nhập</a>
+            <Link className="fs-login-btn" to="/login">Đăng nhập</Link>
           )}
 
           {/* Hamburger button */}
@@ -151,17 +178,20 @@ export default function Header() {
       </div>
 
       {/* Mobile Menu */}
-      <div className={`fs-mobile-menu ${open ? "show" : ""}`} aria-hidden={!open}>
-        <a className="fs-mobile-link" href="/" onClick={() => setOpen(false)}>Trang chủ</a>
-        <a className="fs-mobile-link" href="/products" onClick={() => setOpen(false)}>Sản phẩm</a>
-        <a className="fs-mobile-link" href="/collections" onClick={() => setOpen(false)}>Bộ sưu tập</a>
-        <a className="fs-mobile-link" href="/about" onClick={() => setOpen(false)}>Giới thiệu</a>
-        <a className="fs-mobile-link" href="/contact" onClick={() => setOpen(false)}>Liên hệ</a>
-        <a className="fs-mobile-link" href="/service" onClick={() => setOpen(false)}>Dịch vụ</a>
+      <div className={`fs-mobile-menu ${open ? "show" : ""}`}>
+        <Link to="/" onClick={() => setOpen(false)}>Trang chủ</Link>
+        <Link to="/products" onClick={() => setOpen(false)}>Sản phẩm</Link>
+        <Link to="/collections" onClick={() => setOpen(false)}>Bộ sưu tập</Link>
+        <Link to="/about" onClick={() => setOpen(false)}>Giới thiệu</Link>
+        <Link to="/contact" onClick={() => setOpen(false)}>Liên hệ</Link>
+        <Link to="/service" onClick={() => setOpen(false)}>Dịch vụ</Link>
+
         {!user ? (
-          <a className="fs-mobile-link" href="/login" onClick={() => setOpen(false)}>Đăng nhập</a>
+          <Link to="/login" onClick={() => setOpen(false)}>Đăng nhập</Link>
         ) : (
-          <button className="fs-mobile-link logout" onClick={() => { handleLogout(); setOpen(false); }}>Đăng xuất</button>
+          <button onClick={async () => { await handleLogout(); setOpen(false); }}>
+            Đăng xuất
+          </button>
         )}
       </div>
     </header>

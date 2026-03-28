@@ -8,6 +8,21 @@ const API_URL = "http://localhost:8080/api/auth";
         });
     };
 
+    export const logout = async () => {
+        const accessToken = sessionStorage.getItem("accessToken");
+
+        if (!accessToken) {
+            throw new Error("No access token found");
+        }
+
+        return await fetch(`${API_URL}/logout`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`
+            }
+        });
+    };
+
     export const register = async(credentials) => {
         return await fetch(`${API_URL}/register`, {
             method: "POST",

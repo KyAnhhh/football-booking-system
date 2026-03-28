@@ -46,8 +46,8 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     void logout(@RequestHeader("Authorization") String authHeader) throws ParseException {
-        String token = authHeader.replace("Bearer", "");
-        authenticationService.logout(token);
+        String accessToken = authHeader.replace("Bearer", "");
+        authenticationService.logout(accessToken);
     }   
 
     @PostMapping("/refresh")
