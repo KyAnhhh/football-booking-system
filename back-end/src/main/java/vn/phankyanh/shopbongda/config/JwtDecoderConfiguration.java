@@ -21,7 +21,7 @@ import com.nimbusds.jose.JOSEException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import vn.phankyanh.shopbongda.service.JwtService;
+import vn.phankyanh.shopbongda.user.service.JwtService;
 
 @Component
 @RequiredArgsConstructor
