@@ -2,8 +2,11 @@ package vn.phankyanh.shopbongda.booking.service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -71,4 +74,54 @@ public class BookingService {
 
         return bookingMapper.toResponse(booking);
     }
+
+    public Page<BookingResponse> getAllBooking(
+        String keyword,
+        BookingStatus status,
+        Pageable pageable
+) {
+    return bookingRepository
+        .searchBookings(keyword, status, pageable)
+        .map(bookingMapper::toResponse);
+}
+
+    public List<BookingResponse> getBookingsByUserId(Long userId) {
+        return bookingRepository.findByUserId(userId).stream()
+            .map(bookingMapper::toResponse)
+            .toList();
+    }
+
+    public void confirmBooking(Long bookingId){
+        Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if(booking.getStatus() != BookingStatus.PENDING) {
+            throw new IllegalStateException("Only pending bookings can be confirmed");
+        }
+
+        booking.setStatus(BookingStatus.CONFIRMED);
+
+        bookingRepository.save(booking);
+    }
+
+    public void cancelBooking(Long bookingId, Long userId) {
+        Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (!booking.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        if(booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new IllegalStateException("Booking is already cancelled");
+        }
+
+        if(booking.getStartTime().isBefore(LocalDateTime.now())){
+            throw new IllegalStateException("Cannot cancel past bookings");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED);
+
+        bookingRepository.save(booking);
+    } 
 }

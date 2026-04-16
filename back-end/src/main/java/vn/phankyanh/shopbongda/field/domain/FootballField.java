@@ -26,6 +26,9 @@ public class FootballField {
     @Column(name = "field_type", nullable = false)
     private FieldType type;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "price_per_hour", nullable = false)
     private BigDecimal pricePerHour;
 
