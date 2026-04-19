@@ -1,5 +1,7 @@
 package vn.phankyanh.shopbongda.product.controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +40,13 @@ public class ProductController {
             @RequestParam(required = false) String search) {
         ApiResponse<Page<ProductResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.productService.handleGetAllProduct(pageNo, pageSize, sortBy, sortDir, search));
+        return apiResponse;
+    }
+
+    @GetMapping("/api/public/products/top4-popular")
+    public ApiResponse<List<ProductResponse>> getTop4PopularProducts() {
+        ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setData(this.productService.handleGetTop4PopularProducts());
         return apiResponse;
     }
 

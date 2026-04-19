@@ -1,5 +1,7 @@
 package vn.phankyanh.shopbongda.product.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,10 +11,10 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import vn.phankyanh.shopbongda.exception.ProductNotFoundException;
 import vn.phankyanh.shopbongda.product.domain.Brand;
 import vn.phankyanh.shopbongda.product.domain.Category;
 import vn.phankyanh.shopbongda.product.domain.Product;
-import vn.phankyanh.shopbongda.exception.ProductNotFoundException;
 import vn.phankyanh.shopbongda.product.dto.request.ProductRequest;
 import vn.phankyanh.shopbongda.product.dto.response.ProductResponse;
 import vn.phankyanh.shopbongda.product.mapper.ProductMapper;
@@ -67,6 +69,14 @@ public class ProductService {
             productsPage = productRepository.findAll(pageable);
         }
         return productsPage.map(productMapper::toResponse);
+    }
+
+    // Lấy 4 sản phẩm nổi bật và bán chạy nhất
+    public List<ProductResponse> handleGetTop4PopularProducts() {
+        List<Product> popularProducts = productRepository.findTop4PopularProducts();
+        return popularProducts.stream()
+                .map(productMapper::toResponse)
+                .toList();
     }
 
     // lấy theo id

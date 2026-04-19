@@ -1,8 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "../../assets/styles/Home.css";
 import { Link } from "react-router-dom";
+import { getTop5PopularProducts } from "../../services/productService";
 
 export default function Home() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    getTop5PopularProducts().then((res) => {
+      setProducts(res?.data || res || []);
+    });
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -24,6 +32,14 @@ export default function Home() {
     };
   }, []);
 
+  const formatSold = (num) => {
+    if (!num) return "0";
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + "k";
+    }
+    return num;
+  }
+
   return (
     <div className="home-container">
       <section className="hero-section">
@@ -40,6 +56,98 @@ export default function Home() {
           <Link to="/products" className="cta-button">
             Mua Ngay
           </Link>
+        </div>
+      </section>
+
+      {/* ===== Popular Products Section ===== */}
+      <section className="popular-products-section">
+        <div className="container">
+          
+          <div className="section-header">
+            <h2>🔥 Sản phẩm phổ biến</h2>
+            <Link to="/products" className="view-all">
+              Xem tất cả →
+            </Link>
+          </div>
+
+          <div className="product-grid">
+            {products.map((item) => {
+              const prices =
+                item.variants?.map((v) => v.price).filter(Boolean) || [];
+              const minPrice = prices.length ? Math.min(...prices) : null;
+
+              const finalPrice = minPrice
+                ? item.discount > 0
+                  ? minPrice - (minPrice * item.discount) / 100
+                  : minPrice
+                : null;
+
+              const image =
+                item.variants?.[0]?.image ||
+                item.imageUrls?.[0] ||
+                "/no-image.png";
+
+              const soldQuantity =
+                item.variants?.reduce((total, variant) => total + (variant.soldQuantity || 0), 0) || 0;
+
+              return (
+                <div className="product-card" key={item.id}>
+                  
+                  {/* IMAGE */}
+                  <div className="product-image">
+                    <img src={image} alt={item.name} />
+
+                    <span className="badge">HOT</span>
+
+                    <div className="overlay">
+                      <Link
+                        to={`/products`}
+                        className="view-btn"
+                      >
+                        Xem chi tiết
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* INFO */}
+                  <div className="product-info">
+                    <h3>{item.name}</h3>
+
+                    <div className="price-box">
+                      {finalPrice ? (
+                        <>
+                          <span className="price-new">
+                            {new Intl.NumberFormat("vi-VN").format(finalPrice)}đ
+                          </span>
+
+                          {item.discount > 0 && minPrice && (
+                            <span className="price-old">
+                              {new Intl.NumberFormat("vi-VN").format(minPrice)}đ
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="contact">Liên hệ</span>
+                      )}
+                    </div>
+                      <div className="product-meta">
+                        <span className="sold">
+                          🔥 {formatSold(soldQuantity)} đã bán
+                        </span>
+                      </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* skeleton */}
+            {products.length === 0 &&
+              Array(4)
+                .fill()
+                .map((_, i) => (
+                  <div className="product-card skeleton" key={i}></div>
+                ))}
+          </div>
         </div>
       </section>
 

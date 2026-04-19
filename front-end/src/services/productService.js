@@ -22,22 +22,6 @@ function getAuthHeader() {
     : {};
 }
 
-// export const getProducts = async (pageNo = 0, pageSize = 12, sortBy = "id", sortDir = "asc", search = "") => {
-//   const headers = {
-//     "Content-Type": "application/json"
-//   };
-//   const params = new URLSearchParams({
-//     pageNo,
-//     pageSize,
-//     sortBy,
-//     sortDir
-//   });
-//   if (search) params.append("search", search);
-  
-//   const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
-//   return await handleResponse(response);
-// };
-
 export const getProducts = async (
   pageNo,
   pageSize,
@@ -65,6 +49,17 @@ const params = new URLSearchParams({
 
   return await handleResponse(response);
 };
+
+export const getTop5PopularProducts = async () => {
+  const headers = {
+    "Content-Type": "application/json"
+  }
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/top4-popular`, {
+    method: "GET",
+    headers 
+  });
+  return await handleResponse(response);
+}
 
 export const getProductById = async (id) => {
   const headers = {
