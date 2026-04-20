@@ -28,4 +28,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     AND (:keyword IS NULL OR LOWER(b.field.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
     """)
     Page<Booking> searchBookings(String keyword, BookingStatus status, Pageable pageable);
+
+    @Query("""
+    SELECT b FROM Booking b
+    WHERE b.field.id = :fieldId
+    AND b.startTime < :endOfDay
+    AND b.endTime > :startOfDay
+    """)
+    List<Booking> findBookingsInDay(
+        Long fieldId,
+        LocalDateTime startOfDay,
+        LocalDateTime endOfDay
+    );
 }

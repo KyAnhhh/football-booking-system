@@ -9,9 +9,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,16 +24,13 @@ import vn.phankyanh.shopbongda.booking.dto.response.BookingResponse;
 import vn.phankyanh.shopbongda.booking.service.BookingService;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
-
-
-
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/bookings")
+@RequestMapping("/api")
 public class BookingController {
     private final BookingService bookingService;
     
-    @PostMapping("/create")
+    @PostMapping("/public/bookings")
     public ApiResponse<BookingResponse> createBooking(@RequestBody BookingRequest request, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<BookingResponse> response = new ApiResponse<>();
@@ -41,7 +38,7 @@ public class BookingController {
         return response;
     }
 
-    @GetMapping("/get-all")
+    @GetMapping("/public/bookings")
     public ApiResponse<Page<BookingResponse>> getAllBookings(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -62,7 +59,7 @@ public class BookingController {
         return response;
     }
 
-    @GetMapping("/get-by-user")
+    @GetMapping("/public/bookings/me")
     public ApiResponse<List<BookingResponse>> getBookingsByUserId(@AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<List<BookingResponse>> response = new ApiResponse<>();
@@ -70,23 +67,21 @@ public class BookingController {
         return response;
     }
 
-    @PutMapping("/confirm/{bookingId}")
+    @PatchMapping("/admin/bookings/{bookingId}/confirm")
     public ApiResponse<Void> confirmBooking(@PathVariable("bookingId") Long bookingId) {
         ApiResponse<Void> response = new ApiResponse<>();
         this.bookingService.confirmBooking(bookingId);
         response.setData(null);
-        response.setMessage("Booking confirmed successfully");
         return response;
     }
     
 
-    @DeleteMapping("/cancel/{bookingId}")
+    @DeleteMapping("/admin/bookings/{bookingId}")
     public ApiResponse<Void> cancelBooking(@PathVariable("bookingId") Long bookingId, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<Void> response = new ApiResponse<>();
         this.bookingService.cancelBooking(bookingId, userId);
         response.setData(null);
-        response.setMessage("Booking cancelled successfully");
         return response;
     }
     
