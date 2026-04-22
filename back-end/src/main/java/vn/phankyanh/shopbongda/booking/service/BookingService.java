@@ -114,8 +114,8 @@ public class BookingService {
     }
 
     private static final int SLOT_DURATION = 90;
-    private static final LocalTime OPEN_TIME = LocalTime.of(6, 0);
-    private static final LocalTime CLOSE_TIME = LocalTime.of(22, 0);
+    private static final LocalTime OPEN_TIME = LocalTime.of(7, 0);
+    private static final LocalTime CLOSE_TIME = LocalTime.of(23, 30);
 
     public List<SlotResponse> getAvailableSlots(Long fieldId, LocalDate date) {
 
@@ -155,6 +155,17 @@ public class BookingService {
         return result;
     }
 
+    public BookingResponse getBookingForQr(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new RuntimeException("Booking not payable");
+        }
+
+        return bookingMapper.toResponse(booking);
+    }
+
     public void confirmBooking(Long bookingId){
         Booking booking = bookingRepository.findById(bookingId)
             .orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -188,6 +199,12 @@ public class BookingService {
 
         bookingRepository.save(booking);
     } 
+
+    public void deleteBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
+        bookingRepository.delete(booking);
+    }
 
     private BigDecimal calculatePrice(FootballField field, long minutes) {
         return field.getPricePerHour()

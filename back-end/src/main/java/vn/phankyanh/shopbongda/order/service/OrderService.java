@@ -19,9 +19,6 @@ import vn.phankyanh.shopbongda.order.domain.CartItem;
 import vn.phankyanh.shopbongda.order.domain.Order;
 import vn.phankyanh.shopbongda.order.domain.OrderItem;
 import vn.phankyanh.shopbongda.order.domain.OrderStatus;
-import vn.phankyanh.shopbongda.product.domain.ProductVariant;
-import vn.phankyanh.shopbongda.user.domain.ShippingAddress;
-import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.order.dto.request.CheckoutRequest;
 import vn.phankyanh.shopbongda.order.dto.request.OrderItemRequest;
 import vn.phankyanh.shopbongda.order.dto.request.OrderRequest;
@@ -32,8 +29,11 @@ import vn.phankyanh.shopbongda.order.repository.CartRepository;
 import vn.phankyanh.shopbongda.order.repository.OrderRepository;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
+import vn.phankyanh.shopbongda.product.domain.ProductVariant;
 import vn.phankyanh.shopbongda.product.repository.ProductVariantRepository;
 import vn.phankyanh.shopbongda.shared.service.email.EmailService;
+import vn.phankyanh.shopbongda.user.domain.ShippingAddress;
+import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.repository.ShippingAddressRepository;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
 import vn.phankyanh.shopbongda.user.service.ShippingService;
@@ -141,10 +141,6 @@ public class OrderService {
             variant.setStock(variant.getStock() - itemRequest.getQuantity());
             variant.setSoldQuantity(variant.getSoldQuantity() + itemRequest.getQuantity());
 
-
-            // BigDecimal unitPrice = variant.getPrice();
-            // BigDecimal discountAmount = BigDecimal.ZERO;
-            // BigDecimal finalPrice = unitPrice.subtract(discountAmount);
             BigDecimal unitPrice = variant.getPrice();
 
             Integer discount = variant.getProduct().getDiscount();

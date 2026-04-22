@@ -58,7 +58,7 @@ public class FootballFieldController {
         ApiResponse<FootballFieldResponse> response = new ApiResponse<>();
         response.setData(this.footballFieldService.createFootballField(request));
         return response;
-    }
+    } 
 
     @GetMapping("/public/fields/{id}")
     public ApiResponse<FootballFieldResponse> getFootballFieldById(@PathVariable("id") Long id) {

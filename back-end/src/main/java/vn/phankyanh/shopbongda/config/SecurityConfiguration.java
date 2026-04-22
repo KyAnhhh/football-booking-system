@@ -25,11 +25,15 @@ import vn.phankyanh.shopbongda.security.jwt.JwtAuthEntryPoint;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private static final String[] public_list = {
-              "/api/auth/**", "/api/public/**"
-              
+            "/api/auth/**", "/api/public/**"
     };
-    private static final String[] private_list = {
+
+    private static final String[] admin_list = {
             "/api/admin/**"
+    };
+
+    private static final String[] user_list = {
+            "/api/user/**"
     };
 
     private final UserDetailsService userDetailsService;
@@ -56,7 +60,8 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(public_list).permitAll()
-                        .requestMatchers(private_list).hasRole("ADMIN")
+                        .requestMatchers(admin_list).hasRole("ADMIN")
+                        .requestMatchers(user_list).hasAnyRole("CLIENT", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

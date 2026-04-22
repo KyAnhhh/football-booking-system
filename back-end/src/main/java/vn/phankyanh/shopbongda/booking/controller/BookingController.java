@@ -30,7 +30,7 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 public class BookingController {
     private final BookingService bookingService;
     
-    @PostMapping("/public/bookings")
+    @PostMapping("/user/bookings")
     public ApiResponse<BookingResponse> createBooking(@RequestBody BookingRequest request, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<BookingResponse> response = new ApiResponse<>();
@@ -38,7 +38,7 @@ public class BookingController {
         return response;
     }
 
-    @GetMapping("/public/bookings")
+    @GetMapping("/admin/bookings")
     public ApiResponse<Page<BookingResponse>> getAllBookings(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -59,8 +59,8 @@ public class BookingController {
         return response;
     }
 
-    @GetMapping("/public/bookings/me")
-    public ApiResponse<List<BookingResponse>> getBookingsByUserId(@AuthenticationPrincipal Jwt jwt) {
+    @GetMapping("/user/bookings")
+    public ApiResponse<List<BookingResponse>> getMyBookings(@AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<List<BookingResponse>> response = new ApiResponse<>();
         response.setData(bookingService.getBookingsByUserId(userId));
@@ -75,8 +75,7 @@ public class BookingController {
         return response;
     }
     
-
-    @DeleteMapping("/admin/bookings/{bookingId}")
+    @PatchMapping("/user/bookings/{bookingId}/cancel")
     public ApiResponse<Void> cancelBooking(@PathVariable("bookingId") Long bookingId, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<Void> response = new ApiResponse<>();
@@ -85,4 +84,11 @@ public class BookingController {
         return response;
     }
     
+    @DeleteMapping("/admin/bookings/{bookingId}")
+    public ApiResponse<Void> deleteBooking(@PathVariable("bookingId") Long bookingId) {
+        ApiResponse<Void> response = new ApiResponse<>();
+        this.bookingService.deleteBooking(bookingId);
+        response.setData(null);
+        return response;
+    }
 }

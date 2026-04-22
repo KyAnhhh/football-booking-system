@@ -3,8 +3,14 @@ import { refresh } from "./authService";
 let isRefreshing = false;
 let pendingRequests = [];
 
-const processQueue = (token) => {
-  pendingRequests.forEach(cb => cb(token));
+const processQueue = (error, token = null) => {
+  pendingRequests.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
   pendingRequests = [];
 };
 
@@ -12,25 +18,24 @@ export const fetchWithAuth = async (url, options = {}) => {
   const accessToken = sessionStorage.getItem("accessToken");
   const isFormData = options.body instanceof FormData;
 
-  const response = await fetch(url, {
-    ...options,
-    // headers: {
-    //   "Content-Type": "application/json",
-    //   ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-    //   ...options.headers,
-    // }
-    headers: {
-  ...( !isFormData && { "Content-Type": "application/json" } ),
-  ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
-  ...options.headers,
-}
-  });
+  const makeRequest = (token) =>
+    fetch(url, {
+      ...options,
+      headers: {
+        ...( !isFormData && { "Content-Type": "application/json" }),
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+    });
 
-  // chỉ xử lý 401,403 KHÔNG áp dụng cho refresh API
+  let response = await makeRequest(accessToken);
+
+  // ❗ chỉ xử lý 401 và không phải refresh API
   if (response.status !== 401 || url.includes("/refresh")) {
     return response;
   }
 
+  // refresh token đã hết hạn, cần refresh
   if (!isRefreshing) {
     isRefreshing = true;
 
@@ -43,40 +48,36 @@ export const fetchWithAuth = async (url, options = {}) => {
       sessionStorage.setItem("accessToken", data.accessToken);
       sessionStorage.setItem("refreshToken", data.refreshToken);
 
-      processQueue(data.accessToken);
+      processQueue(null, data.accessToken);
       isRefreshing = false;
 
       // retry request gốc
-      return fetch(url, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${data.accessToken}`,
-          ...options.headers,
-        }
-      });
+      return await makeRequest(data.accessToken);
 
     } catch (err) {
+      processQueue(err, null);
       isRefreshing = false;
-      pendingRequests = [];
+
       sessionStorage.removeItem("accessToken");
       sessionStorage.removeItem("refreshToken");
+
       window.location.href = "/login";
       throw err;
     }
   }
 
-  // chờ refresh xong
-  return new Promise((resolve) => {
-    pendingRequests.push((newToken) => {
-      resolve(fetch(url, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${newToken}`,
-          ...options.headers,
+  // đang refresh, đẩy request vào hàng đợi
+  return new Promise((resolve, reject) => {
+    pendingRequests.push({
+      resolve: async (token) => {
+        try {
+          const res = await makeRequest(token);
+          resolve(res);
+        } catch (err) {
+          reject(err);
         }
-      }));
+      },
+      reject,
     });
   });
 };
