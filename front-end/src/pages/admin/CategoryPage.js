@@ -180,11 +180,11 @@ export default function CategoryPage() {
           </Button>
 
           <span style={{ margin: "0 10px" }}>
-            Page {pageNo + 1} / {pageData.totalPages}
+            Page {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
-            disabled={pageNo + 1 >= pageData.totalPages}
+            disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
             Next

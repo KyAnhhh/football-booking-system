@@ -13,15 +13,6 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-function getAuthHeader() {
-  const token = sessionStorage.getItem("accessToken");
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
-}
-
 export const getProducts = async (
   pageNo,
   pageSize,
@@ -29,9 +20,6 @@ export const getProducts = async (
   sortDir = "asc",
   search = ""
 ) => {
-  const headers = {
-    "Content-Type": "application/json"
-  };
 
 const params = new URLSearchParams({
   pageNo: pageNo,
@@ -44,67 +32,43 @@ const params = new URLSearchParams({
 
   const response = await fetchWithAuth(
     `${API_URL_PUBLIC}?${params.toString()}`,
-    { headers }
   );
 
-  return await handleResponse(response);
+  return handleResponse(response);
 };
 
-export const getTop5PopularProducts = async () => {
-  const headers = {
-    "Content-Type": "application/json"
-  }
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/top4-popular`, {
-    method: "GET",
-    headers 
-  });
-  return await handleResponse(response);
+export const getTop4PopularProducts = async () => {
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/top4-popular`);
+  return handleResponse(response);
 }
 
 export const getProductById = async (id) => {
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`,{
-    method: "GET",
-    headers
-  });
-  return await handleResponse(response);
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`);
+  return handleResponse(response);
 };
 
 export const createProduct = async (product) => {
-
-    const headers = {
-      "Content-Type": "application/json",
-      ...getAuthHeader()
-    };
     const response = await fetchWithAuth(API_URL_ADMIN, {
       method: "POST",
-      headers,
       body: JSON.stringify(product),
     });
-    return await handleResponse(response);
+    return handleResponse(response);
 
 };
 
 export const updateProduct = async (id, product) => {
-
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
-    headers,
     body: JSON.stringify(product),
   });
 
-  return await handleResponse(response);
+  return handleResponse(response);
 };
 
 export const deleteProduct = async (id) => {
-  const headers = { ...getAuthHeader() };
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
-    headers,
   });
 
-  return await handleResponse(response);
+  return handleResponse(response);
 };

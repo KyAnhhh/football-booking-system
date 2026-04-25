@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { useLocation } from "react-router-dom";
-import { getCartByUser } from "../../services/cartService";
+import { getMyCart } from "../../services/cartService";
 import { checkout, createOrder } from "../../services/orderService";
 import {
   getAddressOfMe,
   createAddress,
 } from "../../services/shippingAddressService";
 import "../../assets/styles/Checkout.css";
+import { getQrCode } from "../../services/qrCodeService";
 
 const phoneRegex = /^(0|\+84)[0-9]{9}$/;
 
@@ -294,6 +295,31 @@ export default function Checkout() {
 
   const [orderId, setOrderId] = useState(null);
 
+  const [qrCodeUrl, setQrCodeUrl] = useState(null);
+
+  useEffect(() => {
+    if(!orderId) return;
+
+    let objectUrl;
+
+    const loadUrl = async () => {
+      try {
+        const url = await getQrCode(orderId);
+        objectUrl = url;
+        setQrCodeUrl(url);
+      } catch (error) {
+        console.error("Lỗi khi tải QR code:", error);
+      }
+    };
+
+    loadUrl();
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [orderId]);
 
   useEffect(() => {
     const checkoutItemIds = location.state?.itemIds || [];
@@ -314,7 +340,7 @@ export default function Checkout() {
         setSelectedItemIds([`temp_${buyNowProduct.productVariantId}`]);
       } else {
 
-        const cartRes = await getCartByUser();
+        const cartRes = await getMyCart();
 
         const allItems = (cartRes.items || []).map(item => ({
           ...item,
@@ -498,7 +524,7 @@ export default function Checkout() {
               Đơn hàng đã được tạo, vui lòng hoàn tất chuyển khoản
             </p>
             <img
-              src={`http://localhost:8080/api/public/order/${orderId}/generate-qr`}
+              src={qrCodeUrl}
               alt="QR thanh toán"
               style={{ width: 250 }}
             />

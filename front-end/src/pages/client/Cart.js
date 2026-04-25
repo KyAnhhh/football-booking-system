@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container, Table, Button, Alert, Spinner } from "react-bootstrap";
-import { getCartByUser, removeCartItem } from "../../services/cartService";
+import { getMyCart, removeCartItem } from "../../services/cartService";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../assets/styles/Cart.css";
@@ -17,7 +17,7 @@ export default function Cart() {
 
   const loadCart = async () => {
     try {
-      const data = await getCartByUser();
+      const data = await getMyCart();
       setCart(data);
       setSelectedItems([]);
     } catch {

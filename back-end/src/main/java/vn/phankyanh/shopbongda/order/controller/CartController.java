@@ -19,11 +19,11 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/public/carts")
+@RequestMapping("/api")
 public class CartController {
     private final CartService cartService;
 
-    @PostMapping("/items")
+    @PostMapping("/user/carts/items")
     public ApiResponse<CartResponse> addItemToCart(@RequestBody CartItemRequest request, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<CartResponse> apiResponse = new ApiResponse<>();
@@ -31,15 +31,15 @@ public class CartController {
         return apiResponse;
     }
 
-    @GetMapping("/items/me")
-    public ApiResponse<CartResponse> getCartByUser(@AuthenticationPrincipal Jwt jwt) {
+    @GetMapping("/user/carts")
+    public ApiResponse<CartResponse> getMyCart(@AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<CartResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.cartService.getCartByUser(userId));
         return apiResponse;
     }
 
-    @DeleteMapping("/items/{cartItemId}")
+    @DeleteMapping("/user/carts/items/{cartItemId}")
     public ApiResponse<Void> removeItemFromCart(@AuthenticationPrincipal Jwt jwt, @PathVariable("cartItemId") Long cartItemId) {
         Long userId = jwt.getClaim("id");
         this.cartService.removeItemFromCart(userId, cartItemId);

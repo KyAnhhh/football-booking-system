@@ -15,7 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderResponse {
     private Long id;
-    private String userId;
+    // private String userId;
+    private Long userId;
 
     private String fullName;
     private String phone;

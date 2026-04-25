@@ -39,8 +39,8 @@ public class ReviewController {
         return apiResponse;
     }
     
-    // GET /api/public/user/order-item/{orderItemId}/can-review
-    @GetMapping("/public/user/order-items/{orderItemId}/can-review")
+    // GET /api/user/order-item/{orderItemId}/can-review
+    @GetMapping("/user/order-items/{orderItemId}/can-review")
     public ApiResponse<Boolean> canUserReviewProduct(@PathVariable("orderItemId") Long orderItemId, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<Boolean> apiResponse = new ApiResponse<>();
@@ -48,17 +48,22 @@ public class ReviewController {
         return apiResponse;
     }
     
-    // POST /api/public/order-items/{orderItemId}/reviews
-    @PostMapping("/public/order-items/{orderItemId}/reviews")
-    public ApiResponse<ReviewResponse> createReview(@PathVariable("orderItemId") Long orderItemId, @RequestBody ReviewRequest request) {
+    // POST /api/user/order-items/{orderItemId}/reviews
+    @PostMapping("/user/order-items/{orderItemId}/reviews")
+    public ApiResponse<ReviewResponse> createReview(@PathVariable("orderItemId") Long orderItemId, @RequestBody ReviewRequest request, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("id");
         ApiResponse<ReviewResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(reviewService.createReview(orderItemId, request));
+        apiResponse.setData(reviewService.createReview(orderItemId, request, userId));
         return apiResponse;
     }
+
     // DELETE /api/admin/reviews/{reviewId}
     @DeleteMapping("/admin/reviews/{reviewId}")
-    public void deleteReview(@PathVariable("reviewId") Long reviewId, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<String> deleteReview(@PathVariable("reviewId") Long reviewId, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
-        reviewService.deleteReview(reviewId, userId);
+        this.reviewService.deleteReview(reviewId, userId);
+        ApiResponse<String> response = new ApiResponse<>();
+        response.setMessage("Deleted review successfully");
+        return response;
     }
 }

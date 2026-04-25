@@ -22,4 +22,5 @@ public class QrCodeService {
             throw new RuntimeException("Không tạo được QR Code", e);
         }
     }
+
 }

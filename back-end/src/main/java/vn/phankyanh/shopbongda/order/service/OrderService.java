@@ -195,21 +195,6 @@ public class OrderService {
 
         return orderMapper.toOrderResponse(this.orderRepository.save(order));
     }
-
-
-    //update
-    public Order handleUpdateOrder(Long id, OrderRequest request, Long userId){
-        Order order = this.orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Not found with id: "+ id));
-
-        if (!order.getUser().getId().equals(userId)) {
-            throw new RuntimeException("User không có quyền cập nhật đơn hàng này");
-        }
-        
-        orderMapper.updateOrder(order , request);
-        return orderRepository.save(order);
-
-    }
     
     //delete
     public void handleDeleteOrder(Long id){
@@ -288,14 +273,19 @@ public class OrderService {
 
     //Hủy đơn hàng khi status !PENDING     
     @Transactional
-    public void handleCancelOrder(Long orderId) {
+    public void handleCancelOrder(Long orderId, Long userId) {
 
         Order order = orderRepository.findByIdWithOrderItems(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
-        if(!order.getOrderStatus().equals(OrderStatus.PENDING)){
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền hủy đơn này");
+        }
+
+        if (!order.getOrderStatus().equals(OrderStatus.PENDING)) {
             throw new RuntimeException("Không thể hủy đơn hàng này");
         }
+        
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setUpdatedAt(LocalDateTime.now());
 

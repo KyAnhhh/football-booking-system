@@ -32,8 +32,7 @@ public class PaymentController {
         apiResponse.setData(paymentService.handleGetAllPayment(pageNo, pageSize, sortBy, sortDir, search));
         apiResponse.setMessage("Get all payments successfully");
         return apiResponse;
-    }
-    
+    } 
 
     @GetMapping("/api/public/payments/{id}")
     public ResponseEntity<?> getPayment(@PathVariable Long id) {
@@ -41,13 +40,13 @@ public class PaymentController {
     }
 
     // Lấy payment theo orderId
-    @GetMapping("/api/public/payments/orders/{orderId}")
+    @GetMapping("/api/user/payments/orders/{orderId}")
     public ResponseEntity<?> getPaymentByOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(paymentService.getPaymentByOrderId(orderId));
     }
 
     // Xác nhận thanh toán
-    @PutMapping("/api/public/payments/orders/{orderId}/confirm")
+    @PutMapping("/api/user/payments/orders/{orderId}/confirm")
     public ResponseEntity<?> confirmPayment(@PathVariable Long orderId) {
         Payment payment = paymentService.confirmPaymentForOrder(orderId);
         return ResponseEntity.ok(payment);

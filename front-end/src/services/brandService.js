@@ -12,19 +12,7 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-function getAuthHeader() {
-  const token = sessionStorage.getItem("accessToken");
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
-}
-
 export const getBrands = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
-  const headers = {
-    "Content-Type": "application/json",
-  };
   const params = new URLSearchParams({
     pageNo,
     pageSize,
@@ -33,8 +21,8 @@ export const getBrands = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir
   });
   if (search) params.append("search", search);
   
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
-  return await handleResponse(response);
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`);
+  return handleResponse(response);
 };
 
 // Get all brands for dropdown (no pagination, public endpoint)
@@ -56,22 +44,13 @@ export const getAllBrandsForDropdown = async () => {
 
 
 export const getBrandById = async (id) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  };
-  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`,{
-    method: "GET",
-    headers
-  });
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`);
   return await handleResponse(response);
 };
 
 export const createBrand = async (Brand) => {
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
   const response = await fetchWithAuth(API_URL_ADMIN, {
     method: "POST",
-    headers,
     body: JSON.stringify(Brand),
   });
 
@@ -79,10 +58,8 @@ export const createBrand = async (Brand) => {
 };
 
 export const updateBrand = async (id, Brand) => {
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
-    headers,
     body: JSON.stringify(Brand),
   });
 
@@ -90,10 +67,8 @@ export const updateBrand = async (id, Brand) => {
 };
 
 export const deleteBrand = async (id) => {
-  const headers = { ...getAuthHeader() };
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
-    method: "DELETE",
-    headers,
+    method: "DELETE"
   });
 
   return await handleResponse(response);

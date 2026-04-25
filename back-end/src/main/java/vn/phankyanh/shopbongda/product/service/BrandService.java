@@ -54,11 +54,11 @@ public class BrandService {
         this.brandRepository.deleteById(id);
     }
 
-    public Brand handleUpdateBrand(Long id, BrandRequest request){
+    public BrandResponse handleUpdateBrand(Long id, BrandRequest request){
 
         Brand brand = this.brandRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not found with id: " + id));
         brandMapper.updateBrand(brand, request);
-        return brandRepository.save(brand);
+        return brandMapper.toResponse(brandRepository.save(brand));
     }
 }

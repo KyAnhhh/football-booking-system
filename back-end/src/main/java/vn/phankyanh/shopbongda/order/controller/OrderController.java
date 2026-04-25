@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import vn.phankyanh.shopbongda.order.domain.Order;
 import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 import vn.phankyanh.shopbongda.order.dto.request.CheckoutRequest;
 import vn.phankyanh.shopbongda.order.dto.request.OrderRequest;
@@ -28,7 +27,7 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 public class OrderController {
     private final OrderService orderService;
 
-    @PostMapping("/api/public/orders")
+    @PostMapping("/api/user/orders")
     public ApiResponse<OrderResponse> createOrder(@RequestBody OrderRequest request, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
@@ -49,7 +48,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @GetMapping("/api/public/orders/{id:\\d+}")
+    @GetMapping("/api/user/orders/{id:\\d+}")
     public ApiResponse<OrderResponse> getOrderById(@PathVariable("id") Long id, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
@@ -57,7 +56,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @GetMapping("/api/public/orders/me")
+    @GetMapping("/api/user/orders/me")
     public ApiResponse<List<OrderResponse>> getMyOrder(@AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<List<OrderResponse>> apiResponse = new ApiResponse<>();
@@ -65,7 +64,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @PostMapping("/api/public/orders/checkout-cart")
+    @PostMapping("/api/user/orders/checkout-cart")
     public ApiResponse<OrderResponse> handleCheckout(@AuthenticationPrincipal Jwt jwt, @RequestBody CheckoutRequest request) {
         Long userId = jwt.getClaim("id");
         ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
@@ -73,14 +72,6 @@ public class OrderController {
         System.out.println(">>> paymentMethod = " + request.getPaymentMethod());
         return apiResponse;
         
-    }
-
-    @PutMapping("/api/public/orders/{id:\\d+}")
-    public ApiResponse<Order> updateOrder(@PathVariable("id") Long id, @RequestBody OrderRequest request, @AuthenticationPrincipal Jwt jwt){
-        Long userId = jwt.getClaim("id");
-        ApiResponse<Order> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.orderService.handleUpdateOrder(id, request, userId));
-        return apiResponse;
     }
 
     @PutMapping("/api/admin/orders/{id:\\d+}/status")
@@ -98,7 +89,7 @@ public class OrderController {
         return apiResponse;
     }
 
-    @PutMapping("/api/public/orders/{orderId}/confirm-receipt")
+    @PutMapping("/api/user/orders/{orderId}/confirm-receipt")
     public ApiResponse<Void> confirmReceipt(@PathVariable("orderId") Long orderId, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<Void> apiResponse = new ApiResponse<>();
@@ -107,12 +98,12 @@ public class OrderController {
         return apiResponse;
     }
     
-    @PutMapping("/api/public/orders/{orderId}/cancel")
-    public ApiResponse<Void> cancelOrder(@PathVariable("orderId") Long orderId) {
+    @PutMapping("/api/user/orders/{orderId}/cancel")
+    public ApiResponse<Void> cancelOrder(@PathVariable("orderId") Long orderId, @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt.getClaim("id");
         ApiResponse<Void> apiResponse = new ApiResponse<>();
-        this.orderService.handleCancelOrder(orderId);
+        this.orderService.handleCancelOrder(orderId, userId);
         apiResponse.setMessage("Order cancelled successfully");
         return apiResponse;
     }
-
 }

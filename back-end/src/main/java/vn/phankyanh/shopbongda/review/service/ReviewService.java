@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.order.domain.OrderItem;
+import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 import vn.phankyanh.shopbongda.order.repository.OrderItemRepository;
 import vn.phankyanh.shopbongda.review.domain.Review;
 import vn.phankyanh.shopbongda.review.dto.request.ReviewRequest;
@@ -13,6 +14,8 @@ import vn.phankyanh.shopbongda.review.dto.response.RatingResponse;
 import vn.phankyanh.shopbongda.review.dto.response.ReviewResponse;
 import vn.phankyanh.shopbongda.review.mapper.ReviewMapper;
 import vn.phankyanh.shopbongda.review.repository.ReviewRepository;
+import vn.phankyanh.shopbongda.user.domain.User;
+import vn.phankyanh.shopbongda.user.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewMapper reviewMapper;
     private final OrderItemRepository orderItemRepository;
+    private final UserRepository userRepository;
 
      public List<ReviewResponse> getReviewsByProductId(Long productId) {
         return reviewRepository.findByProductIdWithUser(productId)
@@ -38,22 +42,31 @@ public class ReviewService {
         return new RatingResponse(avg, count);
     }
 
-    public ReviewResponse createReview(Long orderItemId, ReviewRequest request) {
+    public ReviewResponse createReview(Long orderItemId, ReviewRequest request, Long userId) {
 
-        boolean exists = reviewRepository.existsByOrderItemId(orderItemId);
-
-        if (exists) {
-            throw new RuntimeException("Đơn hàng này đã được đánh giá");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
                 .orElseThrow(() -> new RuntimeException("Order item not found"));
 
-        Review review = reviewMapper.toReview(request);
+        if (!orderItem.getOrder().getUser().getId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền đánh giá đơn này");
+        }
+        
+        if (!orderItem.getOrder().getOrderStatus().equals(OrderStatus.DELIVERED)
+            && !orderItem.getOrder().getOrderStatus().equals(OrderStatus.COMPLETED)) {
+            throw new RuntimeException("Chỉ được đánh giá sau khi nhận hàng");
+        }
 
+        if(reviewRepository.existsByOrderItemId(orderItemId)) {
+            throw new RuntimeException("Đơn hàng này đã được đánh giá");
+        }
+
+        Review review = reviewMapper.toReview(request);
         review.setOrderItem(orderItem);
         review.setProduct(orderItem.getProductVariant().getProduct());
-        review.setUser(orderItem.getOrder().getUser());
+        review.setUser(user);
 
         return reviewMapper.toResponse(reviewRepository.save(review));
     }
@@ -74,8 +87,11 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
             .orElseThrow(() -> new RuntimeException("Review không tồn tại"));
         
-        if (!review.getUser().getId().equals(userId)) {
-            throw new RuntimeException("User không có quyền xóa review này");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!review.getUser().getId().equals(userId) && !user.getRole().equals("ROLE_ADMIN")) {
+            throw new RuntimeException("Không có quyền xóa review");
         }
         
         reviewRepository.delete(review);

@@ -32,7 +32,7 @@ public class CategoryService {
         }
         return categoriesPage.map(categoryMapper::toResponse);
     }
-    public CategoryResponse handleGetUserById(Long id){
+    public CategoryResponse handleGetCategoryById(Long id){
         Category category = this.categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not found with id: " + id));
         return categoryMapper.toResponse(category);
@@ -55,11 +55,11 @@ public class CategoryService {
 
     }
 
-    public Category handleUpdateCategory(Long id, CategoryRequest request){
+    public CategoryResponse handleUpdateCategory(Long id, CategoryRequest request){
 
         Category category = this.categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Not found with id: " + id));
          categoryMapper.updateCategory(category, request);
-        return categoryRepository.save(category);
+        return categoryMapper.toResponse(categoryRepository.save(category));
     }
 }

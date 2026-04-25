@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "../../assets/styles/Home.css";
 import { Link } from "react-router-dom";
-import { getTop5PopularProducts } from "../../services/productService";
+import { getTop4PopularProducts } from "../../services/productService";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    getTop5PopularProducts().then((res) => {
+    getTop4PopularProducts().then((res) => {
       setProducts(res?.data || res || []);
     });
   }, []);
@@ -97,7 +97,7 @@ export default function Home() {
                   <div className="product-image">
                     <img src={image} alt={item.name} />
 
-                    <span className="badge">HOT</span>
+                    <span className="home-badge">HOT</span>
 
                     <div className="overlay">
                       <Link

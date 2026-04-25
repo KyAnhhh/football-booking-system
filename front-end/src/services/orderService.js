@@ -1,7 +1,7 @@
 import { fetchWithAuth } from "./apiService";
 
-const API_URL_PUBLIC = "http://localhost:8080/api/public/orders";
 const API_URL_ADMIN = "http://localhost:8080/api/admin/orders";
+const API_URL_USER = "http://localhost:8080/api/user/orders";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -24,15 +24,6 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-function getAuthHeader() {
-  const token = sessionStorage.getItem("accessToken");
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
-}
-
 export const getOrders = async (
   pageNo = 0,
   pageSize = 10,
@@ -41,11 +32,6 @@ export const getOrders = async (
   search = "",
   status = ""
 ) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  };
-
 
   let url = `${API_URL_ADMIN}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`;
   
@@ -53,65 +39,34 @@ export const getOrders = async (
   if (search) url += `&search=${encodeURIComponent(search)}`;
   if (status) url += `&status=${encodeURIComponent(status)}`;
 
-  const response = await fetchWithAuth(url, {
-    headers,
-  });
+  const response = await fetchWithAuth(url);
 
-  return await handleResponse(response);
+  return handleResponse(response);
 };
 
 
-export const createOrder = async (Order) => { 
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
-  const response = await fetchWithAuth(API_URL_PUBLIC, {
+export const createOrder = async (orderData) => { 
+  const response = await fetchWithAuth(API_URL_USER, {
     method: "POST",
-    headers,
-    body: JSON.stringify(Order),
+    body: JSON.stringify(orderData),
   });
 
-  return await handleResponse(response);
+  return handleResponse(response);
 };
 
 export const getOrderById = async (id) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  };
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`,{
-    method: "GET",
-    headers
-  });
+  const response = await fetchWithAuth(`${API_URL_USER}/${id}`);
   return await handleResponse(response);
 };
 
 export const getMyOrders = async () => {
-  const headers = { 
-    "Content-Type": "application/json", 
-    ...getAuthHeader() };
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/me`, { headers });
-  return await handleResponse(response);
-};
-
-export const updateOrder = async (id, Order) => {
-  const headers = { 
-    "Content-Type": "application/json",
-    ...getAuthHeader() };
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify(Order),
-  });
-
-  return await handleResponse(response);
+  const response = await fetchWithAuth(`${API_URL_USER}/me`);
+  return handleResponse(response);
 };
 
 export const updateOrderStatus = async (orderId, status) => {
-  const headers = { 
-    "Content-Type": "application/json", 
-    ...getAuthHeader() };
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${orderId}/status`, {
     method: "PUT",
-    headers,
     body: JSON.stringify( status ),
   });
 
@@ -119,52 +74,30 @@ export const updateOrderStatus = async (orderId, status) => {
 };
 
 export const deleteOrder = async (id) => {
-  const headers = { ...getAuthHeader() };
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
-    method: "DELETE",
-    headers,
+    method: "DELETE"
   });
 
   return await handleResponse(response);
 };
 
 export const cancelOrder = async (orderId) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  }
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${orderId}/cancel`, {
+  const response = await fetchWithAuth(`${API_URL_USER}/${orderId}/cancel`, {
     method: "PUT",
-    headers,
   });
   return await handleResponse(response);
 }
 
 export const confirmReceived = async (orderId) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  }
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${orderId}/confirm-receipt`, {
+  const response = await fetchWithAuth(`${API_URL_USER}/${orderId}/confirm-receipt`, {
     method: "PUT",
-    headers,
   });
-  if(!response.ok){
-    throw new Error("Xác nhận đã nhận hàng thất bại");
-
-  }
   return await handleResponse(response);
 }
 
-
 export const checkout = async (request) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  }
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/checkout-cart`, {
+  const response = await fetchWithAuth(`${API_URL_USER}/checkout-cart`, {
     method: "POST",
-    headers,
     body: JSON.stringify(request),
   });
   return await handleResponse(response);

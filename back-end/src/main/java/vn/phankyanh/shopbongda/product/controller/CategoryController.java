@@ -11,16 +11,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import vn.phankyanh.shopbongda.product.domain.Category;
 import vn.phankyanh.shopbongda.product.dto.request.CategoryRequest;
 import vn.phankyanh.shopbongda.product.dto.response.CategoryResponse;
 import vn.phankyanh.shopbongda.product.service.CategoryService;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
-@Data
 @RequiredArgsConstructor
 public class CategoryController {
     private final CategoryService categoryService;
@@ -49,20 +46,20 @@ public class CategoryController {
     public ApiResponse<String> deleteCategory(@PathVariable("id") Long id){
         ApiResponse<String> apiResponse = new ApiResponse<>();
         this.categoryService.handleDeleteCategory(id);
-        apiResponse.setMessage("Deleted user successfully with id: " + id);
+        apiResponse.setMessage("Deleted category successfully with id: " + id);
         return apiResponse;
     }
 
-    @GetMapping("/api/admin/categories/{id}")
-    public ApiResponse<CategoryResponse> getUserById(@PathVariable("id") Long id){
+    @GetMapping("/api/public/categories/{id}")
+    public ApiResponse<CategoryResponse> getCategoryById(@PathVariable("id") Long id){
         ApiResponse<CategoryResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.categoryService.handleGetUserById(id));
+        apiResponse.setData(this.categoryService.handleGetCategoryById(id));
         return apiResponse;
     }
 
     @PutMapping("/api/admin/categories/{id}")
-    public ApiResponse<Category> updateCategory(@PathVariable("id") Long id, @RequestBody CategoryRequest request){
-        ApiResponse<Category> apiResponse = new ApiResponse<>();
+    public ApiResponse<CategoryResponse> updateCategory(@PathVariable("id") Long id, @RequestBody CategoryRequest request){
+        ApiResponse<CategoryResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.categoryService.handleUpdateCategory(id, request));
         return apiResponse;
     }

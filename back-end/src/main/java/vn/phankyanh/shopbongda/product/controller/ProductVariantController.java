@@ -36,14 +36,14 @@ public class ProductVariantController {
     }
 
     @GetMapping("/api/public/product-variants/{id}")
-    public ApiResponse<ProductVariantResponse> getProductById(@PathVariable("id") Long id) {
+    public ApiResponse<ProductVariantResponse> getProductVariantById(@PathVariable("id") Long id) {
         ApiResponse<ProductVariantResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.productVariantService.handleGetProductVariantById(id));
         return apiResponse;
     }
 
     @PutMapping("/api/admin/product-variants/{id}")
-    public ApiResponse<ProductVariantResponse> updateProduct(@PathVariable("id") Long id,
+    public ApiResponse<ProductVariantResponse> updateProductVariant(@PathVariable("id") Long id,
             @RequestBody ProductVariantRequest request) {
         ApiResponse<ProductVariantResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.productVariantService.handleUpdateProductVariant(id, request));
@@ -51,9 +51,9 @@ public class ProductVariantController {
     }
 
     @DeleteMapping("/api/admin/product-variants/{id}")
-    public ApiResponse<String> deleteProduct(@PathVariable("id") Long id) {
+    public ApiResponse<String> deleteProductVariant(@PathVariable("id") Long id) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        this.productVariantService.handDeleteProductVariant(id);
+        this.productVariantService.handleDeleteProductVariant(id);
         apiResponse.setMessage("Deleted product variant with id: " + id);
         return apiResponse;
     }

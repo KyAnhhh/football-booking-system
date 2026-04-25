@@ -5,7 +5,6 @@ import { addItemToCart } from "../../services/cartService";
 import Swal from "sweetalert2";
 import "../../assets/styles/ProductDetail.css";
 import ReviewSection from "../../components/review/ReviewSection";
-import { checkCanReview } from "../../services/reviewService";
 
 export default function ProductDetail() {
   const { id } = useParams();

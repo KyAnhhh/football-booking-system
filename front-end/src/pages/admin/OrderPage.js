@@ -34,6 +34,12 @@ export default function OrderPage() {
     SHIPPING: "bg-info",
     DELIVERED: "bg-success",
     CANCELLED: "bg-danger",
+    COMPLETED: "bg-dark",
+  };
+
+  const paymentMethodColor = {
+    COD: "bg-secondary",
+    BANKING: "bg-success",
   };
 
   const loadOrders = async () => {
@@ -178,7 +184,11 @@ export default function OrderPage() {
                   {o.orderStatus}
                 </span>
               </td>
-              <td>{o.paymentMethod}</td>
+              <td>
+                <span className={`badge ${paymentMethodColor[o.paymentMethod]}`}>
+                  {o.paymentMethod}
+                </span>
+              </td>
 
               <td>
                 <span
@@ -215,11 +225,11 @@ export default function OrderPage() {
           </Button>
 
           <span>
-            Page {pageNo + 1} / {pageData.totalPages}
+            Page {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
-            disabled={pageNo + 1 >= pageData.totalPages}
+            disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
             Next

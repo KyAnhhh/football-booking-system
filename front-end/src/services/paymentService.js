@@ -1,6 +1,7 @@
 import { fetchWithAuth } from "./apiService";
 
 const API_URL_ADMIN = "http://localhost:8080/api/admin/payments";
+const API_URL_USER = "http://localhost:8080/api/user/payments";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -23,35 +24,14 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-function getAuthHeader() {
-  const token = sessionStorage.getItem("accessToken");
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
-}
-
 export const getPayment = async (pageNo, pageSize, sortBy, sortDir, search) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  };
-  const response = await fetchWithAuth(`${API_URL_ADMIN}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}${search ? `&search=${search}` : ''}`, {
-    method: "GET",
-    headers,
-  });
-  return await handleResponse(response);
+  const response = await fetchWithAuth(`${API_URL_ADMIN}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}${search ? `&search=${search}` : ''}`);
+  return handleResponse(response);
 }
 
 export const deletePaymentById = async (id) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  };
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
-    headers,
   });
-  return await handleResponse(response);
+  return handleResponse(response);
 }

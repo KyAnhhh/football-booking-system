@@ -84,7 +84,7 @@ public class ProductVariantService {
     }
 
     // delete
-    public void handDeleteProductVariant(Long id) {
+    public void handleDeleteProductVariant(Long id) {
         if(!productVariantRepository.existsById(id)) {
             throw new RuntimeException("Product variant not found");
         }

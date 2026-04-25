@@ -12,19 +12,7 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-function getAuthHeader() {
-  const token = sessionStorage.getItem("accessToken");
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
-}
-
 export const getCategories = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDir = "asc", search = "") => {
-  const headers = {
-    "Content-Type": "application/json",
-  };
   const params = new URLSearchParams({
     pageNo,
     pageSize,
@@ -33,8 +21,8 @@ export const getCategories = async (pageNo = 0, pageSize = 10, sortBy = "id", so
   });
   if (search) params.append("search", search);
   
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`, {headers});
-  return await handleResponse(response);
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`);
+  return handleResponse(response);
 };
 
 export const getAllCategoriesForDropdown = async () => {
@@ -54,44 +42,31 @@ export const getAllCategoriesForDropdown = async () => {
 
 
 export const getCategoryById = async (id) => {
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-  };
-  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`,{
-    method: "GET",
-    headers
-  });
-  return await handleResponse(response);
+  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`);
+  return handleResponse(response);
 };
 
-export const createCategory = async (Category) => {
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
+export const createCategory = async (categoryData) => {
   const response = await fetchWithAuth(API_URL_ADMIN, {
     method: "POST",
-    headers,
-    body: JSON.stringify(Category),
+    body: JSON.stringify(categoryData),
   });
 
   return await handleResponse(response);
 };
 
-export const updateCategory = async (id, Category) => {
-  const headers = { "Content-Type": "application/json", ...getAuthHeader() };
+export const updateCategory = async (id, categoryData) => {
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "PUT",
-    headers,
-    body: JSON.stringify(Category),
+    body: JSON.stringify(categoryData),
   });
 
   return await handleResponse(response);
 };
 
 export const deleteCategory = async (id) => {
-  const headers = { ...getAuthHeader() };
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
     method: "DELETE",
-    headers,
   });
 
   return await handleResponse(response);

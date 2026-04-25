@@ -2,6 +2,7 @@ import { fetchWithAuth } from "./apiService";
 
 const API_URL_PUBLIC = "http://localhost:8080/api/public";
 const API_URL_ADM = "http://localhost:8080/api/admin";
+const API_URL_USER = "http://localhost:8080/api/user";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -11,18 +12,9 @@ const handleResponse = async (response) => {
     return result.data ?? result.message;
 };
 
-function getAuthHeader() {
-    const token = sessionStorage.getItem("accessToken");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 export const createReview = async (orderItemId, reviewData) => {
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/order-items/${orderItemId}/reviews`, {
+  const response = await fetchWithAuth(`${API_URL_USER}/order-items/${orderItemId}/reviews`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeader(),
-    },
     body: JSON.stringify({ ...reviewData }),
   });
   return handleResponse(response);
@@ -47,21 +39,13 @@ export const getAverageRating = async (productId) => {
 }
 
 export const checkCanReview = async (orderItemId) => {
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/user/order-items/${orderItemId}/can-review`, {
-    method: "GET",
-    headers: {
-    },
-  });
+  const response = await fetchWithAuth(`${API_URL_USER}/order-items/${orderItemId}/can-review`);
   return handleResponse(response);
 }
 
 export const deleteReview = async (reviewId) => {
   const response = await fetchWithAuth(`${API_URL_ADM}/reviews/${reviewId}`, {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeader(),
-    },
   });
   return handleResponse(response);
 }
