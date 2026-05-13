@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import vn.phankyanh.shopbongda.booking.domain.Booking;
 import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
+import vn.phankyanh.shopbongda.booking.projection.BookingTimeView;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -30,14 +31,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Page<Booking> searchBookings(String keyword, BookingStatus status, Pageable pageable);
 
     @Query("""
-    SELECT b FROM Booking b
+    SELECT b.startTime AS startTime,
+        b.endTime AS endTime,
+        b.status AS status
+    FROM Booking b
     WHERE b.field.id = :fieldId
-    AND b.startTime < :endOfDay
-    AND b.endTime > :startOfDay
+    AND b.startTime >= :startOfDay
+    AND b.endTime <= :endOfDay
     """)
-    List<Booking> findBookingsInDay(
-        Long fieldId,
-        LocalDateTime startOfDay,
-        LocalDateTime endOfDay
+    List<BookingTimeView> findBookingsInDayLite(
+            Long fieldId,
+            LocalDateTime startOfDay,
+            LocalDateTime endOfDay
     );
 }

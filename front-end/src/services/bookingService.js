@@ -1,6 +1,5 @@
 import { fetchWithAuth } from "./apiService";
 
-const API_URL_PUBLIC = "http://localhost:8080/api/public/bookings";
 const API_URL_ADMIN = "http://localhost:8080/api/admin/bookings";
 const API_URL_USER = "http://localhost:8080/api/user/bookings";
 

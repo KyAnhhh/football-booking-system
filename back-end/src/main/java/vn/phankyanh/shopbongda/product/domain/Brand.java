@@ -12,7 +12,8 @@ import lombok.*;
 @Table(name = "brands")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

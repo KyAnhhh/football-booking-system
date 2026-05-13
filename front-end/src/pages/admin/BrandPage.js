@@ -17,7 +17,7 @@ export default function BrandPage() {
   const [pageNo, setPageNo] = useState(0);
   const [pageSize] = useState(5);
   const [sortBy, setSortBy] = useState("id");
-  const [sortDir, setSortDir] = useState("asc");
+  const [sortDir, setSortDir] = useState("asc");  
   const [search, setSearch] = useState("");
 
   const [pageData, setPageData] = useState(null);

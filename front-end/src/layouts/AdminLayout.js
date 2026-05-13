@@ -86,6 +86,20 @@ export default function AdminLayout() {
               </NavLink>
             </li>
 
+            <li>
+              <NavLink to="/admin/football-fields">
+                <BsReceipt />
+                <span>Football Fields</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink to="/admin/bookings">
+                <BsReceipt />
+                <span>Bookings</span>
+              </NavLink>
+            </li>
+
             <li className="back-home">
               <NavLink to="/">
                 <BsHouseDoor />

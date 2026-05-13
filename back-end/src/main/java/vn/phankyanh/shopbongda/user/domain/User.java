@@ -21,7 +21,8 @@ import lombok.*;
 import vn.phankyanh.shopbongda.order.domain.Cart;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor 
 @AllArgsConstructor

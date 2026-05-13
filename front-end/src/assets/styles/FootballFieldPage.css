@@ -1,0 +1,157 @@
+/* ====== ROOT ====== */
+.field-page {
+  padding: 20px;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* ====== HEADER ====== */
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.field-header h2 {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* ====== FILTER ====== */
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.filters input,
+.filters select {
+  border-radius: 8px !important;
+  border: 1px solid #ddd;
+  padding: 6px 10px;
+}
+
+/* ====== TABLE ====== */
+.field-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.field-table thead {
+  background: linear-gradient(90deg, #0d6efd, #4f46e5);
+  color: white;
+}
+
+.field-table th,
+.field-table td {
+  padding: 14px;
+  text-align: center;
+}
+
+.field-table th {
+  font-weight: 600;
+}
+
+.field-table tbody tr {
+  border-bottom: 1px solid #eee;
+  transition: 0.25s;
+}
+
+.field-table tbody tr:hover {
+  background-color: #eef2ff;
+  transform: scale(1.01);
+}
+
+/* ====== STATUS BADGE ====== */
+.status-available {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.status-maintenance {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.status-booked {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+/* ====== BUTTON ====== */
+button {
+  border-radius: 8px !important;
+  transition: 0.2s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+/* ====== PAGINATION ====== */
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.pagination span {
+  font-weight: 600;
+  color: #334155;
+}
+
+/* ====== MODAL ====== */
+.modal-content {
+  border-radius: 16px;
+}
+
+.modal-header {
+  background: linear-gradient(90deg, #0d6efd, #6366f1);
+  color: white;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.modal-body input,
+.modal-body select {
+  border-radius: 10px;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 768px) {
+  .field-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .field-table th,
+  .field-table td {
+    padding: 8px;
+    font-size: 12px;
+  }
+}

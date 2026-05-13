@@ -20,14 +20,16 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.user.domain.User;
 
 @Entity
 @Table(name = "bookings")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

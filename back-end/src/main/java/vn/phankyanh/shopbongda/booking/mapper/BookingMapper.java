@@ -9,9 +9,9 @@ import vn.phankyanh.shopbongda.booking.dto.response.BookingResponse;
 @Mapper(componentModel = "spring")
 public interface BookingMapper {
     
-    @Mapping(target = "userId", expression="java(booking.getUser().getId())")
-    @Mapping(target = "fieldId", expression="java(booking.getField().getId())")
-    @Mapping(target = "fieldName", expression="java(booking.getField().getName())")
-    @Mapping(target = "status", expression="java(booking.getStatus().toString())")
+    @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "field.id", target = "fieldId")
+    @Mapping(source = "field.name", target = "fieldName")
+    @Mapping(source = "status", target = "status")
     BookingResponse toResponse(Booking booking);
 }

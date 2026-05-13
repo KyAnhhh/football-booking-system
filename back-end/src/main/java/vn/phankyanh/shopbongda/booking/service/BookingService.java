@@ -20,6 +20,7 @@ import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
 import vn.phankyanh.shopbongda.booking.dto.request.BookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.response.BookingResponse;
 import vn.phankyanh.shopbongda.booking.mapper.BookingMapper;
+import vn.phankyanh.shopbongda.booking.projection.BookingTimeView;
 import vn.phankyanh.shopbongda.booking.repository.BookingRepository;
 import vn.phankyanh.shopbongda.field.domain.FieldStatus;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
@@ -54,8 +55,9 @@ public class BookingService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
-        FootballField field = fieldRepository.findById(request.getFieldId())
-            .orElseThrow(() -> new RuntimeException("Field not found"));
+        // FootballField field = fieldRepository.findById(request.getFieldId())
+        //     .orElseThrow(() -> new RuntimeException("Field not found"));
+        FootballField field = fieldRepository.getReferenceById(request.getFieldId());
 
         if (field.getStatus() != FieldStatus.AVAILABLE) {
             throw new RuntimeException("Field is not available");
@@ -122,32 +124,34 @@ public class BookingService {
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.atTime(23, 59, 59);
 
-        List<Booking> bookings = bookingRepository
-                .findBookingsInDay(fieldId, startOfDay, endOfDay);
+        List<BookingTimeView> bookings =
+                bookingRepository.findBookingsInDayLite(fieldId, startOfDay, endOfDay);
 
         List<SlotResponse> result = new ArrayList<>();
 
         LocalTime current = OPEN_TIME;
 
-        while (current.plusMinutes(SLOT_DURATION).isBefore(CLOSE_TIME) 
-            || current.plusMinutes(SLOT_DURATION).equals(CLOSE_TIME)) {
+        while (current.plusMinutes(SLOT_DURATION).compareTo(CLOSE_TIME) <= 0) {
 
             LocalDateTime slotStart = LocalDateTime.of(date, current);
             LocalDateTime slotEnd = slotStart.plusMinutes(SLOT_DURATION);
 
-            boolean isBooked = bookings.stream().anyMatch(b ->
-                    b.getStatus() != BookingStatus.CANCELLED &&
-                    slotStart.isBefore(b.getEndTime()) &&
-                    slotEnd.isAfter(b.getStartTime())
-            );
+            boolean isBooked = false;
 
-            result.add(
-                SlotResponse.builder()
+            for (BookingTimeView b : bookings) {
+                if (b.getStatus() != BookingStatus.CANCELLED &&
+                    slotStart.isBefore(b.getEndTime()) &&
+                    slotEnd.isAfter(b.getStartTime())) {
+                    isBooked = true;
+                    break;
+                }
+            }
+
+            result.add(SlotResponse.builder()
                     .startTime(current)
                     .endTime(current.plusMinutes(SLOT_DURATION))
                     .available(!isBooked)
-                    .build()
-            );
+                    .build());
 
             current = current.plusMinutes(SLOT_DURATION);
         }
@@ -167,8 +171,10 @@ public class BookingService {
     }
 
     public void confirmBooking(Long bookingId){
-        Booking booking = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new RuntimeException("Booking not found"));
+        // Booking booking = bookingRepository.findById(bookingId)
+        //     .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        Booking booking = bookingRepository.getReferenceById(bookingId);
 
         if(booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException("Only pending bookings can be confirmed");
@@ -180,8 +186,10 @@ public class BookingService {
     }
 
     public void cancelBooking(Long bookingId, Long userId) {
-        Booking booking = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new RuntimeException("Booking not found"));
+        // Booking booking = bookingRepository.findById(bookingId)
+        //     .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        Booking booking = bookingRepository.getReferenceById(bookingId);
 
         if (!booking.getUser().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized");

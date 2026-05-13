@@ -98,7 +98,7 @@ export default function Header() {
           <Link className="fs-nav-link" to="/">Trang chủ</Link>
           <Link className="fs-nav-link" to="/about">Giới thiệu</Link>
           <Link className="fs-nav-link" to="/products">Sản phẩm</Link>
-          <Link className="fs-nav-link" to="/collections">Bộ sưu tập</Link>
+          <Link className="fs-nav-link" to="/football-fields">Sân bóng</Link>
           <Link className="fs-nav-link" to="/contact">Liên hệ</Link>
           <Link className="fs-nav-link" to="/service">Dịch vụ</Link>
         </nav>
@@ -181,7 +181,7 @@ export default function Header() {
       <div className={`fs-mobile-menu ${open ? "show" : ""}`}>
         <Link to="/" onClick={() => setOpen(false)}>Trang chủ</Link>
         <Link to="/products" onClick={() => setOpen(false)}>Sản phẩm</Link>
-        <Link to="/collections" onClick={() => setOpen(false)}>Bộ sưu tập</Link>
+        <Link to="/football-fields" onClick={() => setOpen(false)}>Sân bóng</Link>
         <Link to="/about" onClick={() => setOpen(false)}>Giới thiệu</Link>
         <Link to="/contact" onClick={() => setOpen(false)}>Liên hệ</Link>
         <Link to="/service" onClick={() => setOpen(false)}>Dịch vụ</Link>

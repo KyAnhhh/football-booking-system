@@ -12,7 +12,7 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-export const getBrands = async (pageNo = 0, pageSize = 5, sortBy = "id", sortDir = "asc", search = "") => {
+export const getBrands = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDir = "asc", search = "") => {
   const params = new URLSearchParams({
     pageNo,
     pageSize,

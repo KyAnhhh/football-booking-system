@@ -28,6 +28,11 @@ import ForgotPassword from "./pages/Forgot-Password";
 import ResetPassword from "./pages/Reset-Password";
 import ReviewSection from "./components/review/ReviewSection";
 import Review from "./pages/client/Review";
+import FootballFieldPage from "./pages/admin/FootballFieldPage";
+import BookingPage from "./pages/admin/BookingPage";
+import PaymentFootballField from "./pages/client/PaymentFootballField";
+import FootballFieldDetail from "./pages/client/FootballFieldDetail";
+import FootballField from "./pages/client/FootballField";
 
 function App() {
   return (
@@ -55,125 +60,27 @@ function App() {
           <Route path="orders" element={<OrderPage />} />
           <Route path="sizes" element={<SizePage />} />
           <Route path="payments" element={<PaymentPage />} />
+          <Route path="football-fields" element={<FootballFieldPage />} />
+          <Route path="bookings" element={<BookingPage />} />
         </Route>
 
         {/* Client routes */}
-        <Route
-          path="/"
-          element={
-            <ClientLayout>
-              <Home />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/products"
-          element={
-            <ClientLayout>
-              <Product />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/products/product-details/:id"
-          element={
-            <ClientLayout>
-              <ProductDetail />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/about"
-          element={
-            <ClientLayout>
-              <About />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/contact"
-          element={
-            <ClientLayout>
-              <Contact />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/profile"
-          element={
-            <ClientLayout>
-              <Profile />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/cart"
-          element={
-            <ClientLayout>
-              <Cart />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/collections"
-          element={
-            <ClientLayout>
-              <Collection />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/service"
-          element={
-            <ClientLayout>
-              <Service />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/my-orders"
-          element={
-            <ClientLayout>
-              <MyOrders />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/cart/checkout"
-          element={
-            <ClientLayout>
-              <Checkout />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/orders/:orderId/review/:productId"
-          element={
-            <ClientLayout>
-              <ReviewSection />
-            </ClientLayout>
-          }
-        />
-
-        <Route
-          path="/review/:id"
-          element={
-            <ClientLayout>
-              <Review />
-            </ClientLayout>
-          }
-        />
+          <Route path="/" element={<ClientLayout><Home /></ClientLayout>} />
+          <Route path="/products" element={<ClientLayout><Product /></ClientLayout>} />
+          <Route path="/products/product-details/:id" element={<ClientLayout><ProductDetail /></ClientLayout>} />
+          <Route path="/about" element={<ClientLayout><About /></ClientLayout>} />
+          <Route path="/contact" element={<ClientLayout><Contact /></ClientLayout>} />
+          <Route path="/profile" element={<ClientLayout><Profile /></ClientLayout>} />
+          <Route path="/cart" element={<ClientLayout><Cart /></ClientLayout>} />
+          <Route path="/collections" element={<ClientLayout><Collection /></ClientLayout>} />
+          <Route path="/service" element={<ClientLayout><Service /></ClientLayout>} />
+          <Route path="/my-orders" element={<ClientLayout><MyOrders /></ClientLayout>} />
+          <Route path="/cart/checkout" element={<ClientLayout><Checkout /></ClientLayout>} />
+          <Route path="/orders/:orderId/review/:productId" element={<ClientLayout><ReviewSection /></ClientLayout>} />
+          <Route path="/review/:id" element={<ClientLayout><Review /></ClientLayout>} />
+          <Route path="/football-fields" element={<ClientLayout><FootballField /></ClientLayout>} />
+          <Route path="/football-fields/:id/detail" element={<ClientLayout><FootballFieldDetail /></ClientLayout>} />
+          <Route path="/football-fields/:id/payment" element={<ClientLayout><PaymentFootballField /></ClientLayout>} />
       </Routes>
     </BrowserRouter>
   );
