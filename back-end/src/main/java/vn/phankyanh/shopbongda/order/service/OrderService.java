@@ -29,6 +29,7 @@ import vn.phankyanh.shopbongda.order.repository.CartRepository;
 import vn.phankyanh.shopbongda.order.repository.OrderRepository;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
+import vn.phankyanh.shopbongda.payment.domain.PaymentType;
 import vn.phankyanh.shopbongda.product.domain.ProductVariant;
 import vn.phankyanh.shopbongda.product.repository.ProductVariantRepository;
 import vn.phankyanh.shopbongda.shared.service.email.EmailService;
@@ -188,7 +189,7 @@ public class OrderService {
                         .totalAmount(totalAmount)
                         .paymentMethod(request.getPaymentMethod())
                         .paymentStatus(PaymentStatus.UNPAID)
-                        .type("Giao hàng tận nơi")
+                        .paymentType(PaymentType.ORDER)
                         .build();
 
         order.setPayment(payment);
@@ -384,7 +385,7 @@ public class OrderService {
             .totalAmount(finalTotalAmount)
             .paymentMethod(request.getPaymentMethod())
             .paymentStatus(PaymentStatus.UNPAID)
-            .type("Giao hàng tận nơi")
+            .paymentType(PaymentType.ORDER)
             .build();
         
         order.setShippingCost(shippingCost);

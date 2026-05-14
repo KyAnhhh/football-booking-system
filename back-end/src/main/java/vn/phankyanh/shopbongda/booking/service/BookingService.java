@@ -26,6 +26,10 @@ import vn.phankyanh.shopbongda.field.domain.FieldStatus;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.dto.response.SlotResponse;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
+import vn.phankyanh.shopbongda.payment.domain.Payment;
+import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
+import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
+import vn.phankyanh.shopbongda.payment.domain.PaymentType;
 import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
 
@@ -94,6 +98,14 @@ public class BookingService {
             .status(BookingStatus.PENDING)
             .build();
 
+        Payment payment = Payment.builder()
+            .paymentType(PaymentType.BOOKING)
+            .paymentStatus(PaymentStatus.UNPAID)
+            .totalAmount(totalPrice)
+            .paymentMethod(request.getPaymentMethod())
+            .build();
+
+        booking.setPayment(payment);
         bookingRepository.save(booking);
 
         return bookingMapper.toResponse(booking);
@@ -127,6 +139,8 @@ public class BookingService {
         List<BookingTimeView> bookings =
                 bookingRepository.findBookingsInDayLite(fieldId, startOfDay, endOfDay);
 
+        System.out.println("Bookings size = " + bookings.size());
+        
         List<SlotResponse> result = new ArrayList<>();
 
         LocalTime current = OPEN_TIME;
@@ -159,6 +173,17 @@ public class BookingService {
         return result;
     }
 
+    // public List<SlotResponse> getAvailableSlots(Long fieldId, LocalDate date) {
+
+    //     return List.of(
+    //         SlotResponse.builder()
+    //             .startTime(LocalTime.of(7, 0))
+    //             .endTime(LocalTime.of(8, 30))
+    //             .available(true)
+    //             .build()
+    //     );
+    // }
+
     public BookingResponse getBookingForQr(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
             .orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -167,17 +192,28 @@ public class BookingService {
             throw new RuntimeException("Booking not payable");
         }
 
+        if (booking.getPayment().getPaymentStatus() == PaymentStatus.PAID) {
+            throw new RuntimeException("Booking already paid");
+        }
+
         return bookingMapper.toResponse(booking);
     }
 
     public void confirmBooking(Long bookingId){
-        // Booking booking = bookingRepository.findById(bookingId)
-        //     .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         Booking booking = bookingRepository.getReferenceById(bookingId);
 
         if(booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException("Only pending bookings can be confirmed");
+        }
+
+        Payment payment = booking.getPayment();
+
+        if (payment != null &&
+            payment.getPaymentMethod() != PaymentMethod.COD &&
+            payment.getPaymentStatus() != PaymentStatus.PAID) {
+
+            throw new IllegalStateException("Booking not paid");
         }
 
         booking.setStatus(BookingStatus.CONFIRMED);
@@ -186,8 +222,6 @@ public class BookingService {
     }
 
     public void cancelBooking(Long bookingId, Long userId) {
-        // Booking booking = bookingRepository.findById(bookingId)
-        //     .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         Booking booking = bookingRepository.getReferenceById(bookingId);
 
@@ -201,6 +235,15 @@ public class BookingService {
 
         if(booking.getStartTime().isBefore(LocalDateTime.now())){
             throw new IllegalStateException("Cannot cancel past bookings");
+        }
+
+        Payment payment = booking.getPayment();
+
+        if(payment != null &&
+        payment.getPaymentStatus() == PaymentStatus.UNPAID) {
+
+            payment.setPaymentStatus(PaymentStatus.FAILED);
+            payment.setPaymentDate(LocalDateTime.now());
         }
 
         booking.setStatus(BookingStatus.CANCELLED);

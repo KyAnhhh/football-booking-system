@@ -13,8 +13,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -24,10 +26,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
+import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.user.domain.User;
 
 @Entity
-@Table(name = "bookings")
+// @Table(name = "bookings")
+@Table(
+    name = "bookings",
+    indexes = {
+        @Index(
+            name = "idx_booking_field_time",
+            columnList = "field_id,start_time,end_time"
+        )
+    }
+)
 @Getter
 @Setter
 @Builder
@@ -46,6 +58,10 @@ public class Booking {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "field_id", nullable = false)
     private FootballField field;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id", nullable = false)
+    private Payment payment;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
