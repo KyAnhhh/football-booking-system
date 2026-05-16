@@ -143,6 +143,8 @@ public class BookingService {
 
         List<SlotResponse> result = new ArrayList<>();
 
+        LocalDateTime now = LocalDateTime.now();
+
         int index = 0;
 
         while (true) {
@@ -160,10 +162,12 @@ public class BookingService {
                     slotEnd.isAfter(b.getStartTime())
             );
 
+            boolean isPastSlot = !slotStart.isAfter(now);
+
             result.add(SlotResponse.builder()
                     .startTime(slotStart.toLocalTime())
                     .endTime(slotEnd.toLocalTime())
-                    .available(!isBooked)
+                    .available(!isBooked && !isPastSlot)
                     .build());
 
             index++;

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getProducts } from "../../services/productService";
 import "../../assets/styles/Product.css";

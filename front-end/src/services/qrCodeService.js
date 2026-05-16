@@ -19,5 +19,5 @@ export const getQrCodeForBooking = async (bookingId) => {
 
   if (!res.ok) throw new Error("Không lấy được QR");
 
-  return await res.text(); // vì backend trả string
+  return await res.text();
 };

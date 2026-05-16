@@ -39,7 +39,7 @@ public class QrCodeController {
         return qrUrl;
     }
 
-    @GetMapping("/api/user/booking/{bookingId}/qr-url")
+    @GetMapping("/api/user/bookings/{bookingId}/qr-url")
     public String getBookingQrUrl(@PathVariable Long bookingId, @AuthenticationPrincipal Jwt jwt) {
 
         Long userId = jwt.getClaim("id");
