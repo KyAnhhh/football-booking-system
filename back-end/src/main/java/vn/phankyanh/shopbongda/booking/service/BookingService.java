@@ -27,7 +27,6 @@ import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.dto.response.SlotResponse;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
-import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
 import vn.phankyanh.shopbongda.user.domain.User;
@@ -44,6 +43,7 @@ public class BookingService {
     @Transactional
     public BookingResponse createBooking(BookingRequest request, Long userId) {
 
+        // 1. VALIDATION
         if (request.getStartTime() == null || request.getEndTime() == null) {
             throw new IllegalArgumentException("Time is required");
         }
@@ -56,70 +56,72 @@ public class BookingService {
             throw new IllegalArgumentException("Cannot book past time");
         }
 
+        // 2. LOAD USER
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // FootballField field = fieldRepository.findById(request.getFieldId())
-        //     .orElseThrow(() -> new RuntimeException("Field not found"));
-        FootballField field = fieldRepository.getReferenceById(request.getFieldId());
+        // 3. LOAD FIELD (safe version)
+        FootballField field = fieldRepository.findById(request.getFieldId())
+                .orElseThrow(() -> new RuntimeException("Field not found"));
 
         if (field.getStatus() != FieldStatus.AVAILABLE) {
             throw new RuntimeException("Field is not available");
         }
 
-        List<Booking> conflicts = bookingRepository
-            .findByFieldIdAndStartTimeLessThanAndEndTimeGreaterThan(
+        // 4. 🔥 LOCK + CHECK CONFLICT (IMPORTANT)
+        List<Booking> conflicts = bookingRepository.findConflictsForUpdate(
                 field.getId(),
-                request.getEndTime(),
-                request.getStartTime()
-            );
-
-        boolean hasConflict = conflicts.stream().anyMatch(b ->
-            b.getStatus() != BookingStatus.CANCELLED
+                request.getStartTime(),
+                request.getEndTime()
         );
 
-        if (hasConflict) {
+        if (!conflicts.isEmpty()) {
             throw new IllegalStateException("Time slot already booked");
         }
 
+        // 5. CALCULATE PRICE
         long minutes = Duration.between(
-            request.getStartTime(),
-            request.getEndTime()
+                request.getStartTime(),
+                request.getEndTime()
         ).toMinutes();
 
         BigDecimal totalPrice = calculatePrice(field, minutes);
 
+        // 6. CREATE BOOKING
         Booking booking = Booking.builder()
-            .user(user)
-            .field(field)
-            .startTime(request.getStartTime())
-            .endTime(request.getEndTime())
-            .totalPrice(totalPrice)
-            .status(BookingStatus.PENDING)
-            .build();
+                .user(user)
+                .field(field)
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .totalPrice(totalPrice)
+                .status(BookingStatus.PENDING)
+                .build();
 
+        // 7. PAYMENT
         Payment payment = Payment.builder()
-            .paymentType(PaymentType.BOOKING)
-            .paymentStatus(PaymentStatus.UNPAID)
-            .totalAmount(totalPrice)
-            .paymentMethod(request.getPaymentMethod())
-            .build();
+                .paymentType(PaymentType.BOOKING)
+                .paymentStatus(PaymentStatus.UNPAID)
+                .totalAmount(totalPrice)
+                .paymentMethod(request.getPaymentMethod())
+                .build();
 
         booking.setPayment(payment);
+
+        // 8. SAVE
         bookingRepository.save(booking);
 
         return bookingMapper.toResponse(booking);
     }
 
     public Page<BookingResponse> getAllBooking(
-        String keyword,
-        BookingStatus status,
-        Pageable pageable
-) {
-    return bookingRepository
-        .searchBookings(keyword, status, pageable)
-        .map(bookingMapper::toResponse);
-}
+            String keyword,
+            BookingStatus status,
+            Pageable pageable
+    ) {
+        return bookingRepository
+            .searchBookings(keyword, status, pageable)
+            .map(bookingMapper::toResponse);
+    }
 
     public List<BookingResponse> getBookingsByUserId(Long userId) {
         return bookingRepository.findByUserId(userId).stream()
@@ -129,60 +131,46 @@ public class BookingService {
 
     private static final int SLOT_DURATION = 90;
     private static final LocalTime OPEN_TIME = LocalTime.of(7, 0);
-    private static final LocalTime CLOSE_TIME = LocalTime.of(23, 30);
+    private static final LocalTime CLOSE_TIME = LocalTime.of(23, 45);
 
     public List<SlotResponse> getAvailableSlots(Long fieldId, LocalDate date) {
 
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+        LocalDateTime base = date.atTime(OPEN_TIME);
+        LocalDateTime close = date.atTime(CLOSE_TIME);
 
         List<BookingTimeView> bookings =
-                bookingRepository.findBookingsInDayLite(fieldId, startOfDay, endOfDay);
+                bookingRepository.findBookingsInDayLite(fieldId, base, close);
 
-        System.out.println("Bookings size = " + bookings.size());
-        
         List<SlotResponse> result = new ArrayList<>();
 
-        LocalTime current = OPEN_TIME;
+        int index = 0;
 
-        while (current.plusMinutes(SLOT_DURATION).compareTo(CLOSE_TIME) <= 0) {
+        while (true) {
 
-            LocalDateTime slotStart = LocalDateTime.of(date, current);
+            LocalDateTime slotStart = base.plusMinutes(index * SLOT_DURATION);
             LocalDateTime slotEnd = slotStart.plusMinutes(SLOT_DURATION);
 
-            boolean isBooked = false;
-
-            for (BookingTimeView b : bookings) {
-                if (b.getStatus() != BookingStatus.CANCELLED &&
-                    slotStart.isBefore(b.getEndTime()) &&
-                    slotEnd.isAfter(b.getStartTime())) {
-                    isBooked = true;
-                    break;
-                }
+            if (slotEnd.isAfter(close)) {
+                break;
             }
 
+            boolean isBooked = bookings.stream().anyMatch(b ->
+                    b.getStatus() != BookingStatus.CANCELLED &&
+                    slotStart.isBefore(b.getEndTime()) &&
+                    slotEnd.isAfter(b.getStartTime())
+            );
+
             result.add(SlotResponse.builder()
-                    .startTime(current)
-                    .endTime(current.plusMinutes(SLOT_DURATION))
+                    .startTime(slotStart.toLocalTime())
+                    .endTime(slotEnd.toLocalTime())
                     .available(!isBooked)
                     .build());
 
-            current = current.plusMinutes(SLOT_DURATION);
+            index++;
         }
 
         return result;
     }
-
-    // public List<SlotResponse> getAvailableSlots(Long fieldId, LocalDate date) {
-
-    //     return List.of(
-    //         SlotResponse.builder()
-    //             .startTime(LocalTime.of(7, 0))
-    //             .endTime(LocalTime.of(8, 30))
-    //             .available(true)
-    //             .build()
-    //     );
-    // }
 
     public BookingResponse getBookingForQr(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -199,23 +187,28 @@ public class BookingService {
         return bookingMapper.toResponse(booking);
     }
 
-    public void confirmBooking(Long bookingId){
+    // gộp update payment + confirm booking
+    @Transactional
+    public void confirmBooking(Long bookingId) {
 
-        Booking booking = bookingRepository.getReferenceById(bookingId);
+        Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        if(booking.getStatus() != BookingStatus.PENDING) {
-            throw new IllegalStateException("Only pending bookings can be confirmed");
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new IllegalStateException("Booking already processed");
         }
 
         Payment payment = booking.getPayment();
 
-        if (payment != null &&
-            payment.getPaymentMethod() != PaymentMethod.COD &&
-            payment.getPaymentStatus() != PaymentStatus.PAID) {
-
-            throw new IllegalStateException("Booking not paid");
+        if (payment == null) {
+            throw new RuntimeException("Payment not found");
         }
 
+        // update payment
+        payment.setPaymentStatus(PaymentStatus.PAID);
+        payment.setPaymentDate(LocalDateTime.now());
+
+        // confirm booking
         booking.setStatus(BookingStatus.CONFIRMED);
 
         bookingRepository.save(booking);

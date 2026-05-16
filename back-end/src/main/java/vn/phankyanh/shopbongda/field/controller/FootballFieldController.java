@@ -79,10 +79,6 @@ public class FootballFieldController {
         return response;
     }
 
-    // @GetMapping("/public/fields/{fieldId}/slots")
-    // public String test() {
-    //     return "OK";
-    // }
 
     @PutMapping("/admin/fields/{id}/status")
     public ApiResponse<Void> updateFootballFieldStatus(

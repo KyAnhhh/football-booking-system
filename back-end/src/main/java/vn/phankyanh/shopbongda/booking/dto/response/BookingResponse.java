@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,8 +11,9 @@ import lombok.Setter;
 @Setter
 @Builder
 public class BookingResponse {
-    private Long userId;
     private Long id;
+    private Long userId;
+    private Long paymentId;
     private Long fieldId;
     private String fieldName;
     private LocalDateTime startTime;

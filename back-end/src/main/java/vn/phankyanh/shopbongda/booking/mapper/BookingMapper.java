@@ -12,6 +12,7 @@ public interface BookingMapper {
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "field.id", target = "fieldId")
     @Mapping(source = "field.name", target = "fieldName")
+    @Mapping(source = "payment.id", target = "paymentId")
     @Mapping(source = "status", target = "status")
     BookingResponse toResponse(Booking booking);
 }

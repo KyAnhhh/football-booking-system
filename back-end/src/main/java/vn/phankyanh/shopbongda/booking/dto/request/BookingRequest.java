@@ -12,5 +12,7 @@ public class BookingRequest {
     private Long fieldId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private String contactPhone;
+    private String note;
     private PaymentMethod paymentMethod; 
 }

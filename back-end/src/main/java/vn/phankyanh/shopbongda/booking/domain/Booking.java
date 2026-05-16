@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -59,7 +60,7 @@ public class Booking {
     @JoinColumn(name = "field_id", nullable = false)
     private FootballField field;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id", nullable = false)
     private Payment payment;
 

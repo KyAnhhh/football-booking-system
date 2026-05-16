@@ -71,7 +71,6 @@ public class BookingController {
     public ApiResponse<Void> confirmBooking(@PathVariable("bookingId") Long bookingId) {
         ApiResponse<Void> response = new ApiResponse<>();
         this.bookingService.confirmBooking(bookingId);
-        response.setData(null);
         return response;
     }
     
@@ -80,7 +79,6 @@ public class BookingController {
         Long userId = jwt.getClaim("id");
         ApiResponse<Void> response = new ApiResponse<>();
         this.bookingService.cancelBooking(bookingId, userId);
-        response.setData(null);
         return response;
     }
     
@@ -88,7 +86,6 @@ public class BookingController {
     public ApiResponse<Void> deleteBooking(@PathVariable("bookingId") Long bookingId) {
         ApiResponse<Void> response = new ApiResponse<>();
         this.bookingService.deleteBooking(bookingId);
-        response.setData(null);
         return response;
     }
 }
