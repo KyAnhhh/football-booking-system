@@ -1,5 +1,6 @@
 package vn.phankyanh.shopbongda.product.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -37,9 +38,14 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice
+    ) {
         ApiResponse<Page<ProductResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleGetAllProduct(pageNo, pageSize, sortBy, sortDir, search));
+        apiResponse.setData(this.productService.handleGetAllProduct(pageNo, pageSize, sortBy, sortDir, search, category, brand, minPrice, maxPrice));
         return apiResponse;
     }
 

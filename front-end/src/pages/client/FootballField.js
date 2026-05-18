@@ -16,6 +16,15 @@ export default function FootballField() {
     load();
   }, []);
 
+  const checkLogin = (callback) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    callback();
+  };
+
   return (
     <div className="field-page">
       <h2 className="title">Sân bóng</h2>
@@ -26,10 +35,14 @@ export default function FootballField() {
             <h3>{f.name}</h3>
             <img src={f.imageUrl} alt={f.name} />
             <p>{f.location}</p>
-            <p className="price">Giá: {f.pricePerHour} VND/h</p>
+            <p className="field-price">Giá: {f.pricePerHour} VND/h</p>
             <Button
               className="btn-custom"
-              onClick={() => navigate(`/football-fields/${f.id}/detail`)}
+              onClick={() => {
+                checkLogin(() => {
+                  navigate(`/football-fields/${f.id}/detail`);
+                });
+              }}
             >
               Xem chi tiết
             </Button>

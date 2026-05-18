@@ -18,7 +18,11 @@ export const getProducts = async (
   pageSize,
   sortBy = "id",
   sortDir = "asc",
-  search = ""
+  search = "",
+  category = "",
+  brand = "",
+  minPrice = null,
+  maxPrice = null
 ) => {
 
 const params = new URLSearchParams({
@@ -29,6 +33,10 @@ const params = new URLSearchParams({
 });
 
   if (search) params.append("search", search);
+  if (category) params.append("category", category);
+  if (brand) params.append("brand", brand);
+  if (minPrice !== null) params.append("minPrice", minPrice);
+  if (maxPrice !== null) params.append("maxPrice", maxPrice);
 
   const response = await fetchWithAuth(
     `${API_URL_PUBLIC}?${params.toString()}`,

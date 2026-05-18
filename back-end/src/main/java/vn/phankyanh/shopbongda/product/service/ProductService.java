@@ -1,5 +1,6 @@
 package vn.phankyanh.shopbongda.product.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -55,19 +56,22 @@ public class ProductService {
 
     // Lấy tất cả
     public Page<ProductResponse> handleGetAllProduct(int pageNo, int pageSize, String sortBy, String sortDir,
-            String search) {
+            String search, String category, String brand, BigDecimal minPrice, BigDecimal maxPrice) {
         Sort sort = sortDir.equalsIgnoreCase("asc")
                 ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
 
-        Page<Product> productsPage;
-        if (search != null && !search.trim().isEmpty()) {
-            productsPage = productRepository.findByNameContaining(search, pageable);
-        } else {
-            productsPage = productRepository.findAll(pageable);
-        }
+        Page<Product> productsPage = productRepository.filterProducts(
+                (search == null || search.isBlank()) ? null : search,
+                (category == null || category.isBlank()) ? null : category,
+                (brand == null || brand.isBlank()) ? null : brand,
+                minPrice,
+                maxPrice,
+                pageable
+        );
+        
         return productsPage.map(productMapper::toResponse);
     }
 

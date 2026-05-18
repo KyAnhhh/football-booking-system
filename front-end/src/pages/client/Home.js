@@ -42,7 +42,13 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      <section className="hero-section">
+      <section
+        className="hero-section"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(15,23,42,0.72), rgba(15,23,42,0.78)), url('https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=1600&auto=format&fit=crop')",
+        }}
+      >
         <div className="hero-bg-animation">
           <div className="floating-ball ball-1"></div>
           <div className="floating-ball ball-2"></div>

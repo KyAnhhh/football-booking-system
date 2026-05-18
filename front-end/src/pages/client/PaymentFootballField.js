@@ -116,7 +116,7 @@ export default function PaymentFootballField() {
 
           </div>
 
-          <div className="price-box">
+          <div className="payment-price-box">
             <div className="price-label">
               Tổng thanh toán
             </div>
