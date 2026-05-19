@@ -85,7 +85,7 @@ public class Booking {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-        @PrePersist
+    @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }

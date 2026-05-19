@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
-import { getMyBookings, cancelBooking } from "../../services/bookingService";
+import {
+  getMyBookings,
+  cancelBooking
+} from "../../services/bookingService";
+
 import "../../assets/styles/MyBookings.css";
 
 export default function MyBookings() {
+
   const [bookings, setBookings] = useState([]);
 
   const load = async () => {
@@ -29,57 +34,162 @@ export default function MyBookings() {
 
   const getStatusClass = (status) => {
     switch (status) {
+
       case "CONFIRMED":
         return "status confirmed";
-      case "PENDING_PAYMENT":
+
+      case "PENDING":
         return "status pending";
+
       case "CANCELLED":
         return "status cancelled";
+
       default:
         return "status";
     }
   };
 
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString(
+      "vi-VN"
+    );
+  };
+
+  const formatTime = (date) => {
+    return new Date(date).toLocaleTimeString(
+      "vi-VN",
+      {
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    );
+  };
+
   return (
     <div className="my-bookings-page">
-      <h2>My Bookings</h2>
+
+      <div className="booking-header">
+        <h2>My Football Bookings</h2>
+      </div>
 
       <div className="booking-grid">
+
         {bookings.length === 0 ? (
-          <p>No bookings found</p>
+
+          <div className="empty-booking">
+            No bookings found
+          </div>
+
         ) : (
+
           bookings.map((b) => (
-            <div key={b.id} className="booking-card">
-              <h3>{b.field?.name}</h3>
 
-              <p>📅 {b.date}</p>
-              <p>⏰ {b.startTime} - {b.endTime}</p>
-              <p>💰 {b.totalPrice} VND</p>
+            <div
+              key={b.id}
+              className="booking-card"
+            >
 
-              <span className={getStatusClass(b.status)}>
-                {b.status}
-              </span>
+              {/* IMAGE */}
+              <div className="booking-image-wrapper">
 
-              <div className="actions">
-                {b.status === "PENDING_PAYMENT" && (
-                  <button
-                    onClick={() => handleCancel(b.id)}
-                    className="btn-cancel"
-                  >
-                    Cancel
-                  </button>
-                )}
+                <img
+                  src={
+                    b.fieldImage ||
+                    "/no-image.png"
+                  }
+                  alt={
+                    b.fieldName ||
+                    "Football Field"
+                  }
+                  className="booking-image"
+                />
 
-                {b.status === "CONFIRMED" && (
-                  <button className="btn-ok">
-                    Completed
-                  </button>
-                )}
+                <span
+                  className={getStatusClass(
+                    b.status
+                  )}
+                >
+                  {b.status}
+                </span>
+
               </div>
+
+              {/* CONTENT */}
+              <div className="booking-content">
+
+                <h3>{b.fieldName}</h3>
+
+                <div className="booking-location">
+                  📍 {b.fieldAddress}
+                </div>
+
+                <div className="booking-info">
+
+                  <div className="info-item">
+                    <span>📅</span>
+
+                    <span>
+                      {formatDate(b.startTime)}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span>⏰</span>
+
+                    <span>
+                      {formatTime(b.startTime)}
+                      {" - "}
+                      {formatTime(b.endTime)}
+                    </span>
+                  </div>
+
+                  <div className="info-item price">
+                    <span>💰</span>
+
+                    <span>
+                      {Number(
+                        b.totalPrice
+                      ).toLocaleString(
+                        "vi-VN"
+                      )} ₫
+                    </span>
+                  </div>
+
+                </div>
+
+                {/* ACTIONS */}
+                <div className="actions">
+
+                  {b.status === "PENDING" && (
+                    <button
+                      onClick={() =>
+                        handleCancel(b.id)
+                      }
+                      className="btn-cancel"
+                    >
+                      Cancel Booking
+                    </button>
+                  )}
+
+                  {b.status ===
+                    "CONFIRMED" && (
+                    <button className="btn-ok">
+                      Booking Confirmed
+                    </button>
+                  )}
+
+                </div>
+
+              </div>
+
             </div>
+
           ))
+
         )}
+
       </div>
+
     </div>
   );
 }

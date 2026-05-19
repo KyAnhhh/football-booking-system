@@ -22,8 +22,9 @@
 /* ====== FILTER ====== */
 .filters {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .filters input,
@@ -154,4 +155,50 @@ button:hover {
     padding: 8px;
     font-size: 12px;
   }
+}
+
+.filters .form-control,
+.filters .form-select {
+  width: 180px !important;
+  min-width: 180px;
+}
+
+.add-field {
+  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  height: 42px;
+
+  border: none !important;
+  border-radius: 12px !important;
+
+  padding: 0 18px !important;
+
+  background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+  color: white !important;
+
+  font-size: 14px !important;
+  font-weight: 600 !important;
+
+  box-shadow:
+    0 6px 14px rgba(37, 99, 235, 0.25),
+    0 2px 6px rgba(37, 99, 235, 0.15);
+
+  transition: all 0.25s ease;
+}
+
+.add-field:hover {
+  transform: translateY(-2px);
+
+  background: linear-gradient(
+    135deg,
+    #1d4ed8,
+    #2563eb
+  ) !important;
+
+  box-shadow:
+    0 10px 20px rgba(37, 99, 235, 0.3),
+    0 4px 10px rgba(37, 99, 235, 0.18);
 }

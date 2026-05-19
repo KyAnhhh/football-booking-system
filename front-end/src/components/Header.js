@@ -140,6 +140,7 @@ export default function Header() {
                 <div className={`fs-user-dropdown ${userMenuOpen ? "show" : ""}`}>
                   <Link to="/profile">Thông tin cá nhân</Link>
                   <Link to="/my-orders">Đơn hàng của tôi</Link>
+                  <Link to="/my-bookings">Đặt sân của tôi</Link>
 
                   {user?.role === "ADMIN" && (
                     <Link to="/admin" className="admin-link">

@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { getMyCart } from "../../services/cartService";
 import { checkout, createOrder } from "../../services/orderService";
 import {
-  getAddressOfMe,
+  getMyAddress,
   createAddress,
 } from "../../services/shippingAddressService";
 import "../../assets/styles/Checkout.css";
@@ -190,19 +190,57 @@ const CheckoutAddress = ({
         </div>
       </label>
 
-      <label className={`payment-card ${paymentMethod === "BANKING" ? "active" : ""}`}>
+        <label className={`payment-card ${paymentMethod === "VNPAY" ? "active" : ""}`}>
+          <input
+            type="radio"
+            name="paymentMethod"
+            value="VNPAY"
+            checked={paymentMethod === "VNPAY"}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+          />
+
+          <div className="payment-content">
+
+            <div className="payment-logo">
+              <img
+                src="https://res.cloudinary.com/do8twj1im/image/upload/v1779120854/ylfqrkcbaadgs73wrcgn.png"
+                alt="vnpay"
+              />
+            </div>
+
+            <div>
+              <strong>VNPAY</strong>
+              <p>Thanh toán online qua VNPay</p>
+            </div>
+
+          </div>
+        </label>
+
+      <label className={`payment-card ${paymentMethod === "VIETQR" ? "active" : ""}`}>
         <input
           type="radio"
           name="paymentMethod"
-          value="BANKING"
-          checked={paymentMethod === "BANKING"}
+          value="VIETQR"
+          checked={paymentMethod === "VIETQR"}
           onChange={(e) => setPaymentMethod(e.target.value)}
         />
-        <div>
-          <strong>Chuyển khoản</strong>
-          <p>Ngân hàng / QR</p>
+
+        <div className="payment-content">
+
+          <div className="payment-logo">
+            <img
+              src="https://res.cloudinary.com/do8twj1im/image/upload/v1779120893/o4oefylronic76jhgkq9.png"
+              alt="vietqr"
+            />
+          </div>
+
+          <div>
+            <strong>VIETQR</strong>
+            <p>Chuyển khoản QR ngân hàng</p>
+          </div>
         </div>
       </label>
+
     </div>
     <h3>Thời gian đặt hàng: {orderDayOnly}</h3>
     <h3>Thời gian giao hàng dự kiến: {deliveryDayOnly} </h3>
@@ -357,11 +395,22 @@ export default function Checkout() {
 
     const loadAddresses = async () => {
       try {
-        const res = await getAddressOfMe();
+        const res = await getMyAddress();
 
-        if (res?.data) {
-          setAddresses([res.data]);
-          setSelectedAddressId(res.data.id);
+            console.log("FULL RES:", res);
+    console.log("TYPE:", typeof res);
+    console.log("DATA:", res.data);
+
+        if (!res) {
+          setAddresses([]);
+          return;
+        }
+
+        const address = res;
+
+        if (address) {
+          setAddresses([address]);
+          setSelectedAddressId(address.id);
         } else {
           setAddresses([]);
         }
@@ -436,18 +485,18 @@ export default function Checkout() {
       }
 
       Swal.fire({
-        icon: paymentMethod === "BANKING" ? "info" : "success",
+        icon: paymentMethod === "VIETQR" ? "info" : "success",
         title:
-          paymentMethod === "BANKING"
+          paymentMethod === "VIETQR"
             ? "Đơn hàng đã được tạo"
             : "Đặt hàng thành công 🎉",
         text:
-          paymentMethod === "BANKING"
+          paymentMethod === "VIETQR"
             ? "Vui lòng quét mã QR để thanh toán đơn hàng"
             : "Đơn hàng của bạn đã được đặt thành công. Shop sẽ sớm liên hệ!",
         confirmButtonText: "OK"
       }).then(() => {
-        if (paymentMethod === "BANKING") {
+        if (paymentMethod === "VIETQR") {
           setShowQR(true);
         } else {
           window.location.href = "/";
@@ -512,33 +561,45 @@ export default function Checkout() {
         />
 
         {/* Hiển thị QR-CODE */}
-        {paymentMethod === "BANKING" && showQR && orderId && (
+        {paymentMethod === "VIETQR" && showQR && orderId && (
           <div className="checkout-card qr-box">
-            <h3>Quét mã QR để thanh toán</h3>
+  <div className="qr-content">
 
-            <p className="qr-status">
-              ⏳ Trạng thái: <b>Chờ thanh toán</b>
-            </p>
+    <div className="qr-info">
+      <h3>Quét mã QR để thanh toán</h3>
 
-            <p style={{ color: "#666", fontSize: 14 }}>
-              Đơn hàng đã được tạo, vui lòng hoàn tất chuyển khoản
-            </p>
-            <img
-              src={qrCodeUrl}
-              alt="QR thanh toán"
-              style={{ width: 250 }}
-            />
-            <button
-              className="checkout-btn"
-              style={{ marginTop: 16 }}
-              onClick={handleConfirmTransfer}
-            >
-              Tôi đã chuyển khoản
-            </button>
-            <p>
-              Nội dung chuyển khoản: <b>Đơn hàng #{orderId}</b>
-            </p>
-          </div>
+      <p className="qr-status">
+        ⏳ Trạng thái: <b>Chờ thanh toán</b>
+      </p>
+
+      <p>
+        Đơn hàng đã được tạo, vui lòng hoàn tất chuyển khoản
+      </p>
+
+      <p>
+        Nội dung chuyển khoản:
+        <b> Đơn hàng #{orderId}</b>
+      </p>
+    </div>
+
+    <div className="qr-image-wrapper">
+      <img
+        src={qrCodeUrl}
+        alt="QR thanh toán"
+      />
+    </div>
+
+    <div className="qr-action">
+      <button
+        className="checkout-btn"
+        onClick={handleConfirmTransfer}
+      >
+        Tôi đã chuyển khoản
+      </button>
+    </div>
+
+  </div>
+</div>
         )}
       </div>
     </div>

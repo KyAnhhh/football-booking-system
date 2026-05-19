@@ -33,6 +33,7 @@ import BookingPage from "./pages/admin/BookingPage";
 import PaymentFootballField from "./pages/client/PaymentFootballField";
 import FootballFieldDetail from "./pages/client/FootballFieldDetail";
 import FootballField from "./pages/client/FootballField";
+import MyBookings from "./pages/client/MyBookings";
 
 function App() {
   return (
@@ -75,6 +76,7 @@ function App() {
           <Route path="/collections" element={<ClientLayout><Collection /></ClientLayout>} />
           <Route path="/service" element={<ClientLayout><Service /></ClientLayout>} />
           <Route path="/my-orders" element={<ClientLayout><MyOrders /></ClientLayout>} />
+          <Route path="/my-bookings" element={<ClientLayout><MyBookings /></ClientLayout>} />
           <Route path="/cart/checkout" element={<ClientLayout><Checkout /></ClientLayout>} />
           <Route path="/orders/:orderId/review/:productId" element={<ClientLayout><ReviewSection /></ClientLayout>} />
           <Route path="/review/:id" element={<ClientLayout><Review /></ClientLayout>} />

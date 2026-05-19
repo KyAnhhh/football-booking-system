@@ -155,7 +155,7 @@ export default function FootballFieldPage() {
             <option value="ELEVEN_A_SIDE">11 vs 11</option>
           </Form.Select>
 
-          <Button onClick={() => handleShow()}>+ Add Field</Button>
+          <Button className="add-field" onClick={() => handleShow()}>+ Add Field</Button>
         </div>
       </div>
 

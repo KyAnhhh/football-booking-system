@@ -69,7 +69,7 @@ export default function PaymentFootballField() {
     });
   }
   return (
-    <div className="payment-page">
+    <div className="payment-football-field-page">
 
       <div className="payment-container">
 
@@ -121,7 +121,7 @@ export default function PaymentFootballField() {
               Tổng thanh toán
             </div>
 
-            <div className="price">
+            <div className="payment-football-price">
               {booking.totalPrice} VND
             </div>
           </div>

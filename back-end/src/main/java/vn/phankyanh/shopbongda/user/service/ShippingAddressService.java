@@ -1,7 +1,5 @@
 package vn.phankyanh.shopbongda.user.service;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -31,20 +29,13 @@ public class ShippingAddressService {
         return shippingAddressMapper.toResponse(shippingAddress);
     }
 
-    public ShippingAddressResponse handleGetAddressOfMe(Long userId) {
+    public ShippingAddressResponse handleGetMyAddress(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
         if(user.getShippingAddresses() == null || user.getShippingAddresses().isEmpty()) {
             return null; // Trả về null nếu user chưa có địa chỉ giao hàng nào
         }
         return shippingAddressMapper.toResponse(user.getShippingAddresses().get(0));
-    }
-
-    public List<ShippingAddressResponse> handleGetAllShippingAddress(){
-        return this.shippingAddressRepository.findAll()
-                .stream()
-                .map(shippingAddressMapper::toResponse)
-                .toList();
     }
 
     public ShippingAddressResponse handleUpdate(Long id, ShippingAddressRequest request){

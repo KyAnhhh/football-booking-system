@@ -51,7 +51,7 @@ export default function Product() {
   }, [pageNo, search, selectedCategory, selectedBrand, minPrice, maxPrice]);
 
   const checkLogin = (callback) => {
-    const token = localStorage.getItem("accessToken");
+    const token = sessionStorage.getItem("accessToken");
     if (!token) {
       navigate("/login");
       return;

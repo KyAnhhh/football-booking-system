@@ -16,6 +16,8 @@ public class BookingResponse {
     private Long paymentId;
     private Long fieldId;
     private String fieldName;
+    private String fieldAddress;
+    private String fieldImage;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private BigDecimal totalPrice;

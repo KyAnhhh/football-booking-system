@@ -1,7 +1,5 @@
 package vn.phankyanh.shopbongda.user.controller;
 
-import java.util.List;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,7 +22,7 @@ import vn.phankyanh.shopbongda.user.service.ShippingAddressService;
 public class ShippingAddressController {
     private final ShippingAddressService shippingAddressService;
 
-    @PostMapping("/api/public/shipping-addresses")
+    @PostMapping("/api/user/shipping-addresses")
     public ApiResponse<ShippingAddressResponse> createShippingAddress(@RequestBody ShippingAddressRequest request, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
@@ -32,39 +30,32 @@ public class ShippingAddressController {
         return apiResponse;
     }
 
-    @GetMapping("/api/public/shipping-addresses")
-    public ApiResponse<List<ShippingAddressResponse>> getAllShippingAddress(){
-        ApiResponse<List<ShippingAddressResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.shippingAddressService.handleGetAllShippingAddress());
-        return  apiResponse;
-    }
-
-    @GetMapping("/api/public/shipping-addresses/me")
-    public ApiResponse<ShippingAddressResponse> getAddressOfMe(@AuthenticationPrincipal Jwt jwt) {
+    @GetMapping("/api/user/shipping-addresses/me")
+    public ApiResponse<ShippingAddressResponse> getMyAddress(@AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         
-        ShippingAddressResponse address = shippingAddressService.handleGetAddressOfMe(userId);
+        ShippingAddressResponse address = shippingAddressService.handleGetMyAddress(userId);
 
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(address);
         return apiResponse;
     }
 
-    @GetMapping("/api/public/shipping-addresses/{id}")
+    @GetMapping("/api/user/shipping-addresses/{id}")
     public ApiResponse<ShippingAddressResponse> getShippingAddressById(@PathVariable("id") Long id){
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.shippingAddressService.handleGetShippingAddressById(id));
         return apiResponse;
     }
 
-    @PutMapping("/api/public/shipping-addresses/{id}")
+    @PutMapping("/api/user/shipping-addresses/{id}")
     public ApiResponse<ShippingAddressResponse> updateShippingAddress(@PathVariable("id") Long id, @RequestBody ShippingAddressRequest request){
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.shippingAddressService.handleUpdate(id, request));
         return apiResponse;
     }
 
-    @DeleteMapping("/api/public/shipping-addresses/{id}")
+    @DeleteMapping("/api/user/shipping-addresses/{id}")
     public ApiResponse<String> deleteShippingAddress(@PathVariable("id") Long id){
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setMessage("Deleted successfully with id "+ id);

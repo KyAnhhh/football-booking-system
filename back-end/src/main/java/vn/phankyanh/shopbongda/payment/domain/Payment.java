@@ -72,7 +72,7 @@ public class Payment {
         this.transactionCode = this.transactionCode != null
                 ? this.transactionCode
                 : "PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        this.paymentMethod = this.paymentMethod != null ? this.paymentMethod : PaymentMethod.CASH; // Chỉ set CASH nếu chưa có giá trị
+        this.paymentMethod = this.paymentMethod != null ? this.paymentMethod : PaymentMethod.COD; // Chỉ set COD nếu chưa có giá trị
         this.paymentStatus = this.paymentStatus != null ? this.paymentStatus : PaymentStatus.UNPAID;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
