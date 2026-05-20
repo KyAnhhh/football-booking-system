@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,10 +19,11 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 public class BrandController {
     private final BrandService brandService;
 
-    @GetMapping("/api/public/brands")
+    @GetMapping("/public/brands")
     public ApiResponse<Page<BrandResponse>> getAllBrand(
         @RequestParam(defaultValue = "0") int pageNo,
         @RequestParam(defaultValue = "10") int pageSize,
@@ -30,36 +32,40 @@ public class BrandController {
         @RequestParam(required = false) String search
     ){
         ApiResponse<Page<BrandResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.brandService.handleGetAllBrand(pageNo, pageSize, sortBy, sortDir, search));
+        apiResponse.setData(this.brandService.getAllBrands(pageNo, pageSize, sortBy, sortDir, search));
+        apiResponse.setMessage("Get all brands successfully");
         return apiResponse;
     }
 
-    @PostMapping("/api/admin/brands")
+    @PostMapping("/admin/brands")
     public ApiResponse<BrandResponse> createBrand(@RequestBody BrandRequest request){
         ApiResponse<BrandResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.brandService.handleCreateBrand(request));
+        apiResponse.setData(this.brandService.createBrand(request));
+        apiResponse.setMessage("Created brand successfully");
         return apiResponse;
     }
 
-    @DeleteMapping("/api/admin/brands/{id}")
-    public ApiResponse<String> deleteBrand(@PathVariable("id") Long id){
-        ApiResponse<String> apiResponse = new ApiResponse<>();
-        this.brandService.handleDeleteBrand(id);
-        apiResponse.setMessage("Deleted brand successfully with id: " + id);
-        return apiResponse;
-    }
-
-    @GetMapping("/api/public/brands/{id}")
+    @GetMapping("/public/brands/{id}")
     public ApiResponse<BrandResponse> getBrandById(@PathVariable("id") Long id){
         ApiResponse<BrandResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.brandService.handleGetBrandById(id));
+        apiResponse.setData(this.brandService.getBrandById(id));
+        apiResponse.setMessage("Get brand by id successfully");
         return apiResponse;
     }
 
-    @PutMapping("/api/admin/brands/{id}")
+    @PutMapping("/admin/brands/{id}")
     public ApiResponse<BrandResponse> updateBrand(@PathVariable("id") Long id, @RequestBody BrandRequest request){
         ApiResponse<BrandResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.brandService.handleUpdateBrand(id, request));
+        apiResponse.setData(this.brandService.updateBrand(id, request));
+        apiResponse.setMessage("Updated brand successfully");
+        return apiResponse;
+    }
+
+    @DeleteMapping("/admin/brands/{id}")
+    public ApiResponse<String> deleteBrand(@PathVariable("id") Long id){
+        ApiResponse<String> apiResponse = new ApiResponse<>();
+        this.brandService.deleteBrand(id);
+        apiResponse.setMessage("Deleted brand successfully with id: " + id);
         return apiResponse;
     }
 }

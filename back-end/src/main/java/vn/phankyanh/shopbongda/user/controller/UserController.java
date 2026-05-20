@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
-import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
+import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.dto.request.UpdateRoleRequest;
 import vn.phankyanh.shopbongda.user.dto.request.UserCreateRequest;
 import vn.phankyanh.shopbongda.user.dto.request.UserUpdateRequest;
@@ -30,7 +30,8 @@ public class UserController {
     @PostMapping("/api/admin/users")
     public ApiResponse<UserCreateResponse> createUser(@RequestBody UserCreateRequest userCreateRequest ){
         ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(userService.handleCreateUser(userCreateRequest));
+        apiResponse.setData(userService.createUser(userCreateRequest));
+        apiResponse.setMessage("Created user successfully");
         return apiResponse;
     }
 
@@ -42,36 +43,40 @@ public class UserController {
         @RequestParam(required = false) String search) {
         ApiResponse<Page<UserCreateResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setData(
-            userService.handleGetAllUsers(pageNo, pageSize, sortBy, sortDir, search)
-    );
-    return apiResponse;
+            userService.getAllUsers(pageNo, pageSize, sortBy, sortDir, search)
+        );
+        apiResponse.setMessage("Get all users successfully");
+        return apiResponse;
     }
 
     @GetMapping("/api/admin/users/{id}")
     public ApiResponse<UserCreateResponse> getUserById(@PathVariable("id") Long id) {
         ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.userService.handleGetUserById(id));
+        apiResponse.setData(this.userService.getUserById(id));
+        apiResponse.setMessage("Get user by id successfully");
         return apiResponse;
     }
 
     @PutMapping("/api/admin/users/{id}")
     public ApiResponse<UserCreateResponse> updateUser(@PathVariable("id") Long id, @RequestBody UserUpdateRequest request) {
         ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
-         apiResponse.setData(this.userService.handleUpdateUser(id, request));
+        apiResponse.setData(this.userService.updateUser(id, request));
+        apiResponse.setMessage("Updated user successfully");
         return apiResponse;
     }
 
     @PutMapping("/api/admin/users/{id}/role")
     public ApiResponse<User> updateRole(@PathVariable("id") Long id, @RequestBody UpdateRoleRequest request) {
         ApiResponse<User> apiResponse = new ApiResponse<>();
-         apiResponse.setData(this.userService.handleUpdateRole(id, request));
+        apiResponse.setData(this.userService.updateRole(id, request));
+        apiResponse.setMessage("Updated user role successfully");
         return apiResponse;
     }
 
     @DeleteMapping("/api/admin/users/{id}")
     public ApiResponse<String> deleteUserById(@PathVariable("id") Long id) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        this.userService.handleDeleteUserById(id);
+        this.userService.deleteUserById(id);
         apiResponse.setMessage("Delete user successful with id: " + id);
         return apiResponse;
     }
@@ -80,7 +85,8 @@ public class UserController {
     public ApiResponse<UserCreateResponse> updateProfile(@RequestBody UserUpdateRequest request, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(userService.handleUpdateUser(userId, request));
+        apiResponse.setData(userService.updateUser(userId, request));
+        apiResponse.setMessage("Updated user profile successfully");
         return apiResponse;
     }
 
@@ -88,7 +94,8 @@ public class UserController {
         public ApiResponse<UserCreateResponse> getMe(@AuthenticationPrincipal Jwt jwt){
             Long userId = jwt.getClaim("id");
             ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
-            apiResponse.setData(userService.handleGetUserById(userId));
+            apiResponse.setData(userService.getUserById(userId));
+            apiResponse.setMessage("Get user profile successfully");
             return apiResponse;
         }
 }

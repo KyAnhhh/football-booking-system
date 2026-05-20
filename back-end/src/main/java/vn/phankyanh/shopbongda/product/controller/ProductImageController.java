@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,11 +20,12 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 public class ProductImageController {
 
     private final ProductImageService productImageService;
 
-    @PostMapping("/api/admin/products/{productId}/images")
+    @PostMapping("/admin/products/{productId}/images")
     public ApiResponse<String> uploadImages(
             @PathVariable Long productId,
             @RequestParam("images") List<MultipartFile> images,
@@ -59,7 +61,7 @@ public class ProductImageController {
         return res;
     }
 
-    @GetMapping("/api/public/products/{productId}/images")
+    @GetMapping("/public/products/{productId}/images")
     public ApiResponse<List<ProductImageResponse>> getImagesByProduct(
             @PathVariable Long productId) {
 
@@ -68,7 +70,7 @@ public class ProductImageController {
         return res;
     }
 
-    @PutMapping("/api/admin/product-images/{imageId}/primary")
+    @PutMapping("/admin/product-images/{imageId}/primary")
     public ApiResponse<String> setPrimary(@PathVariable Long imageId) {
 
         productImageService.setPrimary(imageId);
@@ -78,7 +80,7 @@ public class ProductImageController {
         return res;
     }
 
-    @DeleteMapping("/api/admin/product-images/{imageId}")
+    @DeleteMapping("/admin/product-images/{imageId}")
     public ApiResponse<String> delete(@PathVariable Long imageId) {
 
         productImageService.delete(imageId);

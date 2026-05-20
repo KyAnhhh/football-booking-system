@@ -28,7 +28,7 @@ public class OrderItemController {
     public ApiResponse<List<OrderItemResponse>> getByOrder(@PathVariable("orderId") Long orderId, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<List<OrderItemResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.orderItemService.handleGetOrderItemByOrderId(orderId, userId));
+        apiResponse.setData(this.orderItemService.getOrderItemByOrderId(orderId, userId));
         return apiResponse;
     }
 
@@ -36,7 +36,7 @@ public class OrderItemController {
     public ApiResponse<OrderItemResponse> updateOrder(@PathVariable("id") Long id, @RequestBody OrderItemRequest request, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<OrderItemResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.orderItemService.handleUpdateQuantity(id, request.getQuantity(), userId));
+        apiResponse.setData(this.orderItemService.updateQuantity(id, request.getQuantity(), userId));
         return apiResponse;
     }
 
@@ -44,7 +44,7 @@ public class OrderItemController {
     public ApiResponse<String> deleteOrder(@PathVariable("id") Long id, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        this.orderItemService.handleDeleteOrderItem(id, userId);
+        this.orderItemService.deleteOrderItem(id, userId);
         apiResponse.setMessage("Deleted order with id: " + id);
         return apiResponse;
     }

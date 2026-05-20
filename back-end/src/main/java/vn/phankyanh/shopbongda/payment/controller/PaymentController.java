@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,13 +24,14 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 public class PaymentController {
 
     private final PaymentService paymentService;
     private final BookingRepository bookingRepository;
     private final VNPayService vnPayService;
 
-    @PostMapping("/api/user/payments/bookings/{bookingId}/vnpay")
+    @PostMapping("/user/payments/bookings/{bookingId}/vnpay")
     public ApiResponse<String> createPayment(
             @PathVariable Long bookingId,
             HttpServletRequest request
@@ -56,7 +58,7 @@ public class PaymentController {
         return response;
     }
 
-    @GetMapping("/api/admin/payments")
+    @GetMapping("/admin/payments")
     public ApiResponse<Page<PaymentResponse>> getAllPayment(
             @RequestParam(defaultValue = "0") int pageNo,
             @RequestParam(defaultValue = "10") int pageSize,
@@ -64,32 +66,32 @@ public class PaymentController {
             @RequestParam(defaultValue = "asc") String sortDir,
             @RequestParam(required = false) String search) {
         ApiResponse<Page<PaymentResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(paymentService.handleGetAllPayment(pageNo, pageSize, sortBy, sortDir, search));
+        apiResponse.setData(paymentService.getAllPayments(pageNo, pageSize, sortBy, sortDir, search));
         apiResponse.setMessage("Get all payments successfully");
         return apiResponse;
     } 
 
-    @GetMapping("/api/public/payments/{id}")
+    @GetMapping("/public/payments/{id}")
     public ResponseEntity<?> getPayment(@PathVariable Long id) {
         return ResponseEntity.ok(paymentService.getPaymentById(id));
     }
 
     // Lấy payment theo orderId
-    @GetMapping("/api/user/payments/orders/{orderId}")
+    @GetMapping("/user/payments/orders/{orderId}")
     public ResponseEntity<?> getPaymentByOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(paymentService.getPaymentByOrderId(orderId));
     }
 
     // Xác nhận thanh toán
-    @PutMapping("/api/user/payments/orders/{orderId}/confirm")
+    @PutMapping("/user/payments/orders/{orderId}/confirm")
     public ResponseEntity<?> confirmPayment(@PathVariable Long orderId) {
-        Payment payment = paymentService.confirmPaymentForOrder(orderId);
+        Payment payment = paymentService.confirmPayment(orderId);
         return ResponseEntity.ok(payment);
     }
 
-    @DeleteMapping("/api/admin/payments/{id}")
+    @DeleteMapping("/admin/payments/{id}")
     public ApiResponse<String> deletePayment(@PathVariable Long id) {
-        paymentService.handleDeletePayment(id);
+        paymentService.deletePayment(id);
         ApiResponse<String> apiResponse = new ApiResponse<>();
         apiResponse.setMessage("Payment deleted successfully");
         return apiResponse;

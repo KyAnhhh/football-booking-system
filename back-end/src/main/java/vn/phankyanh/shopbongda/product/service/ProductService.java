@@ -4,122 +4,31 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
 
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import vn.phankyanh.shopbongda.exception.ProductNotFoundException;
-import vn.phankyanh.shopbongda.product.domain.Brand;
-import vn.phankyanh.shopbongda.product.domain.Category;
-import vn.phankyanh.shopbongda.product.domain.Product;
 import vn.phankyanh.shopbongda.product.dto.request.ProductRequest;
 import vn.phankyanh.shopbongda.product.dto.response.ProductResponse;
-import vn.phankyanh.shopbongda.product.mapper.ProductMapper;
-import vn.phankyanh.shopbongda.product.repository.BrandRepository;
-import vn.phankyanh.shopbongda.product.repository.CategoryRepository;
-import vn.phankyanh.shopbongda.product.repository.ProductRepository;
 
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class ProductService {
+public interface ProductService {
 
-    private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository;
-    private final BrandRepository brandRepository;
-    private final ProductMapper productMapper;
+    ProductResponse createProduct(ProductRequest request);
 
-    @Transactional
-    public ProductResponse handleCreateProduct(ProductRequest request) {
-        if (productRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Name already exists");
-        }
+    Page<ProductResponse> getAllProducts(
+            int pageNo,
+            int pageSize,
+            String sortBy,
+            String sortDir,
+            String search,
+            String category,
+            String brand,
+            BigDecimal minPrice,
+            BigDecimal maxPrice
+    );
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+    List<ProductResponse> getTop4PopularProducts();
 
-        Brand brand = brandRepository.findById(request.getBrandId())
-                .orElseThrow(() -> new RuntimeException("Brand not found"));
+    ProductResponse getProductById(Long id);
 
-        Product product = productMapper.toProduct(request);
-        product.setCategory(category);
-        product.setBrand(brand);
+    ProductResponse updateProduct(Long id, ProductRequest request);
 
-        Product savedProduct = productRepository.save(product);
-
-        return productMapper.toResponse(savedProduct);
-    }
-
-    // Lấy tất cả
-    public Page<ProductResponse> handleGetAllProduct(int pageNo, int pageSize, String sortBy, String sortDir,
-            String search, String category, String brand, BigDecimal minPrice, BigDecimal maxPrice) {
-        Sort sort = sortDir.equalsIgnoreCase("asc")
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-
-        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
-
-        Page<Product> productsPage = productRepository.filterProducts(
-                (search == null || search.isBlank()) ? null : search,
-                (category == null || category.isBlank()) ? null : category,
-                (brand == null || brand.isBlank()) ? null : brand,
-                minPrice,
-                maxPrice,
-                pageable
-        );
-        
-        return productsPage.map(productMapper::toResponse);
-    }
-
-    // Lấy 4 sản phẩm nổi bật và bán chạy nhất
-    public List<ProductResponse> handleGetTop4PopularProducts() {
-        List<Product> popularProducts = productRepository.findTop4PopularProducts();
-        return popularProducts.stream()
-                .map(productMapper::toResponse)
-                .toList();
-    }
-
-    // lấy theo id
-    public ProductResponse handleGetProductById(Long id){
-        Product product = this.productRepository.findById(id)
-            .orElseThrow(() -> new ProductNotFoundException(id));
-            return productMapper.toResponse(product);
-    }
-
-
-    // update
-    @Transactional
-    public ProductResponse handleUpdateProduct(Long id, ProductRequest request) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
-
-        productMapper.updateProduct(product, request);
-
-        if (request.getCategoryId() != null) {
-            Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
-            product.setCategory(category);
-        }
-
-        if (request.getBrandId() != null) {
-            Brand brand = brandRepository.findById(request.getBrandId())
-                    .orElseThrow(() -> new RuntimeException("Brand not found"));
-            product.setBrand(brand);
-        }
-
-        Product savedProduct = productRepository.save(product);
-        return productMapper.toResponse(savedProduct);
-    }
-
-    // xóa
-    public void handleDeleteProduct(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new ProductNotFoundException(id);
-        }
-        productRepository.deleteById(id);
-    }
+    void deleteProduct(Long id);
 }

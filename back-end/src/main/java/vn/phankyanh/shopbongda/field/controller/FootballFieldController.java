@@ -1,5 +1,6 @@
 package vn.phankyanh.shopbongda.field.controller;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -43,10 +44,12 @@ public class FootballFieldController {
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(required = false) String keyword,
         @RequestParam(required = false) FieldStatus status,
-        @RequestParam(required = false) FieldType type
+        @RequestParam(required = false) FieldType type,
+        @RequestParam(required = false) BigDecimal minPrice,
+        @RequestParam(required = false) BigDecimal maxPrice
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<FootballFieldResponse> result = footballFieldService.getAllFootballFields(keyword, FieldStatus.AVAILABLE, type, pageable);
+        Page<FootballFieldResponse> result = footballFieldService.getAllFootballFields(keyword, FieldStatus.AVAILABLE, type, pageable, minPrice, maxPrice);
 
         ApiResponse<Page<FootballFieldResponse>> response = new ApiResponse<>();
         response.setData(result);

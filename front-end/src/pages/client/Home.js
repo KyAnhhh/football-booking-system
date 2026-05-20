@@ -76,7 +76,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="product-grid">
+          <div className="home-product-grid">
             {products.map((item) => {
               const prices =
                 item.variants?.map((v) => v.price).filter(Boolean) || [];

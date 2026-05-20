@@ -41,7 +41,7 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public UserCreateResponse createUser(@RequestBody UserCreateRequest userCreateRequest ){
-        return userService.handleCreateUser(userCreateRequest);
+        return userService.createUser(userCreateRequest);
     }
 
     @PostMapping("/logout")

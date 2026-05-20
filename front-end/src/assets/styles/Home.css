@@ -165,7 +165,7 @@
 
 /* ===== PRODUCT GRID ===== */
 
-.product-grid {
+.home-product-grid {
   display: grid;
 
   grid-template-columns:
@@ -486,7 +486,7 @@
     width: 100%;
   }
 
-  .product-grid {
+  .home-product-grid {
     grid-template-columns: 1fr;
   }
 

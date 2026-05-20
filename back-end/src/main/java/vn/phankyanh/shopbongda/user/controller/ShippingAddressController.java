@@ -26,7 +26,8 @@ public class ShippingAddressController {
     public ApiResponse<ShippingAddressResponse> createShippingAddress(@RequestBody ShippingAddressRequest request, @AuthenticationPrincipal Jwt jwt){
         Long userId = jwt.getClaim("id");
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.shippingAddressService.handleCreateShippingAddress(request, userId));
+        apiResponse.setData(this.shippingAddressService.createShippingAddress(request, userId));
+        apiResponse.setMessage("Created shipping address successfully");
         return apiResponse;
     }
 
@@ -34,24 +35,27 @@ public class ShippingAddressController {
     public ApiResponse<ShippingAddressResponse> getMyAddress(@AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         
-        ShippingAddressResponse address = shippingAddressService.handleGetMyAddress(userId);
+        ShippingAddressResponse address = shippingAddressService.getMyAddress(userId);
 
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(address);
+        apiResponse.setMessage("Get my shipping address successfully");
         return apiResponse;
     }
 
     @GetMapping("/api/user/shipping-addresses/{id}")
     public ApiResponse<ShippingAddressResponse> getShippingAddressById(@PathVariable("id") Long id){
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.shippingAddressService.handleGetShippingAddressById(id));
+        apiResponse.setData(this.shippingAddressService.getShippingAddressById(id));
+        apiResponse.setMessage("Get shipping address by id successfully");
         return apiResponse;
     }
 
     @PutMapping("/api/user/shipping-addresses/{id}")
     public ApiResponse<ShippingAddressResponse> updateShippingAddress(@PathVariable("id") Long id, @RequestBody ShippingAddressRequest request){
         ApiResponse<ShippingAddressResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.shippingAddressService.handleUpdate(id, request));
+        apiResponse.setData(this.shippingAddressService.update(id, request));
+        apiResponse.setMessage("Updated successfully with id "+ id);
         return apiResponse;
     }
 

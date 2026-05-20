@@ -33,6 +33,8 @@ export const getFields = async ({
     keyword,
     status,
     type,
+    minPrice,
+    maxPrice
 }) => {
     const params = new URLSearchParams({
         page,
@@ -41,6 +43,8 @@ export const getFields = async ({
     if(keyword) params.append("keyword", keyword);
     if(status) params.append("status", status);
     if(type) params.append("type", type);
+    if(minPrice) params.append("minPrice", minPrice);
+    if(maxPrice) params.append("maxPrice", maxPrice);
 
     const response = await fetch(`${API_URL_PUBLIC}?${params.toString()}`);
     

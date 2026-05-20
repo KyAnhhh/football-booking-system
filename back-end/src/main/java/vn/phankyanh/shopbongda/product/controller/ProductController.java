@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,18 +22,20 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 public class ProductController {
 
     private final ProductService productService;
 
-    @PostMapping("/api/admin/products")
+    @PostMapping("/admin/products")
     public ApiResponse<ProductResponse> createProduct(@RequestBody ProductRequest request) {
         ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleCreateProduct(request));
+        apiResponse.setData(this.productService.createProduct(request));
+        apiResponse.setMessage("Created product successfully");
         return apiResponse;
     }
 
-    @GetMapping("/api/public/products")
+    @GetMapping("/public/products")
     public ApiResponse<Page<ProductResponse>> getAllProduct(
             @RequestParam(defaultValue = "0") int pageNo,
             @RequestParam(defaultValue = "10") int pageSize,
@@ -45,36 +48,40 @@ public class ProductController {
             @RequestParam(required = false) BigDecimal maxPrice
     ) {
         ApiResponse<Page<ProductResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleGetAllProduct(pageNo, pageSize, sortBy, sortDir, search, category, brand, minPrice, maxPrice));
+        apiResponse.setData(this.productService.getAllProducts(pageNo, pageSize, sortBy, sortDir, search, category, brand, minPrice, maxPrice));
+        apiResponse.setMessage("Get all products successfully");
         return apiResponse;
     }
 
-    @GetMapping("/api/public/products/top4-popular")
+    @GetMapping("/public/products/top4-popular")
     public ApiResponse<List<ProductResponse>> getTop4PopularProducts() {
         ApiResponse<List<ProductResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleGetTop4PopularProducts());
+        apiResponse.setData(this.productService.getTop4PopularProducts());
+        apiResponse.setMessage("Get top 4 popular products successfully");
         return apiResponse;
     }
 
-    @GetMapping("/api/public/products/{id}")
+    @GetMapping("/public/products/{id}")
     public ApiResponse<ProductResponse> getProductById(@PathVariable("id") Long id) {
         ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleGetProductById(id));
+        apiResponse.setData(this.productService.getProductById(id));
+        apiResponse.setMessage("Get product by id successfully");
         return apiResponse;
     }
 
-    @PutMapping("/api/admin/products/{id}")
+    @PutMapping("/admin/products/{id}")
     public ApiResponse<ProductResponse> updateProduct(@PathVariable("id") Long id,
             @RequestBody ProductRequest request) {
         ApiResponse<ProductResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.productService.handleUpdateProduct(id, request));
+        apiResponse.setData(this.productService.updateProduct(id, request));
+        apiResponse.setMessage("Updated product successfully");
         return apiResponse;
     }
 
-    @DeleteMapping("/api/admin/products/{id}")
+    @DeleteMapping("/admin/products/{id}")
     public ApiResponse<String> deleteProduct(@PathVariable("id") Long id) {
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        this.productService.handleDeleteProduct(id);
+        this.productService.deleteProduct(id);
         apiResponse.setMessage("Deleted product with id: " + id);
         return apiResponse;
     }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -18,41 +19,45 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 public class SizeController {
     private final SizeService sizeService;
 
-    @GetMapping("/api/public/sizes")
+    @GetMapping("/public/sizes")
     public ApiResponse<List<SizeResponse>> getAllSizes(){
         ApiResponse<List<SizeResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.sizeService.handleGetAllSize());
+        apiResponse.setData(this.sizeService.getAllSize());
         return apiResponse;
     }
 
-    @PostMapping("/api/admin/sizes")
+    @PostMapping("/admin/sizes")
     public ApiResponse<SizeResponse> createSize(@RequestBody SizeRequest request){
         ApiResponse<SizeResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.sizeService.handleCreateSize(request));
+        apiResponse.setData(this.sizeService.createSize(request));
+        apiResponse.setMessage("Created size successfully");
         return apiResponse;
     }
 
-    @PutMapping("/api/admin/sizes/{id}")
+    @PutMapping("/admin/sizes/{id}")
     public ApiResponse<SizeResponse> updateSize(@PathVariable("id") Long id, @RequestBody SizeRequest request){
         ApiResponse<SizeResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setData(this.sizeService.handleUpdateSize(id, request));
+        apiResponse.setData(this.sizeService.updateSize(id, request));
+        apiResponse.setMessage("Updated size successfully");
         return apiResponse;
     }
 
-    @GetMapping("/api/public/sizes/{id}")
+    @GetMapping("/public/sizes/{id}")
     public ApiResponse<SizeResponse> getSizeById(@PathVariable("id") Long id){
         ApiResponse<SizeResponse> apiResponse = new ApiResponse<>();    
-        apiResponse.setData(this.sizeService.handleGetSizeById(id));
+        apiResponse.setData(this.sizeService.getSizeById(id));
+        apiResponse.setMessage("Get size by id successfully");
         return apiResponse;
     }
 
-    @DeleteMapping("/api/admin/sizes/{id}")
+    @DeleteMapping("/admin/sizes/{id}")
     public ApiResponse<String> deleteSize(@PathVariable("id") Long id){
         ApiResponse<String> apiResponse = new ApiResponse<>();
-        this.sizeService.handleDeleteSize(id);
+        this.sizeService.deleteSize(id);
         apiResponse.setMessage("Deleted size successfully with id: " + id);
         return apiResponse;
     }
