@@ -4,6 +4,9 @@ import {
   getFieldById,
   getAvailableSlots
 } from "../../services/fieldService";
+import {
+  getFieldReviews
+} from "../../services/bookingReviewService";
 import { createBooking } from "../../services/bookingService";
 import { Button, Form } from "react-bootstrap";
 import "../../assets/styles/FootballFieldDetail.css";
@@ -20,20 +23,8 @@ export default function FootballFieldDetail() {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [reviews, setReviews] = useState([]);
 
-  // load field detail
-  useEffect(() => {
-    const loadField = async () => {
-      try {
-        const data = await getFieldById(id);
-        setField(data);
-      } catch (error) {
-        console.error("Load field error:", error);
-      }
-    };
-
-    loadField();
-  }, [id]);
 
   // load available slots
   const loadSlots = async (selectedDate) => {
@@ -50,6 +41,30 @@ export default function FootballFieldDetail() {
       setLoading(false);
     }
   };
+
+  const loadReviews = async () => {
+    try {
+      const data = await getFieldReviews(id);
+      setReviews(data || []);
+    } catch (error) {
+      console.error("Load reviews error:", error);
+    }
+  };
+
+  // load field detail
+  useEffect(() => {
+    const loadField = async () => {
+      try {
+        const data = await getFieldById(id);
+        setField(data);
+      } catch (error) {
+        console.error("Load field error:", error);
+      }
+    };
+
+    loadField();
+    loadReviews();
+  }, [id]);
 
   // booking
   const handleBooking = async () => {
@@ -136,7 +151,11 @@ export default function FootballFieldDetail() {
               />
 
               <p className="price">
-                Giá: {field?.pricePerHour} VND / Giờ
+                Giá:
+                {" "}
+                {Number(field?.pricePerHour)
+                  .toLocaleString("vi-VN")}
+                ₫ / giờ
               </p>
 
               <p className="description">
@@ -248,6 +267,42 @@ export default function FootballFieldDetail() {
           </div>
 
         </div>
+      </div>
+      {/* REVIEWS */}
+      <div className="reviews-section">
+        <h3>
+          Reviews ({reviews.length})
+        </h3>
+        {reviews.length === 0 ? (
+          <p className="no-review">
+            Chưa có đánh giá nào
+          </p>
+        ) : (
+
+          reviews.map((review) => (
+            <div
+              key={review.id}
+              className="review-card"
+            >
+              <div className="review-top">
+
+                <strong>
+                  {review.user?.username}
+                </strong>
+                <span className="review-rating">
+                  {"⭐".repeat(review.rating)}
+                </span>
+              </div>
+              <p className="review-comment">
+                {review.comment}
+              </p>
+              <small className="review-date">
+                {new Date(review.createdAt)
+                  .toLocaleDateString("vi-VN")}
+              </small>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

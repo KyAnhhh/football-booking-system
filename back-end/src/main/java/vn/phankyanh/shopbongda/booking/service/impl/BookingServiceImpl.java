@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.booking.domain.Booking;
 import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
 import vn.phankyanh.shopbongda.booking.dto.request.BookingRequest;
+import vn.phankyanh.shopbongda.booking.dto.request.UpdateBookingStatusRequest;
 import vn.phankyanh.shopbongda.booking.dto.response.BookingResponse;
 import vn.phankyanh.shopbongda.booking.mapper.BookingMapper;
 import vn.phankyanh.shopbongda.booking.projection.BookingTimeView;
@@ -140,242 +141,314 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.save(booking);
 
         return bookingMapper.toResponse(booking);
-    }
+        }
 
-    @Override
-    public Page<BookingResponse> getAllBooking(
-            String keyword,
-            BookingStatus status,
-            Pageable pageable
-    ) {
+        @Override
+        public Page<BookingResponse> getAllBooking(
+                String keyword,
+                BookingStatus status,
+                Pageable pageable
+        ) {
 
-        return bookingRepository
-                .searchBookings(keyword, status, pageable)
-                .map(bookingMapper::toResponse);
-    }
+                return bookingRepository
+                        .searchBookings(keyword, status, pageable)
+                        .map(bookingMapper::toResponse);
+        }
 
-    @Override
-    public List<BookingResponse> getBookingsByUserId(
-            Long userId
-    ) {
+        @Override
+        public List<BookingResponse> getBookingsByUserId(
+                Long userId
+        ) {
 
-        return bookingRepository.findByUserId(userId)
-                .stream()
-                .map(bookingMapper::toResponse)
-                .toList();
-    }
+                return bookingRepository.findByUserId(userId)
+                        .stream()
+                        .map(bookingMapper::toResponse)
+                        .toList();
+        }
 
-    @Override
-    public List<SlotResponse> getAvailableSlots(
-            Long fieldId,
-            LocalDate date
-    ) {
+        @Override
+        public List<SlotResponse> getAvailableSlots(
+                Long fieldId,
+                LocalDate date
+        ) {
 
-        LocalDateTime base =
-                date.atTime(OPEN_TIME);
+                LocalDateTime base =
+                        date.atTime(OPEN_TIME);
 
-        LocalDateTime close =
-                date.atTime(CLOSE_TIME);
+                LocalDateTime close =
+                        date.atTime(CLOSE_TIME);
 
-        List<BookingTimeView> bookings =
-                bookingRepository.findBookingsInDayLite(
-                        fieldId,
-                        base,
-                        close
+                List<BookingTimeView> bookings =
+                        bookingRepository.findBookingsInDayLite(
+                                fieldId,
+                                base,
+                                close
+                        );
+
+                List<SlotResponse> result =
+                        new ArrayList<>();
+
+                LocalDateTime now =
+                        LocalDateTime.now();
+
+                int index = 0;
+
+                while (true) {
+
+                LocalDateTime slotStart =
+                        base.plusMinutes(
+                                (long) index * SLOT_DURATION
+                        );
+
+                LocalDateTime slotEnd =
+                        slotStart.plusMinutes(SLOT_DURATION);
+
+                if (slotEnd.isAfter(close)) {
+                        break;
+                }
+
+                boolean isBooked =
+                        bookings.stream().anyMatch(b ->
+                                b.getStatus() != BookingStatus.CANCELLED &&
+                                slotStart.isBefore(b.getEndTime()) &&
+                                slotEnd.isAfter(b.getStartTime())
+                        );
+
+                boolean isPastSlot =
+                        !slotStart.isAfter(now);
+
+                result.add(
+                        SlotResponse.builder()
+                                .startTime(slotStart.toLocalTime())
+                                .endTime(slotEnd.toLocalTime())
+                                .available(!isBooked && !isPastSlot)
+                                .build()
                 );
 
-        List<SlotResponse> result =
-                new ArrayList<>();
+                index++;
+                }
 
-        LocalDateTime now =
-                LocalDateTime.now();
-
-        int index = 0;
-
-        while (true) {
-
-            LocalDateTime slotStart =
-                    base.plusMinutes(
-                            (long) index * SLOT_DURATION
-                    );
-
-            LocalDateTime slotEnd =
-                    slotStart.plusMinutes(SLOT_DURATION);
-
-            if (slotEnd.isAfter(close)) {
-                break;
-            }
-
-            boolean isBooked =
-                    bookings.stream().anyMatch(b ->
-                            b.getStatus() != BookingStatus.CANCELLED &&
-                            slotStart.isBefore(b.getEndTime()) &&
-                            slotEnd.isAfter(b.getStartTime())
-                    );
-
-            boolean isPastSlot =
-                    !slotStart.isAfter(now);
-
-            result.add(
-                    SlotResponse.builder()
-                            .startTime(slotStart.toLocalTime())
-                            .endTime(slotEnd.toLocalTime())
-                            .available(!isBooked && !isPastSlot)
-                            .build()
-            );
-
-            index++;
+                return result;
         }
 
-        return result;
-    }
+        @Override
+        public BookingResponse getBookingForQr(
+                Long bookingId
+        ) {
 
-    @Override
-    public BookingResponse getBookingForQr(
-            Long bookingId
-    ) {
+                Booking booking =
+                        bookingRepository.findById(bookingId)
+                                .orElseThrow(() ->
+                                        new RuntimeException("Booking not found"));
 
-        Booking booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Booking not found"));
+                if (booking.getStatus() != BookingStatus.PENDING) {
 
-        if (booking.getStatus() != BookingStatus.PENDING) {
-
-            throw new RuntimeException(
-                    "Booking not payable"
-            );
-        }
-
-        if (booking.getPayment().getPaymentStatus()
-                == PaymentStatus.PAID) {
-
-            throw new RuntimeException(
-                    "Booking already paid"
-            );
-        }
-
-        return bookingMapper.toResponse(booking);
-    }
-
-    @Override
-    @Transactional
-    public void confirmBooking(Long bookingId) {
-
-        Booking booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Booking not found"));
-
-        if (booking.getStatus() != BookingStatus.PENDING) {
-
-            throw new IllegalStateException(
-                    "Booking already processed"
-            );
-        }
-
-        Payment payment =
-                booking.getPayment();
-
-        if (payment == null) {
-
-            throw new RuntimeException(
-                    "Payment not found"
-            );
-        }
-
-        payment.setPaymentStatus(
-                PaymentStatus.PAID
-        );
-
-        payment.setPaymentDate(
-                LocalDateTime.now()
-        );
-
-        booking.setStatus(
-                BookingStatus.CONFIRMED
-        );
-
-        bookingRepository.save(booking);
-    }
-
-    @Override
-    public void cancelBooking(
-            Long bookingId,
-            Long userId
-    ) {
-
-        Booking booking =
-                bookingRepository.getReferenceById(bookingId);
-
-        if (!booking.getUser().getId().equals(userId)) {
-
-            throw new RuntimeException(
-                    "Unauthorized"
-            );
-        }
-
-        if (booking.getStatus() ==
-                BookingStatus.CANCELLED) {
-
-            throw new IllegalStateException(
-                    "Booking is already cancelled"
-            );
-        }
-
-        if (booking.getStartTime()
-                .isBefore(LocalDateTime.now())) {
-
-            throw new IllegalStateException(
-                    "Cannot cancel past bookings"
-            );
-        }
-
-        Payment payment =
-                booking.getPayment();
-
-        if (payment != null &&
-                payment.getPaymentStatus()
-                        == PaymentStatus.UNPAID) {
-
-            payment.setPaymentStatus(
-                    PaymentStatus.FAILED
-            );
-
-            payment.setPaymentDate(
-                    LocalDateTime.now()
-            );
-        }
-
-        booking.setStatus(
-                BookingStatus.CANCELLED
-        );
-
-        bookingRepository.save(booking);
-    }
-
-    @Override
-    public void deleteBooking(Long bookingId) {
-
-        Booking booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Booking not found"));
-
-        bookingRepository.delete(booking);
-    }
-
-    private BigDecimal calculatePrice(
-            FootballField field,
-            long minutes
-    ) {
-
-        return field.getPricePerHour()
-                .multiply(BigDecimal.valueOf(minutes))
-                .divide(
-                        BigDecimal.valueOf(60),
-                        2,
-                        RoundingMode.HALF_UP
+                throw new RuntimeException(
+                        "Booking not payable"
                 );
-    }
+                }
+
+                if (booking.getPayment().getPaymentStatus()
+                        == PaymentStatus.PAID) {
+
+                throw new RuntimeException(
+                        "Booking already paid"
+                );
+                }
+
+                return bookingMapper.toResponse(booking);
+        }
+
+        @Override
+        @Transactional
+        public void confirmBooking(Long bookingId) {
+
+                Booking booking =
+                        bookingRepository.findById(bookingId)
+                                .orElseThrow(() ->
+                                        new RuntimeException("Booking not found"));
+
+                if (booking.getStatus() != BookingStatus.PENDING) {
+
+                throw new IllegalStateException(
+                        "Booking already processed"
+                );
+                }
+
+                Payment payment =
+                        booking.getPayment();
+
+                if (payment == null) {
+
+                throw new RuntimeException(
+                        "Payment not found"
+                );
+                }
+
+                payment.setPaymentStatus(
+                        PaymentStatus.PAID
+                );
+
+                payment.setPaymentDate(
+                        LocalDateTime.now()
+                );
+
+                booking.setStatus(
+                        BookingStatus.CONFIRMED
+                );
+
+                bookingRepository.save(booking);
+        }
+
+        @Transactional
+        public BookingResponse updateBookingStatus(
+                Long bookingId,
+                UpdateBookingStatusRequest request
+        ) {
+
+        Booking booking = bookingRepository
+                .findById(bookingId)
+                .orElseThrow(() ->
+                        new RuntimeException("Booking not found"));
+
+        BookingStatus currentStatus = booking.getStatus();
+        BookingStatus newStatus = request.getBookingStatus();
+
+        // không cho update nếu đã completed
+        if (currentStatus == BookingStatus.COMPLETED) {
+                throw new RuntimeException(
+                        "Completed booking cannot be updated"
+                );
+        }
+
+        // không cho update nếu đã cancelled
+        if (currentStatus == BookingStatus.CANCELLED) {
+                throw new RuntimeException(
+                        "Cancelled booking cannot be updated"
+                );
+        }
+
+        // validate flow
+        switch (currentStatus) {
+
+                case PENDING -> {
+
+                // chỉ cho:
+                // PENDING -> CONFIRMED
+                // PENDING -> CANCELLED
+                if (newStatus != BookingStatus.CONFIRMED
+                        && newStatus != BookingStatus.CANCELLED) {
+
+                        throw new RuntimeException(
+                                "Invalid status transition from PENDING"
+                        );
+                }
+                }
+
+                case CONFIRMED -> {
+
+                // chỉ cho:
+                // CONFIRMED -> COMPLETED
+                // CONFIRMED -> CANCELLED
+                if (newStatus != BookingStatus.COMPLETED
+                        && newStatus != BookingStatus.CANCELLED) {
+
+                        throw new RuntimeException(
+                                "Invalid status transition from CONFIRMED"
+                        );
+                }
+                }
+
+                default -> throw new RuntimeException(
+                        "Invalid booking status"
+                );
+        }
+
+        booking.setStatus(newStatus);
+
+        Booking updatedBooking =
+                bookingRepository.save(booking);
+
+        return bookingMapper.toResponse(updatedBooking);
+        }
+
+        @Override
+        public void cancelBooking(
+                Long bookingId,
+                Long userId
+        ) {
+
+                Booking booking =
+                        bookingRepository.getReferenceById(bookingId);
+
+                if (!booking.getUser().getId().equals(userId)) {
+
+                throw new RuntimeException(
+                        "Unauthorized"
+                );
+                }
+
+                if (booking.getStatus() ==
+                        BookingStatus.CANCELLED) {
+
+                throw new IllegalStateException(
+                        "Booking is already cancelled"
+                );
+                }
+
+                if (booking.getStartTime()
+                        .isBefore(LocalDateTime.now())) {
+
+                throw new IllegalStateException(
+                        "Cannot cancel past bookings"
+                );
+                }
+
+                Payment payment =
+                        booking.getPayment();
+
+                if (payment != null &&
+                        payment.getPaymentStatus()
+                                == PaymentStatus.UNPAID) {
+
+                payment.setPaymentStatus(
+                        PaymentStatus.FAILED
+                );
+
+                payment.setPaymentDate(
+                        LocalDateTime.now()
+                );
+                }
+
+                booking.setStatus(
+                        BookingStatus.CANCELLED
+                );
+
+                bookingRepository.save(booking);
+        }
+
+        @Override
+        public void deleteBooking(Long bookingId) {
+
+                Booking booking =
+                        bookingRepository.findById(bookingId)
+                                .orElseThrow(() ->
+                                        new RuntimeException("Booking not found"));
+
+                bookingRepository.delete(booking);
+        }
+
+        private BigDecimal calculatePrice(
+                FootballField field,
+                long minutes
+        ) {
+
+                return field.getPricePerHour()
+                        .multiply(BigDecimal.valueOf(minutes))
+                        .divide(
+                                BigDecimal.valueOf(60),
+                                2,
+                                RoundingMode.HALF_UP
+                        );
+        }
 }

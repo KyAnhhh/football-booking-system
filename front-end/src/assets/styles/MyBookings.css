@@ -304,3 +304,21 @@
     font-size: 30px;
   }
 }
+
+.btn-review {
+  background: #f59e0b;
+  color: rgb(43, 27, 27);
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-reviewed {
+  background: #9ca3af;
+  color: rgb(43, 27, 27);
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+}

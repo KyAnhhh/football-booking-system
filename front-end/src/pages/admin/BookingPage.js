@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   getBookings,
-  confirmBooking,
-  deleteBooking
+  deleteBooking,
+  updateBookingStatus
 } from "../../services/bookingService";
 
 import { Button, Form, Modal } from "react-bootstrap";
@@ -19,6 +19,8 @@ export default function BookingPage() {
   const [status, setStatus] = useState("");
 
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(null);
+
+  const [loadingAction, setLoadingAction] = useState(false);
 
   const loadBookings = async () => {
     try {
@@ -45,12 +47,15 @@ export default function BookingPage() {
     loadBookings();
   }, [pageNo, keyword, status]);
 
-  const handleConfirm = async (id) => {
+  const handleUpdateStatus = async (id, status) => {
     try {
-      await confirmBooking(id);
+      setLoadingAction(true);
+      await updateBookingStatus(id, status);
       await loadBookings();
     } catch (err) {
-      console.error("Confirm failed:", err);
+      console.error("Update status failed:", err);
+    } finally {
+      setLoadingAction(false);
     }
   };
 
@@ -63,6 +68,8 @@ export default function BookingPage() {
       setConfirmDeleteModal(null);
     } catch (err) {
       console.error("Delete failed:", err);
+    } finally {
+      setLoadingAction(false);
     }
   };
 
@@ -84,12 +91,16 @@ export default function BookingPage() {
 
           <Form.Select
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPageNo(0);
+            }}
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
             <option value="CONFIRMED">Confirmed</option>
             <option value="CANCELLED">Cancelled</option>
+            <option value="COMPLETED">Completed</option>
           </Form.Select>
         </div>
       </div>
@@ -119,7 +130,10 @@ export default function BookingPage() {
                 <td>
                   {b.startTime} - {b.endTime}
                 </td>
-                <td>{b.totalPrice} VND</td>
+                {/* <td>{b.totalPrice} VND</td> */}
+                <td>
+                  {Number(b.totalPrice).toLocaleString("vi-VN")} VND
+                </td>
 
                 <td>
                   <span className={`status-${b.status?.toLowerCase()}`}>
@@ -127,24 +141,68 @@ export default function BookingPage() {
                   </span>
                 </td>
 
-                <td>
-                  {b.status === "PENDING" && (
+                <td className="booking-actions">
+
+                {/* PENDING */}
+                {b.status === "PENDING" && (
+                  <>
                     <Button
                       size="sm"
                       variant="success"
-                      onClick={() => handleConfirm(b.id)}
+                      onClick={() =>
+                        handleUpdateStatus(b.id, "CONFIRMED")
+                      }
                     >
                       Confirm
                     </Button>
-                  )}{" "}
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => setConfirmDeleteModal(b)}
-                  >
-                    Delete
-                  </Button>
-                </td>
+
+                    <Button
+                      size="sm"
+                      variant="warning"
+                      onClick={() =>
+                        handleUpdateStatus(b.id, "CANCELLED")
+                      }
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                )}
+
+                {/* CONFIRMED */}
+                {b.status === "CONFIRMED" && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() =>
+                        handleUpdateStatus(b.id, "COMPLETED")
+                      }
+                    >
+                      Complete
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="warning"
+                      onClick={() =>
+                        handleUpdateStatus(b.id, "CANCELLED")
+                      }
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                )}
+
+                {/* DELETE */}
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => setConfirmDeleteModal(b)}
+                >
+                  Delete
+                </Button>
+
+              </td>
               </tr>
             ))
           ) : (

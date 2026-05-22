@@ -246,3 +246,44 @@
     width: 100%;
   }
 }
+
+.reviews-section {
+  margin-top: 40px;
+  background: #fff;
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.review-card {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.review-card:last-child {
+  border-bottom: none;
+}
+
+.review-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.review-rating {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.review-comment {
+  color: #555;
+  line-height: 1.5;
+}
+
+.review-date {
+  color: #999;
+  font-size: 13px;
+}
+
+.no-review {
+  color: #888;
+}

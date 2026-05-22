@@ -55,6 +55,14 @@ export const confirmBooking = async (bookingId) => {
     return handleResponse(response);
 }
 
+export const updateBookingStatus = async (bookingId, status) => {
+    const response = await fetchWithAuth(`${API_URL_ADMIN}/${bookingId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ bookingStatus: status }),
+    });
+    return handleResponse(response);
+}
+
 export const cancelBooking = async (bookingId) => {
     const response = await fetchWithAuth(`${API_URL_USER}/${bookingId}/cancel`, {
         method: "PATCH",

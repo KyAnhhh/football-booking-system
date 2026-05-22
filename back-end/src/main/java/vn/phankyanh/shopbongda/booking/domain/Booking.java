@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
+import vn.phankyanh.shopbongda.review.domain.BookingReview;
 import vn.phankyanh.shopbongda.user.domain.User;
 
 @Entity
@@ -63,6 +64,9 @@ public class Booking {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id", nullable = false)
     private Payment payment;
+
+    @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
+    private BookingReview bookingReview;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;

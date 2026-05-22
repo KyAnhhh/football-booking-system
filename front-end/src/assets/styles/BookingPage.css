@@ -61,3 +61,9 @@
   padding: 4px 10px;
   border-radius: 20px;
 }
+
+.booking-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

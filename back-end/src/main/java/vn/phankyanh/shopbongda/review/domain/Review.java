@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import vn.phankyanh.shopbongda.booking.domain.Booking;
 import vn.phankyanh.shopbongda.order.domain.OrderItem;
 import vn.phankyanh.shopbongda.product.domain.Product;
 import vn.phankyanh.shopbongda.user.domain.User;
