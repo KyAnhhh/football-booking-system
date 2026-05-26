@@ -31,6 +31,7 @@ import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
+import vn.phankyanh.shopbongda.shared.service.email.EmailService;
 import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
 
@@ -42,6 +43,7 @@ public class BookingServiceImpl implements BookingService {
     private final FootballFieldRepository fieldRepository;
     private final UserRepository userRepository;
     private final BookingMapper bookingMapper;
+    private final EmailService emailService;
 
     private static final int SLOT_DURATION = 90;
 
@@ -314,6 +316,18 @@ public class BookingServiceImpl implements BookingService {
         BookingStatus currentStatus = booking.getStatus();
         BookingStatus newStatus = request.getBookingStatus();
 
+        // check null
+        if (newStatus == null) {
+                throw new RuntimeException("Booking status is required");
+        }
+
+        // tránh update cùng status
+        if (currentStatus == newStatus) {
+                throw new RuntimeException(
+                        "Booking is already in this status"
+                );
+        }
+        
         // không cho update nếu đã completed
         if (currentStatus == BookingStatus.COMPLETED) {
                 throw new RuntimeException(
@@ -368,6 +382,17 @@ public class BookingServiceImpl implements BookingService {
 
         Booking updatedBooking =
                 bookingRepository.save(booking);
+
+        if(newStatus == BookingStatus.CONFIRMED
+                || newStatus == BookingStatus.CANCELLED
+                || newStatus == BookingStatus.COMPLETED
+        ) {
+                emailService.sendEmailWhenBookingStatusChange(
+                        updatedBooking.getUser().getEmail(),
+                        updatedBooking.getId(),
+                        updatedBooking.getStatus()
+                );
+        }
 
         return bookingMapper.toResponse(updatedBooking);
         }

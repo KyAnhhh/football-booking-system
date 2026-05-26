@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/api/admin/dashboard-summary";
+const API_URL = "http://localhost:8080/api/public/dashboard";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -9,19 +9,16 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-function getAuthHeader() {
-  const token = sessionStorage.getItem("accessToken");
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
+export const getDashboardSummary = async () => {
+    const response = await fetch(`${API_URL}/summary`, {
+        method: "GET",
+    });
+    return handleResponse(response);
 }
 
-export const getDashboardSummary = async () => {
-    const response = await fetch(API_URL, {
+export const getMonthlyRevenue = async () => {
+    const response = await fetch(`${API_URL}/monthly-revenue`, {
         method: "GET",
-        headers: getAuthHeader(),
     });
     return handleResponse(response);
 }

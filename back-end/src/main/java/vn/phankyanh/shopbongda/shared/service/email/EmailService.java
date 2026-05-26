@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
 import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 
 @Service
@@ -39,6 +40,26 @@ public class EmailService {
         mailMessage.setText(
                 "Dear customer,\n\n" +
                 "Your order #" + orderCode + " status has been updated.\n\n" +
+                "New status: " + status + "\n\n" +
+                "Thank you for shopping with us."
+        );
+
+        mailSender.send(mailMessage);
+    }
+
+    @Async
+    public void sendEmailWhenBookingStatusChange(String to, Long bookingId, BookingStatus status) {
+
+        String bookingCode = String.format("BOOK-%06d", bookingId);
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom("phankyanh789@gmail.com");
+        mailMessage.setTo(to);
+        mailMessage.setSubject("Booking Status Update");
+
+        mailMessage.setText(
+                "Dear customer,\n\n" +
+                "Your booking #" + bookingCode + " status has been updated.\n\n" +
                 "New status: " + status + "\n\n" +
                 "Thank you for shopping with us."
         );

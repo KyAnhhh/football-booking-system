@@ -124,13 +124,12 @@ export default function BookingPage() {
             bookings.map((b) => (
               <tr key={b.id}>
                 <td>{b.id}</td>
-                <td>{b.user?.username}</td>
-                <td>{b.field?.name}</td>
-                <td>{b.date}</td>
+                <td>{b.userName}</td>
+                <td>{b.fieldName}</td>
+                <td>{b.startTime?.split("T")[0]}</td>
                 <td>
                   {b.startTime} - {b.endTime}
                 </td>
-                {/* <td>{b.totalPrice} VND</td> */}
                 <td>
                   {Number(b.totalPrice).toLocaleString("vi-VN")} VND
                 </td>

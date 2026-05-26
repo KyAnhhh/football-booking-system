@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Login from "./pages/Login";
 import AdminLayout from "./layouts/AdminLayout";
-import Dashboard from "./pages/admin/Dashboard";
+import DashboardPage from "./pages/admin/DashboardPage";
 import UsersPage from "./pages/admin/UserPage";
 import ProductPage from "./pages/admin/ProductPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -53,7 +53,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Dashboard />} />
+          <Route index element={<DashboardPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="products" element={<ProductPage />} />
           <Route path="brands" element={<BrandPage />} />

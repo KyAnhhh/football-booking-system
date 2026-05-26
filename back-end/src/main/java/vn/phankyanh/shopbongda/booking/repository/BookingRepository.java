@@ -62,4 +62,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             LocalDateTime endTime
     );
 
+    @Query("""
+    SELECT MONTH(b.createdAt),
+    SUM(b.totalPrice)
+    FROM Booking b
+    WHERE b.status = 'COMPLETED'
+    GROUP BY MONTH(b.createdAt)
+    ORDER BY MONTH(b.createdAt)
+    """)
+    List<Object[]> getMonthlyRevenue();
+
 }

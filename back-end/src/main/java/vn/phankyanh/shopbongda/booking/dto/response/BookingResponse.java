@@ -13,6 +13,7 @@ import lombok.Setter;
 public class BookingResponse {
     private Long id;
     private Long userId;
+    private String userName;
     private Long paymentId;
     private Long fieldId;
     private String fieldName;

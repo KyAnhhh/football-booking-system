@@ -165,7 +165,7 @@ export default function MyBookings() {
 
     <div className="my-bookings-page">
 
-      <div className="booking-header">
+      <div className="my-booking-header">
         <h2>My Football Bookings</h2>
       </div>
 

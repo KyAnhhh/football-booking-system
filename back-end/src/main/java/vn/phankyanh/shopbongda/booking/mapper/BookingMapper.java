@@ -10,6 +10,7 @@ import vn.phankyanh.shopbongda.booking.dto.response.BookingResponse;
 public interface BookingMapper {
     
     @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "user.username", target = "userName")
     @Mapping(source = "field.id", target = "fieldId")
     @Mapping(source = "field.name", target = "fieldName")
     @Mapping(source = "field.imageUrl", target = "fieldImage")

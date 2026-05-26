@@ -1,7 +1,6 @@
 import { fetchWithAuth } from "./apiService";
 
 const API_URL_ADMIN = "http://localhost:8080/api/admin/payments";
-const API_URL_USER = "http://localhost:8080/api/user/payments";
 
 const handleResponse = async (response) => {
   if (!response.ok) {

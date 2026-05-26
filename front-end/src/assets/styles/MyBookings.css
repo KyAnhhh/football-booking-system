@@ -15,7 +15,7 @@
 }
 
 /* ================= HEADER ================= */
-.booking-header {
+.my-booking-header {
   margin-bottom: 36px;
 
   display: flex;
@@ -27,7 +27,7 @@
   text-align: center;
 }
 
-.booking-header h2 {
+.my-booking-header h2 {
   font-size: 38px;
   font-weight: 800;
   color: #0f172a;
@@ -35,7 +35,7 @@
   margin-bottom: 10px;
 }
 
-.booking-header p {
+.my-booking-header p {
   color: #64748b;
   font-size: 16px;
 }
@@ -300,7 +300,7 @@
     height: 220px;
   }
 
-  .booking-header h2 {
+  .my-booking-header h2 {
     font-size: 30px;
   }
 }
