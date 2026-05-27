@@ -1,30 +1,68 @@
 # ========================
 # Backend (Spring Boot)
 # ========================
+
 back-end/target/
 back-end/.idea/
 back-end/.vscode/
 back-end/*.iml
+back-end/*.iws
+back-end/*.ipr
+
+# Maven Wrapper
+back-end/.mvn/wrapper/maven-wrapper.jar
+
+# Environment
+back-end/*.env
+back-end/src/main/resources/application-*.properties
+
+# Uploads
+back-end/uploads/
+back-end/src/main/resources/static/uploads/
+
 
 # ========================
 # Frontend (React)
 # ========================
-front-end/node_modules/
-front-end/build/
-front-end/.env
-front-end/.next/
-front-end/dist/
 
-# ========================
-# System files
-# ========================
-.DS_Store
-Thumbs.db
+node_modules/
+front-end/node_modules/
+
+front-end/build/
+front-end/dist/
+front-end/.next/
+
+# Environment
+front-end/.env
+front-end/.env.local
+front-end/.env.development
+front-end/.env.production
+
+# Uploads
+front-end/public/uploads/
+
+# Frontend IDE
+front-end/.idea/
+
 
 # ========================
 # Logs
 # ========================
+
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 
 # ========================
-node_modules/
+# System / Editor
+# ========================
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.tmp
+*.cache
+*.swp

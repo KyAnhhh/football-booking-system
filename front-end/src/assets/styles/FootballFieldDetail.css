@@ -1,0 +1,289 @@
+.detail-page {
+  min-height: 100vh;
+  padding: 40px;
+  background: #f4f7ff;
+}
+
+.detail-container {
+  max-width: 1400px;
+  margin: auto;
+}
+
+/* LAYOUT */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* LEFT */
+.left-section {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* IMAGE */
+.detail-image {
+  width: 100%;
+  height: 500px;
+  object-fit: cover;
+}
+
+/* INFO */
+.detail-info {
+  padding: 28px;
+}
+
+.detail-info h2 {
+  font-size: 38px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.address {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.price {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ff4d4f;
+  margin-bottom: 22px;
+}
+
+.description {
+  background: #f8fafc;
+  border-left: 5px solid #2563eb;
+  padding: 16px;
+  border-radius: 12px;
+  color: #334155;
+  line-height: 1.7;
+}
+
+/* RIGHT */
+.right-section {
+  background: white;
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 20px;
+}
+
+/* SECTION */
+.booking-section,
+.slot-section {
+  margin-bottom: 30px;
+}
+
+.booking-section h3,
+.slot-section h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #1e293b;
+}
+
+/* DATE */
+.booking-section input {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  font-size: 16px;
+}
+
+/* SLOT GRID */
+.slot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* SLOT */
+.slot {
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 2px solid #dbeafe;
+  background: white;
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.slot:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.slot.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-color: transparent;
+}
+
+.slot:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* PAYMENT METHOD */
+.payment-method-section {
+  margin-top: 30px;
+}
+
+.payment-method-section h3 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #1e293b;
+}
+
+.payment-methods {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* BUTTON */
+.payment-method {
+  flex: 1;
+  min-width: 120px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 2px solid #dbeafe;
+  background: white;
+  color: #1e293b;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.payment-method:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+  transform: translateY(-2px);
+}
+
+/* ACTIVE */
+.payment-method.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .payment-method {
+    width: 100%;
+  }
+}
+
+/* BUTTON */
+.book-btn {
+  width: 100%;
+  margin-top: 40px;
+  padding: 16px !important;
+  border: none !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.book-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.book-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .right-section {
+    position: static;
+  }
+
+  .detail-image {
+    height: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .detail-page {
+    padding: 18px;
+  }
+
+  .detail-info h2 {
+    font-size: 28px;
+  }
+
+  .price {
+    font-size: 24px;
+  }
+
+  .slot {
+    width: 100%;
+  }
+}
+
+.reviews-section {
+  margin-top: 40px;
+  background: #fff;
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.review-card {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.review-card:last-child {
+  border-bottom: none;
+}
+
+.review-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.review-rating {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.review-comment {
+  color: #555;
+  line-height: 1.5;
+}
+
+.review-date {
+  color: #999;
+  font-size: 13px;
+}
+
+.no-review {
+  color: #888;
+}

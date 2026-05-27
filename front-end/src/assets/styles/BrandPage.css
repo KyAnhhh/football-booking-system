@@ -1,0 +1,160 @@
+/* ===== Page ===== */
+.brand-page {
+  padding: 25px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: "Inter", sans-serif;
+}
+
+/* ===== Header ===== */
+.brand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.brand-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #222;
+  font-weight: 700;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-actions input {
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid #d0d0d0;
+  transition: 0.2s;
+}
+
+.user-actions input:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 4px rgba(13, 110, 253, 0.4);
+}
+
+/* ===== Table ===== */
+.brand-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+.brand-table th {
+  background: #0d6efd;
+  color: #fff;
+  padding: 14px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.brand-table th:hover {
+  background: #0b5ed7;
+}
+
+.brand-table td {
+  padding: 13px;
+  font-size: 0.93rem;
+  color: #333;
+  vertical-align: middle;
+}
+
+.brand-table tr {
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.brand-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.brand-table tr:hover {
+  background-color: #eef5ff;
+  transition: 0.2s ease;
+}
+
+.brand-table img {
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+/* ===== Buttons ===== */
+.brand-table button {
+  padding: 5px 12px;
+  font-size: 0.83rem !important;
+  border-radius: 6px !important;
+  margin-right: 5px;
+}
+
+/* ===== Pagination ===== */
+.pagination-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.pagination-section button {
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+}
+
+.pagination-section span {
+  font-weight: 500;
+  color: #444;
+}
+
+/* ===== Modal ===== */
+.modal-content {
+  border-radius: 12px !important;
+}
+
+.modal-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+.form-control {
+  border-radius: 8px !important;
+  padding: 10px !important;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .brand-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .user-actions {
+    width: 100%;
+  }
+
+  .user-actions input {
+    width: 100%;
+  }
+
+  .brand-table th,
+  .brand-table td {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+}

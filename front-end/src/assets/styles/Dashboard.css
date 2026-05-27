@@ -1,0 +1,43 @@
+.dashboard-page {
+    min-height: 100vh;
+    background: #f5f7fb;
+    padding: 32px;
+    font-family: Inter, sans-serif;
+}
+
+.dashboard-header {
+    margin-bottom: 32px;
+}
+
+.dashboard-header h1 {
+    font-size: 40px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #111827;
+}
+
+.dashboard-header p {
+    color: #6b7280;
+    font-size: 16px;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+@media (max-width: 1200px) {
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}

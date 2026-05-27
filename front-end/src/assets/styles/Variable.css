@@ -1,0 +1,17 @@
+:root {
+  /* ===== Primary (Navy Blue) ===== */
+  --navy-900: #0a192f;   /* header / sidebar */
+  --navy-800: #112240;   /* hover, active */
+  --navy-700: #1f3a5f;   /* button primary */
+
+  /* ===== Accent ===== */
+  --accent-blue: #2563eb; /* link, focus, action */
+  --accent-green: #22c55e; /* success */
+  --accent-red: #ef4444;   /* danger */
+
+  /* ===== Neutral ===== */
+  --gray-100: #f8fafc;  /* background */
+  --gray-200: #e5e7eb;  /* border */
+  --gray-600: #475569;  /* text secondary */
+  --gray-900: #0f172a;  /* text primary */
+}

@@ -1,0 +1,129 @@
+/* footer.css - FootballShop footer styling */
+
+.fs-footer {
+  background: linear-gradient(180deg, #003b88 0%, #002e6a 100%);
+  color: white;
+  margin-top: 48px;
+  font-size: 14px;
+}
+
+/* inner grid */
+.fs-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 42px 24px;
+  display: grid;
+  grid-template-columns: 1fr 140px 140px 160px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* brand */
+.fs-footer-brand .fs-footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.fs-footer-desc {
+  color: #cfe6ff;
+  margin-top: 10px;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+/* columns */
+.fs-footer-col h4 {
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #eaf6ff;
+}
+
+.fs-footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fs-footer-col li {
+  margin-bottom: 8px;
+}
+
+.fs-footer-col a {
+  color: #cfe6ff;
+  text-decoration: none;
+  transition: color 140ms ease, transform 120ms ease;
+}
+
+.fs-footer-col a:hover,
+.fs-footer-col a:focus {
+  color: #fff;
+  transform: translateX(4px);
+  outline: none;
+}
+
+/* social links */
+.fs-footer-socials {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fs-footer-socials a {
+  color: #cfe6ff;
+  text-decoration: none;
+}
+
+.fs-footer-socials a:hover {
+  color: #fff;
+}
+
+/* bottom bar */
+.fs-footer-bottom {
+  background: #00264e;
+  padding: 12px 0;
+  margin-top: 14px;
+}
+
+.fs-footer-bottom-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  color: #bfe0ff;
+}
+
+.fs-footer-bottom-inner a {
+  color: #bfe0ff;
+  text-decoration: none;
+}
+
+.fs-footer-sep { opacity: 0.4; margin: 0 6px; }
+
+/* responsiveness */
+@media (max-width: 980px) {
+  .fs-footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .fs-footer-inner {
+    grid-template-columns: 1fr;
+    padding: 28px 16px;
+    gap: 18px;
+  }
+
+  .fs-footer-bottom-inner {
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 16px;
+  }
+}

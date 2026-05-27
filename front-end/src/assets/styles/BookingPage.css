@@ -1,0 +1,69 @@
+/* giống FieldPage nhưng đổi class */
+
+.booking-page {
+  padding: 20px;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  min-height: 100vh;
+}
+
+.booking-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+}
+
+.booking-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.booking-table th {
+  background: #0d6efd;
+  color: white;
+  padding: 12px;
+}
+
+.booking-table td {
+  padding: 12px;
+  text-align: center;
+}
+
+.booking-table tr:hover {
+  background: #eef2ff;
+}
+
+/* STATUS */
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.status-confirmed {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.booking-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

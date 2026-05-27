@@ -1,0 +1,266 @@
+/* ================= HEADER ================= */
+.fs-header {
+  width: 100%;
+  background: linear-gradient(90deg, #003b88 0%, #0074d9 100%);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+}
+
+.fs-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ================= LOGO ================= */
+.fs-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: white;
+}
+
+.fs-logo-ball {
+  font-size: 1.25rem;
+}
+
+.fs-logo-text {
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.4px;
+}
+
+/* ================= NAV DESKTOP ================= */
+.fs-nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: 1;
+  justify-content: center;
+}
+
+.fs-nav-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background 0.18s ease, transform 0.12s ease;
+  white-space: nowrap;
+}
+
+.fs-nav-link:hover,
+.fs-nav-link:focus {
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+/* ================= ACTIONS ================= */
+.fs-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* icon chung */
+.fs-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 10px;
+  color: white;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+/* hover CHUNG (cart, hamburger) */
+.fs-icon-btn:hover,
+.fs-icon-btn:focus {
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+/* ================= CART ================= */
+.fs-cart-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* ================= USER MENU ================= */
+.fs-user-menu {
+  position: relative;
+}
+
+/* USER ICON: không nền – không border – không transform */
+.fs-user-menu .fs-icon-btn {
+  background: transparent;
+  box-shadow: none;
+}
+
+.fs-user-menu .fs-icon-btn:hover,
+.fs-user-menu .fs-icon-btn:focus,
+.fs-user-menu .fs-icon-btn:active {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ================= USER DROPDOWN ================= */
+.fs-user-dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  min-width: 200px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 999;
+  animation: dropdownFade 0.2s ease;
+}
+
+.fs-user-dropdown.show {
+  display: flex;
+}
+
+.fs-user-dropdown a,
+.fs-user-dropdown button {
+  padding: 12px 16px;
+  font-size: 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.fs-user-dropdown a {
+  color: #333;
+  text-decoration: none;
+}
+
+.fs-user-dropdown a:hover,
+.fs-user-dropdown button:hover {
+  background: #f2f6ff;
+}
+
+.fs-user-dropdown button {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+/* ================= LOGIN BUTTON ================= */
+.fs-login-btn {
+  background: white;
+  color: #0a3d91;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.fs-login-btn:hover {
+  background: #f2f6ff;
+  color: #0044cc;
+}
+
+/* ================= HAMBURGER ================= */
+.fs-menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ================= MOBILE MENU ================= */
+.fs-mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 20px 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(0,64,136,0.95),
+    rgba(0,84,170,0.98)
+  );
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.fs-mobile-link {
+  color: white;
+  text-decoration: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.fs-mobile-link:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.admin-link {
+  font-weight: 600;
+  color: #0a3d91;
+}
+
+.admin-link:hover {
+  background: #eef4ff;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .fs-nav {
+    display: none;
+  }
+
+  .fs-menu-toggle {
+    display: inline-flex;
+  }
+
+  .fs-mobile-menu.show {
+    display: flex;
+    animation: slideDown 0.18s ease;
+  }
+}
+
+/* ================= ANIMATION ================= */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

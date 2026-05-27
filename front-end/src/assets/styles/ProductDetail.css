@@ -1,0 +1,152 @@
+.product-detail {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+}
+
+.gallery {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  margin-bottom: 16px;
+}
+
+.thumbs {
+  display: flex;
+  gap: 12px;
+}
+
+.thumbs img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.thumbs img:hover {
+  border-color: #ccc;
+  transform: scale(1.05);
+}
+
+.info h2 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.price {
+  font-size: 26px;
+  font-weight: 700;
+  color: #e53935;
+  margin-bottom: 24px;
+}
+
+.info h6 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.size-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.size-group button {
+  min-width: 52px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.size-group button:hover {
+  border-color: #000;
+}
+
+.size-group button.active {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.size-group button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.info input[type="number"] {
+  width: 120px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 24px;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+}
+
+.actions button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actions button:first-child {
+  background: #fff;
+  border: 2px solid #000;
+}
+
+.actions button:first-child:hover {
+  background: #000;
+  color: #fff;
+}
+
+.actions .buy-now {
+  background: #e53935;
+  color: #fff;
+}
+
+.actions .buy-now:hover {
+  background: #c62828;
+}
+
+.review-area{
+  margin-top:40px;
+  padding-top:20px;
+  border-top:1px solid #eee;
+}
+
+@media (max-width: 900px) {
+  .product-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+}
