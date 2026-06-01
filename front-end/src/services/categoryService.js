@@ -21,13 +21,13 @@ export const getCategories = async (pageNo = 0, pageSize = 10, sortBy = "id", so
   });
   if (search) params.append("search", search);
   
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`);
+  const response = await fetch(`${API_URL_PUBLIC}?${params.toString()}`);
   return handleResponse(response);
 };
 
 export const getAllCategoriesForDropdown = async () => {
   try {
-    const response = await fetchWithAuth(`${API_URL_PUBLIC}`);
+    const response = await fetch(`${API_URL_PUBLIC}`);
     const res = await handleResponse(response);
 
     if (Array.isArray(res)) return res;
@@ -42,7 +42,7 @@ export const getAllCategoriesForDropdown = async () => {
 
 
 export const getCategoryById = async (id) => {
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`);
+  const response = await fetch(`${API_URL_PUBLIC}/${id}`);
   return handleResponse(response);
 };
 

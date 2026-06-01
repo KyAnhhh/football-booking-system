@@ -2,16 +2,30 @@ spring:
   application:
     name: shopbongda
 
+  # datasource:
+  #   driver-class-name: com.mysql.cj.jdbc.Driver
+  #   url: jdbc:mysql://localhost:3306/shopbongda?useSSL=false&serverTimezone=UTC
+  #   username: root
+  #   password:
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/shopbongda?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://root:KfjicfrVJYHAEEqDEQupNyMdovDFvamx@kodama.proxy.rlwy.net:25781/railway?useSSL=false&serverTimezone=UTC
     username: root
-    password:
+    password: KfjicfrVJYHAEEqDEQupNyMdovDFvamx
+
+  # data:
+  #   redis:
+  #     host: localhost
+  #     port: 6379
 
   data:
     redis:
-      host: localhost
+      host: willing-ray-94929.upstash.io
       port: 6379
+      password: gQAAAAAAAXLRAAIgcDI2Yjg5ZDk0YzZlY2U0ZGZlYjU1ZGRlYTAzNWVhZmVhYg
+      ssl:
+        enabled: true
 
   jpa:
     hibernate:
@@ -38,6 +52,10 @@ spring:
           auth: true
           starttls:
             enable: true
+
+# logging:
+#   level:
+#     org.springframework.security: DEBUG
 
 server:
   port: 8080

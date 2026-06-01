@@ -39,7 +39,9 @@ export default function OrderPage() {
 
   const paymentMethodColor = {
     COD: "bg-secondary",
-    BANKING: "bg-success",
+    VIETQR: "bg-success",
+    CASH: "bg-dark",
+    VNPAY: "bg-info",
   };
 
   const loadOrders = async () => {

@@ -17,6 +17,7 @@ import {
 } from "react-bootstrap";
 
 import "../../assets/styles/MyBookings.css";
+import swal from "sweetalert2";
 
 export default function MyBookings() {
 
@@ -41,6 +42,12 @@ export default function MyBookings() {
     } catch (err) {
 
       console.error(err);
+
+      swal.fire(
+        "Error",
+        "Failed to load bookings",
+        "error"
+      );
     }
   };
 
@@ -51,6 +58,7 @@ export default function MyBookings() {
       const data = await getMyReviews();
 
       setMyReviews(data || []);
+      console.log(data);
 
     } catch (err) {
 
@@ -98,13 +106,23 @@ export default function MyBookings() {
       await load();
       await loadMyReviews();
 
+      swal.fire(
+        "Success",
+        "Đánh giá thành công",
+        "success"
+      );
+
       closeReviewModal();
 
     } catch (err) {
 
       console.error(err);
 
-      alert(err.message);
+      swal.fire(
+        "Error",
+        "Failed to create review",
+        "error"
+      );
     }
   };
 
@@ -114,11 +132,17 @@ export default function MyBookings() {
 
       await cancelBooking(id);
 
-      load();
+      await load();
 
     } catch (err) {
 
       console.error(err);
+
+      swal.fire(
+        "Error",
+        "Failed to cancel booking",
+        "error"
+      );
     }
   };
 
@@ -159,6 +183,22 @@ export default function MyBookings() {
           minute: "2-digit"
         }
       );
+  };
+
+  const canCancelBooking = (booking) => {
+
+    if (booking.status !== "PENDING") {
+      return false;
+    }
+
+    const now = new Date();
+
+    const startTime = new Date(booking.startTime);
+
+    const diffHours =
+      (startTime - now) / (1000 * 60 * 60);
+
+    return diffHours >= 2;
   };
 
   return (
@@ -253,16 +293,26 @@ export default function MyBookings() {
                 </div>
 
                 <div className="actions">
-                  {b.status === "PENDING" && (
+                  {canCancelBooking(b) ? (
+
                     <button
-                      onClick={() =>
-                        handleCancel(b.id)
-                      }
+                      onClick={() => handleCancel(b.id)}
                       className="btn-cancel"
                     >
                       Cancel Booking
                     </button>
-                  )}
+
+                  ) : b.status === "PENDING" ? (
+
+                    <button
+                      className="btn-cancel-disabled"
+                      disabled
+                      title="Chỉ được hủy nếu còn hơn 2 tiếng trước giờ bắt đầu"
+                    >
+                      Không thể hủy
+                    </button>
+
+                  ) : null}
 
                   {b.status === "CONFIRMED" && (
 

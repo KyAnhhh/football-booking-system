@@ -48,7 +48,7 @@ export const getAllProductVariant = async () => {
         "Content-Type": "application/json",
         ...getAuthHeader(),
     };
-    const response = await fetchWithAuth(API_URL_PUBLIC, {
+    const response = await fetch(API_URL_PUBLIC, {
         method: "GET",
         headers
     });
@@ -60,7 +60,7 @@ export const getProductVariant = async (id) => {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`,{
+  const response = await fetch(`${API_URL_PUBLIC}/${id}`,{
     method: "GET",
     headers
   });

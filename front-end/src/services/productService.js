@@ -38,7 +38,7 @@ const params = new URLSearchParams({
   if (minPrice !== null) params.append("minPrice", minPrice);
   if (maxPrice !== null) params.append("maxPrice", maxPrice);
 
-  const response = await fetchWithAuth(
+  const response = await fetch(
     `${API_URL_PUBLIC}?${params.toString()}`,
   );
 
@@ -46,12 +46,12 @@ const params = new URLSearchParams({
 };
 
 export const getTop4PopularProducts = async () => {
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/top4-popular`);
+  const response = await fetch(`${API_URL_PUBLIC}/top4-popular`);
   return handleResponse(response);
 }
 
 export const getProductById = async (id) => {
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`);
+  const response = await fetch(`${API_URL_PUBLIC}/${id}`);
   return handleResponse(response);
 };
 

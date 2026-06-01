@@ -50,6 +50,9 @@ const API_URL = "http://localhost:8080/api/auth";
 
     export const refresh = async () => {
         const refreshToken = sessionStorage.getItem("refreshToken");
+        console.log("Refresh token:", refreshToken);
+        console.log("refresh status", refresh.status);
+        
         if (!refreshToken) {
             throw new Error("No refresh token found");
         }

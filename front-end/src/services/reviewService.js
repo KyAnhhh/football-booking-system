@@ -21,7 +21,7 @@ export const createReview = async (orderItemId, reviewData) => {
 }
 
 export const getReviewsByProductId = async (productId) => {
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/products/${productId}/reviews`, {
+  const response = await fetch(`${API_URL_PUBLIC}/products/${productId}/reviews`, {
     method: "GET",
     headers: {
     },
@@ -30,7 +30,7 @@ export const getReviewsByProductId = async (productId) => {
 }  
 
 export const getAverageRating = async (productId) => {
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/products/${productId}/average-rating`, {
+  const response = await fetch(`${API_URL_PUBLIC}/products/${productId}/average-rating`, {
     method: "GET",
     headers: {
     },

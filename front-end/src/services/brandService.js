@@ -21,14 +21,14 @@ export const getBrands = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDi
   });
   if (search) params.append("search", search);
   
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}?${params.toString()}`);
+  const response = await fetch(`${API_URL_PUBLIC}?${params.toString()}`);
   return handleResponse(response);
 };
 
 // Get all brands for dropdown (no pagination, public endpoint)
 export const getAllBrandsForDropdown = async () => {
   try {
-    const response = await fetchWithAuth(`${API_URL_PUBLIC}`);
+    const response = await fetch(`${API_URL_PUBLIC}`);
     const res = await handleResponse(response);
 
     // res có thể là Page hoặc List
@@ -44,7 +44,7 @@ export const getAllBrandsForDropdown = async () => {
 
 
 export const getBrandById = async (id) => {
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`);
+  const response = await fetch(`${API_URL_PUBLIC}/${id}`);
   return await handleResponse(response);
 };
 

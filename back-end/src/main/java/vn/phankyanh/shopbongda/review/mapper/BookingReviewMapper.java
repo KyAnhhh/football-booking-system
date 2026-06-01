@@ -17,5 +17,6 @@ public interface BookingReviewMapper {
     
     @Mapping(source = "user.username", target = "userName")
     @Mapping(source = "booking.field.name", target = "fieldName")
+    @Mapping(source = "booking.id", target = "bookingId")
     BookingReviewResponse toResponse(BookingReview bookingReview);
 }

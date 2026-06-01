@@ -2,8 +2,8 @@ package vn.phankyanh.shopbongda.review.controller;
 
 import java.util.List;
 
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,7 +53,7 @@ public class BookingReviewController {
     @GetMapping("/user/booking-reviews/my-reviews")
     public ApiResponse<List<BookingReviewResponse>> getMyReviews(@AuthenticationPrincipal Jwt jwt) {
         ApiResponse<List<BookingReviewResponse>> response = new ApiResponse<>();
-        Long userId = Long.valueOf(jwt.getSubject());
+        Long userId = jwt.getClaim("id");
         List<BookingReviewResponse> reviews = bookingReviewService.getMyReviews(userId);
         response.setData(reviews);
         response.setMessage("My reviews retrieved successfully");

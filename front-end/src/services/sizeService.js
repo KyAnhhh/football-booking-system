@@ -20,7 +20,7 @@ export const getSizes = async () => {
     const headers = {
         "Content-Type": "application/json",
     }
-    const response = await fetchWithAuth(`${API_URL_PUBLIC}`, { headers });
+    const response = await fetch(`${API_URL_PUBLIC}`, { headers });
     return handleResponse(response);
 }
 
@@ -54,7 +54,7 @@ export const getSizeById = async (id) => {
     const headers = {
         "Content-Type": "application/json",
     }
-    const response = await fetchWithAuth(`${API_URL_PUBLIC}/${id}`, {
+    const response = await fetch(`${API_URL_PUBLIC}/${id}`, {
         method: "GET",
         headers
     });

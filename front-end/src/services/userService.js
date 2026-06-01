@@ -13,19 +13,9 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-function getAuthHeader() {
-  const token = sessionStorage.getItem("accessToken");
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
-}
-
 export const getUsers = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDir = "asc", search = "") => {
   const headers = {
     "Content-Type": "application/json",
-    ...getAuthHeader(),
   };
 
   const url = `${API_URL_ADMIN}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}&search=${search}`;
@@ -37,7 +27,6 @@ export const getUsers = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDir
 export const createUser = async (user) => {
   const headers = {
     "Content-Type": "application/json",
-    ...getAuthHeader(),
   };
   const response = await fetchWithAuth(`${API_URL_ADMIN}`, {
     method: "POST",
@@ -51,7 +40,6 @@ export const createUser = async (user) => {
 export const updateUser = async (id, user) => {
   const headers = {
     "Content-Type": "application/json",
-    ...getAuthHeader(),
   };
 
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
@@ -66,7 +54,6 @@ export const updateUser = async (id, user) => {
 export const deleteUser = async (id) => {
   const headers = {
     "Content-Type": "application/json",
-    ...getAuthHeader(),
   };
 
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
@@ -80,7 +67,6 @@ export const deleteUser = async (id) => {
 export const getProfile = async () => {
   const headers = {
     "Content-Type": "application/json",
-    ...getAuthHeader(),
   };
 
   const response = await fetchWithAuth(`${API_URL_PUBLIC}/profile`, {
@@ -94,7 +80,6 @@ export const getProfile = async () => {
 export const updateProfile = async (profile) => {
   const headers = {
     "Content-Type": "application/json",
-    ...getAuthHeader(),
   };
 
   const response = await fetchWithAuth(`${API_URL_PUBLIC}/profile/update`, {

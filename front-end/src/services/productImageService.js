@@ -43,7 +43,7 @@ export const uploadProductImages = async (productId, files, primaryIndex) => {
 };
 
 export const getImageByProduct = async (productId) => {
-    const response = await fetchWithAuth(`${API_URL_PUBLIC}/${productId}/images`, {
+    const response = await fetch(`${API_URL_PUBLIC}/${productId}/images`, {
         method: "GET",
         headers: {
       ...getAuthHeader()
