@@ -2,28 +2,17 @@ spring:
   application:
     name: shopbongda
 
-  # datasource:
-  #   driver-class-name: com.mysql.cj.jdbc.Driver
-  #   url: jdbc:mysql://localhost:3306/shopbongda?useSSL=false&serverTimezone=UTC
-  #   username: root
-  #   password:
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://root:KfjicfrVJYHAEEqDEQupNyMdovDFvamx@kodama.proxy.rlwy.net:25781/railway?useSSL=false&serverTimezone=UTC
-    username: root
-    password: KfjicfrVJYHAEEqDEQupNyMdovDFvamx
-
-  # data:
-  #   redis:
-  #     host: localhost
-  #     port: 6379
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
 
   data:
     redis:
-      host: willing-ray-94929.upstash.io
-      port: 6379
-      password: gQAAAAAAAXLRAAIgcDI2Yjg5ZDk0YzZlY2U0ZGZlYjU1ZGRlYTAzNWVhZmVhYg
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
       ssl:
         enabled: true
 
@@ -44,8 +33,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: phankyanh789@gmail.com
-    password: ckbbemkxczbutoab
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -53,17 +42,14 @@ spring:
           starttls:
             enable: true
 
-# logging:
-#   level:
-#     org.springframework.security: DEBUG
-
 server:
-  port: 8080
+  port: ${PORT:8080}
+
 jwt:
-  secret-key: JrmOiDklKneqbBb3cN1KTIJnGd1tCVl9Vx62B7K/Z8WC7x+jyywBcyjGWxFXKK/GJD9/is6SKaZqb94WVCQQz0IcshLjck73mJL3jVwWIuU=
+  secret-key: ${JWT_SECRET_KEY}
 
 vnpay:
-  tmn-code: DEMO
-  secret-key: DEMOSECRET
+  tmn-code: ${VNPAY_TMN_CODE:DEMO}
+  secret-key: ${VNPAY_SECRET_KEY:DEMOSECRET}
   pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-  return-url: http://localhost:8080/api/payments/vnpay-return
+  return-url: ${VNPAY_RETURN_URL:http://localhost:8080/api/public/payments/vnpay-return}
