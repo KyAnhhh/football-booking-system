@@ -1,6 +1,7 @@
 import "../assets/styles/AdminLayout.css";
-import Header from "../components/Header"
-import Footer from "../components/Footer"
+import Footer from "../components/client/Footer";
+import Header from "../components/client/Header";
+
 
 export default function ClientLayout({ children }) {
   return (

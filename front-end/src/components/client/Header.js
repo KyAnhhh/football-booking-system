@@ -3,7 +3,7 @@ import "../assets/styles/Header.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { Link } from "react-router-dom";
-import { logout } from "../services/authService";
+import { logout } from "../../services/authService";
 
 export default function Header() {
   const navigate = useNavigate();
