@@ -68,6 +68,14 @@
 
 /* FILTER BUTTONS */
 
+.filter-buttons .btn {
+  transition: all 0.3s ease;
+}
+
+.filter-buttons .btn:hover {
+  transform: translateY(-2px);
+}
+
 .filter-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -150,6 +158,9 @@
 .btn-custom {
   width: calc(100% - 36px);
   margin: 0 18px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border-radius: 12px !important;
   font-weight: 700 !important;
   height: 46px;

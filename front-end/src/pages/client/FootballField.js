@@ -141,74 +141,71 @@ export default function FootballField() {
 
           </Form.Group>
 
-          {/* TYPE */}
-          <div className="mb-4">
+          <h6>Loại sân</h6>
+          <Button
+            variant={filters.type === "" ? "primary" : "outline-dark"}
+            onClick={() => handleTypeFilter("")}
+          >
+            Tất cả
+          </Button>
 
-            <h6>Loại sân</h6>
+          <Button
+            variant={filters.type === "FIVE_A_SIDE" ? "primary" : "outline-dark"}
+            onClick={() => handleTypeFilter("FIVE_A_SIDE")}
+          >
+            Sân 5
+          </Button>
 
-            <div className="filter-buttons">
+          <Button
+            variant={filters.type === "SEVEN_A_SIDE" ? "primary" : "outline-dark"}
+            onClick={() => handleTypeFilter("SEVEN_A_SIDE")}
+          >
+            Sân 7
+          </Button>
 
-              <Button
-                variant="outline-dark"
-                onClick={() => handleTypeFilter("")}
-              >
-                Tất cả
-              </Button>
+          <Button
+            variant={filters.type === "ELEVEN_A_SIDE" ? "primary" : "outline-dark"}
+            onClick={() => handleTypeFilter("ELEVEN_A_SIDE")}
+          >
+            Sân 11
+          </Button>
 
-              <Button
-                variant="outline-dark"
-                onClick={() => handleTypeFilter("FIVE_A_SIDE")}
-              >
-                Sân 5
-              </Button>
+          <h6>Mức giá</h6>
+          <Button
+            variant={
+              filters.maxPrice === 200000 &&
+              !filters.minPrice
+                ? "primary"
+                : "outline-dark"
+            }
+            onClick={() => handlePriceFilter("UNDER_200")}
+          >
+            Dưới 200k
+          </Button>
 
-              <Button
-                variant="outline-dark"
-                onClick={() => handleTypeFilter("SEVEN_A_SIDE")}
-              >
-                Sân 7
-              </Button>
+          <Button
+            variant={
+              filters.minPrice === 200000 &&
+              filters.maxPrice === 500000
+                ? "primary"
+                : "outline-dark"
+            }
+            onClick={() => handlePriceFilter("200_500")}
+          >
+            200k - 500k
+          </Button>
 
-              <Button
-                variant="outline-dark"
-                onClick={() => handleTypeFilter("ELEVEN_A_SIDE")}
-              >
-                Sân 11
-              </Button>
-
-            </div>
-          </div>
-
-          {/* PRICE */}
-          <div>
-
-            <h6>Mức giá</h6>
-
-            <div className="filter-buttons">
-
-              <Button
-                variant="outline-success"
-                onClick={() => handlePriceFilter("UNDER_200")}
-              >
-                Dưới 200k
-              </Button>
-
-              <Button
-                variant="outline-success"
-                onClick={() => handlePriceFilter("200_500")}
-              >
-                200k - 500k
-              </Button>
-
-              <Button
-                variant="outline-success"
-                onClick={() => handlePriceFilter("OVER_500")}
-              >
-                Trên 500k
-              </Button>
-
-            </div>
-          </div>
+          <Button
+            variant={
+              filters.minPrice === 500000 &&
+              !filters.maxPrice
+                ? "primary"
+                : "outline-dark"
+            }
+            onClick={() => handlePriceFilter("OVER_500")}
+          >
+            Trên 500k
+          </Button>
         </div>
 
         {/* FIELD LIST */}

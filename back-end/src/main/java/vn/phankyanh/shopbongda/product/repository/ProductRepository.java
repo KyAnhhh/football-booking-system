@@ -22,7 +22,7 @@ public interface  ProductRepository extends JpaRepository<Product, Long>{
 
     @Query("""
     SELECT DISTINCT p FROM Product p
-    JOIN p.variants v
+    LEFT JOIN p.variants v
     WHERE
     (:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')))
     AND (:category IS NULL OR p.category.name = :category)

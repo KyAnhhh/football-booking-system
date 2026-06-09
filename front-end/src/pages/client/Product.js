@@ -21,6 +21,8 @@ export default function Product() {
   const [minPrice, setMinPrice] = useState(null);
   const [maxPrice, setMaxPrice] = useState(null);
 
+  const [selectedPriceRange, setSelectedPriceRange] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,109 +79,184 @@ export default function Product() {
         />
 
         <div className="filter-group">
-          <h4>Giá</h4>
 
-          <select
-            onChange={(e) => {
-              const value = e.target.value;
+  <h4>Giá</h4>
 
-              setPageNo(0);
+  <div className="filter-buttons">
 
-              switch (value) {
-                case "under200":
-                  setMinPrice("");
-                  setMaxPrice(200000);
-                  break;
+    <button
+      className={selectedPriceRange === "" ? "active" : ""}
+      onClick={() => {
+        setSelectedPriceRange("");
+        setMinPrice("");
+        setMaxPrice("");
+        setPageNo(0);
+      }}
+    >
+      Tất cả
+    </button>
 
-                case "200to500":
-                  setMinPrice(200000);
-                  setMaxPrice(500000);
-                  break;
+    <button
+      className={
+        selectedPriceRange === "under200"
+          ? "active"
+          : ""
+      }
+      onClick={() => {
+        setSelectedPriceRange("under200");
+        setMinPrice("");
+        setMaxPrice(200000);
+        setPageNo(0);
+      }}
+    >
+      Dưới 200k
+    </button>
 
-                case "500to1000":
-                  setMinPrice(500000);
-                  setMaxPrice(1000000);
-                  break;
+    <button
+      className={
+        selectedPriceRange === "200to500"
+          ? "active"
+          : ""
+      }
+      onClick={() => {
+        setSelectedPriceRange("200to500");
+        setMinPrice(200000);
+        setMaxPrice(500000);
+        setPageNo(0);
+      }}
+    >
+      200k - 500k
+    </button>
 
-                case "1000to2000":
-                  setMinPrice(1000000);
-                  setMaxPrice(2000000);
-                  break;
+    <button
+      className={
+        selectedPriceRange === "500to1000"
+          ? "active"
+          : ""
+      }
+      onClick={() => {
+        setSelectedPriceRange("500to1000");
+        setMinPrice(500000);
+        setMaxPrice(1000000);
+        setPageNo(0);
+      }}
+    >
+      500k - 1tr
+    </button>
 
-                case "over2000":
-                  setMinPrice(2000000);
-                  setMaxPrice("");
-                  break;
+    <button
+      className={
+        selectedPriceRange === "1000to2000"
+          ? "active"
+          : ""
+      }
+      onClick={() => {
+        setSelectedPriceRange("1000to2000");
+        setMinPrice(1000000);
+        setMaxPrice(2000000);
+        setPageNo(0);
+      }}
+    >
+      1tr - 2tr
+    </button>
 
-                default:
-                  setMinPrice("");
-                  setMaxPrice("");
-              }
-            }}
-          >
-            <option value="">Tất cả</option>
+    <button
+      className={
+        selectedPriceRange === "over2000"
+          ? "active"
+          : ""
+      }
+      onClick={() => {
+        setSelectedPriceRange("over2000");
+        setMinPrice(2000000);
+        setMaxPrice("");
+        setPageNo(0);
+      }}
+    >
+      Trên 2tr
+    </button>
 
-            <option value="under200">
-              Dưới 200.000đ
-            </option>
+  </div>
 
-            <option value="200to500">
-              200.000đ - 500.000đ
-            </option>
-
-            <option value="500to1000">
-              500.000đ - 1.000.000đ
-            </option>
-
-            <option value="1000to2000">
-              1.000.000đ - 2.000.000đ
-            </option>
-
-            <option value="over2000">
-              Trên 2.000.000đ
-            </option>
-          </select>
-        </div>
+</div>
 
         <div className="filter-group">
-          <h4>Danh mục</h4>
 
-          <select
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-              setPageNo(0);
-            }}
-          >
-            <option value="">Tất cả</option>
+  <h4>Danh mục</h4>
 
-            {categories.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+  <div className="filter-buttons">
+
+    <button
+      className={selectedCategory === "" ? "active" : ""}
+      onClick={() => {
+        setSelectedCategory("");
+        setPageNo(0);
+      }}
+    >
+      Tất cả
+    </button>
+
+    {categories.map((c) => (
+
+      <button
+        key={c.id}
+        className={
+          selectedCategory === c.name
+            ? "active"
+            : ""
+        }
+        onClick={() => {
+          setSelectedCategory(c.name);
+          setPageNo(0);
+        }}
+      >
+        {c.name}
+      </button>
+
+    ))}
+
+  </div>
+
+</div>
 
         <div className="filter-group">
-          <h4>Thương hiệu</h4>
 
-          <select
-            value={selectedBrand}
-            onChange={(e) => {
-              setSelectedBrand(e.target.value);
-              setPageNo(0);
-            }}
-          >
-            <option value="">Tất cả</option>
+  <h4>Thương hiệu</h4>
 
-            {brands.map((b) => (
-              <option key={b.id} value={b.name}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
+  <div className="filter-buttons">
+
+    <button
+      className={selectedBrand === "" ? "active" : ""}
+      onClick={() => {
+        setSelectedBrand("");
+        setPageNo(0);
+      }}
+    >
+      Tất cả
+    </button>
+
+    {brands.map((b) => (
+
+      <button
+        key={b.id}
+        className={
+          selectedBrand === b.name
+            ? "active"
+            : ""
+        }
+        onClick={() => {
+          setSelectedBrand(b.name);
+          setPageNo(0);
+        }}
+      >
+        {b.name}
+      </button>
+
+    ))}
+
+  </div>
+
+</div>
       </div>
 
       {/* PRODUCT CONTENT */}
