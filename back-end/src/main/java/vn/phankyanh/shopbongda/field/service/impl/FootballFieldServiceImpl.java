@@ -1,6 +1,7 @@
 package vn.phankyanh.shopbongda.field.service.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -18,6 +19,8 @@ import vn.phankyanh.shopbongda.field.dto.response.FootballFieldResponse;
 import vn.phankyanh.shopbongda.field.mapper.FootballFieldMapper;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
 import vn.phankyanh.shopbongda.field.service.FootballFieldService;
+import vn.phankyanh.shopbongda.maintenance.dto.response.MaintenanceScheduleResponse;
+import vn.phankyanh.shopbongda.maintenance.service.MaintenanceService;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class FootballFieldServiceImpl implements FootballFieldService {
     private final BookingRepository bookingRepository;
     private final FootballFieldRepository footballFieldRepository;
     private final FootballFieldMapper footballFieldMapper;
+    private final MaintenanceService maintenanceService;
 
     @Override
     public FootballFieldResponse createFootballField(FootballFieldRequest request) {
@@ -75,6 +79,22 @@ public class FootballFieldServiceImpl implements FootballFieldService {
                 .orElseThrow(() -> new RuntimeException("Field not found"));
 
         return footballFieldMapper.toResponse(field);
+    }
+
+    @Override
+    public FootballFieldResponse getFootballFieldByIdWithMaintenance(Long id) {
+        FootballField field = footballFieldRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Field not found"));
+
+        FootballFieldResponse response = footballFieldMapper.toResponse(field);
+
+        MaintenanceScheduleResponse maintenanceStatus = maintenanceService.getMaintenanceStatus(id, LocalDateTime.now());
+        response.setUnderMaintenance(maintenanceStatus.isUnderMaintenance());
+        response.setMaintenanceStartTime(maintenanceStatus.getMaintenanceStartTime());
+        response.setMaintenanceEndTime(maintenanceStatus.getMaintenanceEndTime());
+        response.setMaintenanceReason(maintenanceStatus.getMaintenanceReason());
+
+        return response;
     }
 
     @Override

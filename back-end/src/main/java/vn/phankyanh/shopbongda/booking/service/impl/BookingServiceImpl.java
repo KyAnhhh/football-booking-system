@@ -24,10 +24,10 @@ import vn.phankyanh.shopbongda.booking.mapper.BookingMapper;
 import vn.phankyanh.shopbongda.booking.projection.BookingTimeView;
 import vn.phankyanh.shopbongda.booking.repository.BookingRepository;
 import vn.phankyanh.shopbongda.booking.service.BookingService;
-import vn.phankyanh.shopbongda.field.domain.FieldStatus;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.dto.response.SlotResponse;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
+import vn.phankyanh.shopbongda.maintenance.service.MaintenanceService;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
@@ -44,6 +44,7 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final BookingMapper bookingMapper;
     private final EmailService emailService;
+    private final MaintenanceService maintenanceService;
 
     private static final int SLOT_DURATION = 90;
 
@@ -93,11 +94,15 @@ public class BookingServiceImpl implements BookingService {
                         .orElseThrow(() ->
                                 new RuntimeException("Field not found"));
 
-        if (field.getStatus() != FieldStatus.AVAILABLE) {
+        if (field.getStatus() != vn.phankyanh.shopbongda.field.domain.FieldStatus.AVAILABLE) {
 
             throw new RuntimeException(
                     "Field is not available"
             );
+        }
+
+        if (!maintenanceService.isFieldAvailable(field.getId(), request.getStartTime(), request.getEndTime())) {
+            throw new RuntimeException("Field is under maintenance during this time");
         }
 
         List<Booking> conflicts =
@@ -219,11 +224,13 @@ public class BookingServiceImpl implements BookingService {
                 boolean isPastSlot =
                         !slotStart.isAfter(now);
 
+                boolean isUnderMaintenance = !maintenanceService.isFieldAvailable(fieldId, slotStart, slotEnd);
+
                 result.add(
                         SlotResponse.builder()
                                 .startTime(slotStart.toLocalTime())
                                 .endTime(slotEnd.toLocalTime())
-                                .available(!isBooked && !isPastSlot)
+                                .available(!isBooked && !isPastSlot && !isUnderMaintenance)
                                 .build()
                 );
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   getFields,
   createField,
@@ -141,7 +142,6 @@ export default function FootballFieldPage() {
           >
             <option value="">All Status</option>
             <option value="AVAILABLE">Available</option>
-            <option value="MAINTENANCE">Maintenance</option>
             <option value="UNAVAILABLE">Unavailability</option>
           </Form.Select>
 
@@ -156,6 +156,11 @@ export default function FootballFieldPage() {
           </Form.Select>
 
           <Button className="add-field" onClick={() => handleShow()}>+ Add Field</Button>
+          <Link to="/admin/maintenance" style={{ textDecoration: "none" }}>
+            <Button className="add-field" variant="info" style={{ marginLeft: "10px" }}>
+              Quản lý bảo trì
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -196,7 +201,6 @@ export default function FootballFieldPage() {
                     }
                   >
                     <option value="AVAILABLE">Available</option>
-                    <option value="MAINTENANCE">Maintenance</option>
                     <option value="UNAVAILABLE">Unavailability</option>
                   </Form.Select>
                 </td>
@@ -313,7 +317,7 @@ export default function FootballFieldPage() {
               >
                 <option value="">Select</option>
                 <option value="AVAILABLE">Available</option>
-                <option value="MAINTENANCE">Maintenance</option>
+                <option value="UNAVAILABLE">Unavailability</option>
               </Form.Select>
             </Form.Group>
 

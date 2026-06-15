@@ -1,6 +1,7 @@
 package vn.phankyanh.shopbongda.field.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -18,4 +19,9 @@ public class FootballFieldResponse {
     private String status;
     private String address;
     private String description;
+
+    private boolean isUnderMaintenance;
+    private LocalDateTime maintenanceStartTime;
+    private LocalDateTime maintenanceEndTime;
+    private String maintenanceReason;
 }

@@ -11,6 +11,7 @@ import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.dto.request.FieldStatusUpdateRequest;
 import vn.phankyanh.shopbongda.field.dto.request.FootballFieldRequest;
 import vn.phankyanh.shopbongda.field.dto.response.FootballFieldResponse;
+import vn.phankyanh.shopbongda.maintenance.dto.response.MaintenanceScheduleResponse;
 
 public interface FootballFieldService {
 
@@ -26,6 +27,8 @@ public interface FootballFieldService {
     );
 
     FootballFieldResponse getFootballFieldById(Long id);
+
+    FootballFieldResponse getFootballFieldByIdWithMaintenance(Long id);
 
     List<FootballFieldResponse> getFootballFieldsByStatus(FieldStatus status);
 

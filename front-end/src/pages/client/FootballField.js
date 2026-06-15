@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getFields } from "../../services/fieldService";
+import { getFields, getMaintenanceStatus } from "../../services/fieldService";
 import { useNavigate } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
 import "../../assets/styles/FootballField.css";
@@ -7,6 +7,7 @@ import "../../assets/styles/FootballField.css";
 export default function FootballField() {
 
   const [fields, setFields] = useState([]);
+  const [maintenanceMap, setMaintenanceMap] = useState({});
 
   const [keyword, setKeyword] = useState("");
 
@@ -57,6 +58,28 @@ export default function FootballField() {
       console.log("DATA:", data);
 
       setFields(data.content || []);
+
+      // Load maintenance status for each field
+      if (data.content && data.content.length > 0) {
+        const maintenancePromises = data.content.map(async (field) => {
+          try {
+            const maintenanceStatus = await getMaintenanceStatus(field.id);
+            // Fix: Trích xuất đúng object data bên trong response nếu API trả về bọc qua một lớp data vỏ
+            const maintenanceData = maintenanceStatus.data ? maintenanceStatus.data : maintenanceStatus;
+            return { fieldId: field.id, ...maintenanceData };
+          } catch (error) {
+            console.error(`Failed to load maintenance for field ${field.id}:`, error);
+            return { fieldId: field.id, underMaintenance: false };
+          }
+        });
+
+        const maintenanceResults = await Promise.all(maintenancePromises);
+        const newMaintenanceMap = {};
+        maintenanceResults.forEach((result) => {
+          newMaintenanceMap[result.fieldId] = result;
+        });
+        setMaintenanceMap(newMaintenanceMap);
+      }
 
     } catch (error) {
       console.error(error);
@@ -213,34 +236,70 @@ export default function FootballField() {
 
           {fields.length > 0 ? (
 
-            fields.map((f) => (
+            fields.map((f) => {
+              // Use maintenance info from API response if available, otherwise from maintenanceMap
+              const maintenanceFromApi = f.underMaintenance ? f : null;
+              const maintenanceFromMap = maintenanceMap[f.id];
+              const maintenance = maintenanceFromApi || maintenanceFromMap;
+              // Fix: Thay đổi từ .isUnderMaintenance sang .underMaintenance theo đúng cấu trúc JSON trả về
+              const isUnderMaintenance = maintenance?.underMaintenance || false;
+              const maintenanceStartTime = maintenance?.maintenanceStartTime;
+              const maintenanceEndTime = maintenance?.maintenanceEndTime;
+              const maintenanceReason = maintenance?.maintenanceReason;
 
-              <div key={f.id} className="field-card">
+              return (
+                <div key={f.id} className={`field-card ${isUnderMaintenance ? 'under-maintenance' : ''}`}>
+                  {isUnderMaintenance && (
+                    <div className="maintenance-badge">
+                      <span className="badge-dot" /> Đang bảo trì
+                    </div>
+                  )}
 
-                <h3>{f.name}</h3>
+                  <h3>{f.name}</h3>
 
-                <img
-                  src={f.imageUrl}
-                  alt={f.name}
-                />
+                  <img
+                    src={f.imageUrl}
+                    alt={f.name}
+                  />
 
-                <p>{f.address}</p>
+                  <p>{f.address}</p>
 
-                <p className="field-price">
-                  Giá: {f.pricePerHour} VND/h
-                </p>
+                  <p className="field-price">
+                    Giá: {f.pricePerHour} VND/h
+                  </p>
 
-                <Button
-                  className="btn-custom"
-                  onClick={() =>
-                    navigate(`/football-fields/${f.id}/detail`)
-                  }
-                >
-                  Xem chi tiết
-                </Button>
+                  <Button
+                    className="btn-custom"
+                    disabled={isUnderMaintenance}
+                    onClick={() =>
+                      !isUnderMaintenance && navigate(`/football-fields/${f.id}/detail`)
+                    }
+                    title={isUnderMaintenance ? `Đang bảo trì từ ${new Date(maintenanceStartTime).toLocaleString('vi-VN')} đến ${new Date(maintenanceEndTime).toLocaleString('vi-VN')}. Lý do: ${maintenanceReason}` : ""}
+                    aria-disabled={isUnderMaintenance}
+                  >
+                    {isUnderMaintenance ? "Đang bảo trì" : "Xem chi tiết"}
+                  </Button>
 
-              </div>
-            ))
+                  {isUnderMaintenance && maintenanceStartTime && maintenanceEndTime && (
+                    <div className="maintenance-info">
+                      <span className="info-icon">⚠️</span>
+                      <span>Bảo trì từ: {new Date(maintenanceStartTime).toLocaleString('vi-VN')} đến {new Date(maintenanceEndTime).toLocaleString('vi-VN')}</span>
+                      {maintenanceReason && (
+                        <span className="info-reason">
+                          <br />Lý do: {maintenanceReason}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {!isUnderMaintenance && (
+                    <div className="status-active">
+                      <span className="status-dot" /> Đang hoạt động
+                    </div>
+                  )}
+                </div>
+              );
+            })
 
           ) : (
 

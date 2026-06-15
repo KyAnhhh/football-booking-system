@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getFieldById,
-  getAvailableSlots
+  getAvailableSlots,
 } from "../../services/fieldService";
 import {
   getFieldReviews
@@ -24,15 +24,13 @@ export default function FootballFieldDetail() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
-
+  const [maintenanceInfo, setMaintenanceInfo] = useState(null);
 
   // load available slots
   const loadSlots = async (selectedDate) => {
     try {
       setLoading(true);
-
       const data = await getAvailableSlots(id, selectedDate);
-
       setSlots(data || []);
       setSelectedSlot(null);
     } catch (error) {
@@ -57,6 +55,16 @@ export default function FootballFieldDetail() {
       try {
         const data = await getFieldById(id);
         setField(data);
+        
+        // Use maintenance info from field response (already included in getFieldById)
+        if (data) {
+          setMaintenanceInfo({
+            isUnderMaintenance: data.isUnderMaintenance || false,
+            maintenanceStartTime: data.maintenanceStartTime,
+            maintenanceEndTime: data.maintenanceEndTime,
+            maintenanceReason: data.maintenanceReason
+          });
+        }
       } catch (error) {
         console.error("Load field error:", error);
       }
@@ -71,7 +79,6 @@ export default function FootballFieldDetail() {
     if (!selectedSlot || !date) return;
     setBookingLoading(true);
     try {
-
       const token = sessionStorage.getItem("accessToken");
       if (!token) {
         swal("Vui lòng đăng nhập để đặt sân.", "", "warning");
@@ -80,11 +87,7 @@ export default function FootballFieldDetail() {
       }
 
       if (!paymentMethod) {
-        swal(
-          "Vui lòng chọn phương thức thanh toán",
-          "",
-          "warning"
-        );
+        swal("Vui lòng chọn phương thức thanh toán", "", "warning");
         return;
       }
 
@@ -112,7 +115,6 @@ export default function FootballFieldDetail() {
             "Vui lòng thanh toán tại sân.",
             "success"
           );
-
           navigate("/my-bookings");
           break;
 
@@ -121,7 +123,6 @@ export default function FootballFieldDetail() {
       }
     } catch (error) {
       console.error("Booking error:", error);
-
       swal("Đặt sân thất bại!", error?.response?.data?.message || "Vui lòng thử lại sau.", "error");
     } finally {
       setBookingLoading(false);
@@ -132,32 +133,42 @@ export default function FootballFieldDetail() {
     <div className="detail-page">
       <div className="detail-container">
 
+        {/* Maintenance Banner */}
+        {maintenanceInfo?.isUnderMaintenance && (
+          <div className="maintenance-banner">
+            <h3>
+              <span className="warning-icon">⚠️</span>
+              Sân đang bảo trì
+            </h3>
+            <p>
+              <strong>Từ:</strong>{' '}
+              {new Date(maintenanceInfo.maintenanceStartTime).toLocaleString('vi-VN')}
+              {' '}<strong>đến:</strong>{' '}
+              {new Date(maintenanceInfo.maintenanceEndTime).toLocaleString('vi-VN')}
+            </p>
+            {maintenanceInfo.maintenanceReason && (
+              <p>
+                <strong>Lý do:</strong> {maintenanceInfo.maintenanceReason}
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="detail-layout">
 
           {/* LEFT */}
           <div className="left-section">
-
             <div className="detail-info">
               <h2>{field?.name}</h2>
-
-              <p className="address">
-                📍 {field?.address}
-              </p>
-
+              <p className="address">📍 {field?.address}</p>
               <img
                 src={field?.imageUrl}
                 alt={field?.name}
                 className="detail-image"
               />
-
               <p className="price">
-                Giá:
-                {" "}
-                {Number(field?.pricePerHour)
-                  .toLocaleString("vi-VN")}
-                ₫ / giờ
+                Giá: {Number(field?.pricePerHour).toLocaleString("vi-VN")} ₫ / giờ
               </p>
-
               <p className="description">
                 Chú ý: {field?.description}
               </p>
@@ -170,16 +181,13 @@ export default function FootballFieldDetail() {
             {/* DATE */}
             <div className="booking-section">
               <h3>Chọn ngày</h3>
-
               <Form.Control
                 type="date"
-                value={date}
                 min={new Date().toISOString().split("T")[0]}
+                value={date}
                 onChange={(e) => {
                   const selectedDate = e.target.value;
-
                   setDate(selectedDate);
-
                   if (selectedDate) {
                     loadSlots(selectedDate);
                   }
@@ -197,36 +205,46 @@ export default function FootballFieldDetail() {
                 <p>Không có khung giờ nào có sẵn</p>
               ) : (
                 <div className="slot-grid">
-                  {slots.map((slot) => (
-                    <button
-                      key={`${slot.startTime}-${slot.endTime}`}
-                      disabled={!slot.available}
-                      className={`slot ${
-                        selectedSlot?.startTime === slot.startTime &&
-                        selectedSlot?.endTime === slot.endTime
-                          ? "active"
-                          : ""
-                      }`}
-                      onClick={() => setSelectedSlot(slot)}
-                    >
-                      {slot.startTime} - {slot.endTime}
-                    </button>
-                  ))}
+                  {slots.map((slot) => {
+                    const isUnderMaintenance = maintenanceInfo?.isUnderMaintenance;
+                    const maintenanceStart = maintenanceInfo?.maintenanceStartTime;
+                    const maintenanceEnd = maintenanceInfo?.maintenanceEndTime;
+                    
+                    // Check if this specific slot falls within maintenance window
+                    const slotStart = new Date(`${date}T${slot.startTime}`);
+                    const slotEnd = new Date(`${date}T${slot.endTime}`);
+                    const isSlotUnderMaintenance = isUnderMaintenance && maintenanceStart && maintenanceEnd &&
+                      slotStart < new Date(maintenanceEnd) && slotEnd > new Date(maintenanceStart);
+
+                    return (
+                      <button
+                        key={`${slot.startTime}-${slot.endTime}`}
+                        disabled={!slot.available || isSlotUnderMaintenance}
+                        className={`slot ${
+                          selectedSlot?.startTime === slot.startTime &&
+                          selectedSlot?.endTime === slot.endTime
+                            ? "active"
+                            : ""
+                        } ${isSlotUnderMaintenance ? "maintenance" : ""}`}
+                        title={isSlotUnderMaintenance ? `Trong giờ bảo trì (${new Date(maintenanceStart).toLocaleString('vi-VN')} - ${new Date(maintenanceEnd).toLocaleString('vi-VN')})` : ""}
+                        onClick={() => !isSlotUnderMaintenance && setSelectedSlot(slot)}
+                      >
+                        {slot.startTime} - {slot.endTime}
+                        {isSlotUnderMaintenance && " ⚠️"}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
-            </div>
+            </div> {/* Gốc của slot-section đóng tại đây */}
 
-              {/* PAYMENT METHOD */}
+            {/* PAYMENT METHOD */}
             <div className="payment-method-section">
               <h3>Phương thức thanh toán</h3>
-
               <div className="payment-methods">
-
                 <button
                   type="button"
-                  className={`payment-method ${
-                    paymentMethod === "VNPAY" ? "active" : ""
-                  }`}
+                  className={`payment-method ${paymentMethod === "VNPAY" ? "active" : ""}`}
                   onClick={() => setPaymentMethod("VNPAY")}
                 >
                   VNPay
@@ -234,9 +252,7 @@ export default function FootballFieldDetail() {
 
                 <button
                   type="button"
-                  className={`payment-method ${
-                    paymentMethod === "VIETQR" ? "active" : ""
-                  }`}
+                  className={`payment-method ${paymentMethod === "VIETQR" ? "active" : ""}`}
                   onClick={() => setPaymentMethod("VIETQR")}
                 >
                   VietQR
@@ -244,61 +260,43 @@ export default function FootballFieldDetail() {
 
                 <button
                   type="button"
-                  className={`payment-method ${
-                    paymentMethod === "CASH" ? "active" : ""
-                  }`}
+                  className={`payment-method ${paymentMethod === "CASH" ? "active" : ""}`}
                   onClick={() => setPaymentMethod("CASH")}
                 >
                   Tiền mặt
                 </button>
-
               </div>
             </div>
 
             {/* BUTTON */}
             <Button
               className="book-btn"
-              disabled={!selectedSlot || !date || !paymentMethod}
+              disabled={!selectedSlot || !date || !paymentMethod || maintenanceInfo?.isUnderMaintenance}
               onClick={handleBooking}
+              title={maintenanceInfo?.isUnderMaintenance ? "Không thể đặt sân trong thời gian bảo trì" : ""}
             >
-                {bookingLoading ? "Đang xử lý..." : "Đặt sân"}
+              {bookingLoading ? "Đang xử lý..." : maintenanceInfo?.isUnderMaintenance ? "Đang bảo trì" : "Đặt sân"}
             </Button>
 
-          </div>
+          </div> {/* Đóng right-section */}
+        </div> {/* Đóng detail-layout */}
+      </div> {/* Đóng detail-container */}
 
-        </div>
-      </div>
       {/* REVIEWS */}
       <div className="reviews-section">
-        <h3>
-          Reviews ({reviews.length})
-        </h3>
+        <h3>Reviews ({reviews.length})</h3>
         {reviews.length === 0 ? (
-          <p className="no-review">
-            Chưa có đánh giá nào
-          </p>
+          <p className="no-review">Chưa có đánh giá nào</p>
         ) : (
-
           reviews.map((review) => (
-            <div
-              key={review.id}
-              className="review-card"
-            >
+            <div key={review.id} className="review-card">
               <div className="review-top">
-
-                <strong>
-                  {review.user?.username}
-                </strong>
-                <span className="review-rating">
-                  {"⭐".repeat(review.rating)}
-                </span>
+                <strong>{review.user?.username}</strong>
+                <span className="review-rating">{"⭐".repeat(review.rating)}</span>
               </div>
-              <p className="review-comment">
-                {review.comment}
-              </p>
+              <p className="review-comment">{review.comment}</p>
               <small className="review-date">
-                {new Date(review.createdAt)
-                  .toLocaleDateString("vi-VN")}
+                {new Date(review.createdAt).toLocaleDateString("vi-VN")}
               </small>
             </div>
           ))

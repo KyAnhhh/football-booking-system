@@ -1,7 +1,6 @@
 package vn.phankyanh.shopbongda.field.domain;
 
-public enum  FieldStatus {
+public enum FieldStatus {
     AVAILABLE,
-    MAINTENANCE,
     UNAVAILABLE
 }

@@ -11,7 +11,8 @@ import {
   BsRulers,
   BsHouseDoor,
   BsPersonCircle,
-  BsBoxArrowRight
+  BsBoxArrowRight,
+  BsTools
 } from "react-icons/bs";
 
 import "../assets/styles/AdminLayout.css";
@@ -111,6 +112,13 @@ export default function AdminLayout() {
               <NavLink to="/admin/football-fields">
                 <BsReceipt />
                 <span>Football Fields</span>
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink to="/admin/maintenance">
+                <BsTools />
+                <span>Maintenance</span>
               </NavLink>
             </li>
 

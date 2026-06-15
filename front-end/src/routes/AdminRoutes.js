@@ -10,6 +10,7 @@ import SizePage from "../pages/admin/SizePage";
 import PaymentPage from "../pages/admin/PaymentPage";
 import FootballFieldPage from "../pages/admin/FootballFieldPage";
 import BookingPage from "../pages/admin/BookingPage";
+import MaintenanceManagementPage from "../pages/admin/MaintenanceManagementPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
@@ -33,6 +34,7 @@ const AdminRoutes = (
     <Route path="payments" element={<PaymentPage />} />
     <Route path="football-fields" element={<FootballFieldPage />} />
     <Route path="bookings" element={<BookingPage />} />
+    <Route path="maintenance" element={<MaintenanceManagementPage />} />
   </Route>
 );
 
