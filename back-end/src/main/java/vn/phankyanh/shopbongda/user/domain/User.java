@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
 import vn.phankyanh.shopbongda.order.domain.Order;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.*;
+import vn.phankyanh.shopbongda.membership.domain.MembershipTier;
 import vn.phankyanh.shopbongda.order.domain.Cart;
 
 @Entity
@@ -58,6 +58,12 @@ public class User implements UserDetails {
     @Column(nullable = false)
     
     private String status = "active";
+
+    private Integer loyaltyPoints;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "membership_tier_id")
+    private MembershipTier membershipTier;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

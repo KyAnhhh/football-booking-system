@@ -2,6 +2,7 @@ package vn.phankyanh.shopbongda.booking.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -22,5 +23,12 @@ public class BookingResponse {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private BigDecimal totalPrice;
+    private BigDecimal finalPrice;
+    private BigDecimal originalPrice;
+    private BigDecimal extraServicePrice;
+    private BigDecimal membershipDiscount;
+    private BigDecimal voucherDiscount;
+    private String voucherCode;
+    private List<BookingExtraServiceResponse> extraServices;
     private String status;
 }

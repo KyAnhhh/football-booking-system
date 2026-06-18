@@ -2,6 +2,7 @@ package vn.phankyanh.shopbongda.booking.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByUserId(Long userId);
 
     boolean existsByFieldId(Long fieldId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    SELECT b FROM Booking b
+    WHERE b.id = :bookingId
+    """)
+    Optional<Booking> findByIdForUpdate(
+            @Param("bookingId") Long bookingId
+    );
 
     @Query("""
     SELECT b FROM Booking b

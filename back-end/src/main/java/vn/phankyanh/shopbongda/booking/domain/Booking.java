@@ -2,7 +2,7 @@ package vn.phankyanh.shopbongda.booking.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.CascadeType;
@@ -17,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -26,6 +27,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import vn.phankyanh.shopbongda.extra.domain.BookingExtraService;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.review.domain.BookingReview;
@@ -68,6 +70,15 @@ public class Booking {
     @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
     private BookingReview bookingReview;
 
+    @OneToMany(
+        mappedBy = "booking",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    private List<BookingExtraService> extraServices;
+
+    private BigDecimal extraServicePrice;
+
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
@@ -76,6 +87,18 @@ public class Booking {
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
+
+    @Column(name = "original_price")
+    private BigDecimal originalPrice;
+
+    @Column(name = "membership_discount")
+    private BigDecimal membershipDiscount;
+
+    @Column(name = "voucher_discount")
+    private BigDecimal voucherDiscount;
+
+    @Column(name = "voucher_code")
+    private String voucherCode;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -96,7 +119,9 @@ public class Booking {
 
     @PreUpdate
     public void validateTime() {
-        if (startTime.isAfter(endTime)) {
+        if (startTime != null
+                && endTime != null
+                && !endTime.isAfter(startTime)) {
             throw new IllegalArgumentException("Start time must be before end time");
         }
     }

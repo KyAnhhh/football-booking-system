@@ -1,8 +1,6 @@
 package vn.phankyanh.shopbongda.booking.service.impl;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,6 +22,11 @@ import vn.phankyanh.shopbongda.booking.mapper.BookingMapper;
 import vn.phankyanh.shopbongda.booking.projection.BookingTimeView;
 import vn.phankyanh.shopbongda.booking.repository.BookingRepository;
 import vn.phankyanh.shopbongda.booking.service.BookingService;
+import vn.phankyanh.shopbongda.extra.domain.BookingExtraService;
+import vn.phankyanh.shopbongda.extra.domain.ExtraService;
+import vn.phankyanh.shopbongda.extra.dto.request.BookingExtraServiceRequest;
+import vn.phankyanh.shopbongda.extra.repository.ExtraServiceRepository;
+import vn.phankyanh.shopbongda.extra.repository.BookingExtraServiceRepository;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.dto.response.SlotResponse;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
@@ -34,6 +37,10 @@ import vn.phankyanh.shopbongda.payment.domain.PaymentType;
 import vn.phankyanh.shopbongda.shared.service.email.EmailService;
 import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
+import vn.phankyanh.shopbongda.pricing.service.PricingService;
+import vn.phankyanh.shopbongda.membership.service.MembershipService;
+import vn.phankyanh.shopbongda.voucher.service.VoucherApplicationResult;
+import vn.phankyanh.shopbongda.voucher.service.VoucherService;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +52,12 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper bookingMapper;
     private final EmailService emailService;
     private final MaintenanceService maintenanceService;
+    private final PricingService pricingService;
+    private final MembershipService membershipService;
+    private final VoucherService voucherService;
+    private final ExtraServiceRepository extraServiceRepository;
+    private final BookingExtraServiceRepository bookingExtraServiceRepository;
+    
 
     private static final int SLOT_DURATION = 90;
 
@@ -54,100 +67,209 @@ public class BookingServiceImpl implements BookingService {
     private static final LocalTime CLOSE_TIME =
             LocalTime.of(23, 45);
 
-    @Override
-    @Transactional
-    public BookingResponse createBooking(
-            BookingRequest request,
-            Long userId
-    ) {
+        @Override
+        @Transactional
+        public BookingResponse createBooking(
+                BookingRequest request,
+                Long userId
+        ) {
 
-        if (request.getStartTime() == null ||
-                request.getEndTime() == null) {
+                if (request.getStartTime() == null ||
+                        request.getEndTime() == null) {
 
-            throw new IllegalArgumentException(
-                    "Time is required"
-            );
-        }
+                throw new IllegalArgumentException(
+                        "Time is required"
+                );
+                }
 
-        if (request.getStartTime()
-                .isAfter(request.getEndTime())) {
+                if (request.getFieldId() == null) {
 
-            throw new IllegalArgumentException(
-                    "Invalid time range"
-            );
-        }
+                throw new IllegalArgumentException(
+                        "Field is required"
+                );
+                }
 
-        if (request.getStartTime()
-                .isBefore(LocalDateTime.now())) {
+                if (!request.getEndTime()
+                        .isAfter(request.getStartTime())) {
 
-            throw new IllegalArgumentException(
-                    "Cannot book past time"
-            );
-        }
+                throw new IllegalArgumentException(
+                        "Invalid time range"
+                );
+                }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                if (request.getStartTime()
+                        .isBefore(LocalDateTime.now())) {
 
-        FootballField field =
-                fieldRepository.findById(request.getFieldId())
+                throw new IllegalArgumentException(
+                        "Cannot book past time"
+                );
+                }
+
+                User user = userRepository.findById(userId)
                         .orElseThrow(() ->
-                                new RuntimeException("Field not found"));
+                                new RuntimeException("User not found"));
 
-        if (field.getStatus() != vn.phankyanh.shopbongda.field.domain.FieldStatus.AVAILABLE) {
+                FootballField field =
+                        fieldRepository.findById(request.getFieldId())
+                                .orElseThrow(() ->
+                                        new RuntimeException("Field not found"));
 
-            throw new RuntimeException(
-                    "Field is not available"
-            );
-        }
+                if (field.getStatus() != vn.phankyanh.shopbongda.field.domain.FieldStatus.AVAILABLE) {
 
-        if (!maintenanceService.isFieldAvailable(field.getId(), request.getStartTime(), request.getEndTime())) {
-            throw new RuntimeException("Field is under maintenance during this time");
-        }
+                throw new RuntimeException(
+                        "Field is not available"
+                );
+                }
 
-        List<Booking> conflicts =
-                bookingRepository.findConflictsForUpdate(
-                        field.getId(),
-                        request.getStartTime(),
-                        request.getEndTime()
+                if (!maintenanceService.isFieldAvailable(field.getId(), request.getStartTime(), request.getEndTime())) {
+                throw new RuntimeException("Field is under maintenance during this time");
+                }
+
+                List<Booking> conflicts =
+                        bookingRepository.findConflictsForUpdate(
+                                field.getId(),
+                                request.getStartTime(),
+                                request.getEndTime()
+                        );
+
+                if (!conflicts.isEmpty()) {
+
+                throw new IllegalStateException(
+                        "Time slot already booked"
+                );
+                }
+
+                BigDecimal fieldPrice =
+                        pricingService.calculatePrice(
+                                field.getId(),
+                                request.getStartTime(),
+                                request.getEndTime()
+                        );
+
+                BigDecimal extraServicePrice =
+                        calculateExtraServicePrice(
+                                request.getServices()
+                        );
+
+                BigDecimal originalPrice =
+                        fieldPrice.add(extraServicePrice);
+
+                BigDecimal priceAfterMembership =
+                        membershipService.applyMembershipDiscount(
+                                user.getId(),
+                                originalPrice
+                        );
+
+                BigDecimal membershipDiscount =
+                        calculateDiscountAmount(
+                                originalPrice,
+                                priceAfterMembership
+                        );
+
+                String voucherCode =
+                        normalizeVoucherCode(
+                                request.getVoucherCode()
+                        );
+
+                VoucherApplicationResult voucherApplication =
+                        null;
+
+                BigDecimal priceAfterVoucher =
+                        priceAfterMembership;
+
+                if (voucherCode != null) {
+                        voucherApplication =
+                                voucherService.consumeVoucher(
+                                        voucherCode,
+                                        priceAfterMembership
+                                );
+
+                        priceAfterVoucher =
+                                voucherApplication.getFinalAmount();
+                }
+
+                BigDecimal voucherDiscount =
+                        calculateDiscountAmount(
+                                priceAfterMembership,
+                                priceAfterVoucher
+                        );
+
+                BigDecimal totalPrice =
+                        priceAfterVoucher;
+
+                Booking booking = Booking.builder()
+                        .user(user)
+                        .field(field)
+                        .startTime(request.getStartTime())
+                        .endTime(request.getEndTime())
+                        .contactPhone(request.getContactPhone())
+                        .note(request.getNote())
+                        .originalPrice(originalPrice)
+                        .extraServicePrice(extraServicePrice)
+                        .membershipDiscount(membershipDiscount)
+                        .voucherDiscount(voucherDiscount)
+                        .voucherCode(voucherCode)
+                        .totalPrice(totalPrice)
+                        .status(BookingStatus.PENDING)
+                        .build();
+
+                Payment payment = Payment.builder()
+                        .paymentType(PaymentType.BOOKING)
+                        .paymentStatus(PaymentStatus.UNPAID)
+                        .totalAmount(totalPrice)
+                        .paymentMethod(request.getPaymentMethod())
+                        .build();
+
+                booking.setPayment(payment);
+
+                Booking savedBooking =
+                        bookingRepository.save(booking);
+
+                voucherService.recordUsage(
+                        voucherApplication,
+                        user.getId(),
+                        savedBooking.getId()
                 );
 
-        if (!conflicts.isEmpty()) {
+                List<BookingExtraService> bookingExtraServices =
+                        saveBookingExtraServices(
+                        savedBooking,
+                        request.getServices()
+                );
 
-            throw new IllegalStateException(
-                    "Time slot already booked"
-            );
+                savedBooking.setExtraServices(
+                        bookingExtraServices
+                );
+
+                return bookingMapper.toResponse(savedBooking);
+                }
+
+        private BigDecimal calculateDiscountAmount(
+                BigDecimal priceBeforeDiscount,
+                BigDecimal priceAfterDiscount
+        ) {
+
+                BigDecimal discount =
+                        priceBeforeDiscount.subtract(
+                                priceAfterDiscount
+                        );
+
+                if (discount.compareTo(BigDecimal.ZERO) < 0) {
+                        return BigDecimal.ZERO;
+                }
+
+                return discount;
         }
 
-        long minutes = Duration.between(
-                request.getStartTime(),
-                request.getEndTime()
-        ).toMinutes();
+        private String normalizeVoucherCode(
+                String voucherCode
+        ) {
 
-        BigDecimal totalPrice =
-                calculatePrice(field, minutes);
+                if (voucherCode == null || voucherCode.isBlank()) {
+                        return null;
+                }
 
-        Booking booking = Booking.builder()
-                .user(user)
-                .field(field)
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .totalPrice(totalPrice)
-                .status(BookingStatus.PENDING)
-                .build();
-
-        Payment payment = Payment.builder()
-                .paymentType(PaymentType.BOOKING)
-                .paymentStatus(PaymentStatus.UNPAID)
-                .totalAmount(totalPrice)
-                .paymentMethod(request.getPaymentMethod())
-                .build();
-
-        booking.setPayment(payment);
-
-        bookingRepository.save(booking);
-
-        return bookingMapper.toResponse(booking);
+                return voucherCode.trim();
         }
 
         @Override
@@ -273,38 +395,11 @@ public class BookingServiceImpl implements BookingService {
         public void confirmBooking(Long bookingId) {
 
                 Booking booking =
-                        bookingRepository.findById(bookingId)
+                        bookingRepository.findByIdForUpdate(bookingId)
                                 .orElseThrow(() ->
                                         new RuntimeException("Booking not found"));
 
-                if (booking.getStatus() != BookingStatus.PENDING) {
-
-                throw new IllegalStateException(
-                        "Booking already processed"
-                );
-                }
-
-                Payment payment =
-                        booking.getPayment();
-
-                if (payment == null) {
-
-                throw new RuntimeException(
-                        "Payment not found"
-                );
-                }
-
-                payment.setPaymentStatus(
-                        PaymentStatus.PAID
-                );
-
-                payment.setPaymentDate(
-                        LocalDateTime.now()
-                );
-
-                booking.setStatus(
-                        BookingStatus.CONFIRMED
-                );
+                confirmPendingBooking(booking);
 
                 bookingRepository.save(booking);
         }
@@ -316,7 +411,7 @@ public class BookingServiceImpl implements BookingService {
         ) {
 
         Booking booking = bookingRepository
-                .findById(bookingId)
+                .findByIdForUpdate(bookingId)
                 .orElseThrow(() ->
                         new RuntimeException("Booking not found"));
 
@@ -385,7 +480,11 @@ public class BookingServiceImpl implements BookingService {
                 );
         }
 
-        booking.setStatus(newStatus);
+        if (newStatus == BookingStatus.CONFIRMED) {
+                confirmPendingBooking(booking);
+        } else {
+                booking.setStatus(newStatus);
+        }
 
         Booking updatedBooking =
                 bookingRepository.save(booking);
@@ -402,6 +501,45 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return bookingMapper.toResponse(updatedBooking);
+        }
+
+        private void confirmPendingBooking(
+                Booking booking
+        ) {
+
+                if (booking.getStatus() != BookingStatus.PENDING) {
+
+                throw new IllegalStateException(
+                        "Booking already processed"
+                );
+                }
+
+                Payment payment =
+                        booking.getPayment();
+
+                if (payment == null) {
+
+                throw new RuntimeException(
+                        "Payment not found"
+                );
+                }
+
+                payment.setPaymentStatus(
+                        PaymentStatus.PAID
+                );
+
+                payment.setPaymentDate(
+                        LocalDateTime.now()
+                );
+
+                membershipService.addPoints(
+                        booking.getUser().getId(),
+                        booking.getTotalPrice()
+                );
+
+                booking.setStatus(
+                        BookingStatus.CONFIRMED
+                );
         }
 
         @Override
@@ -470,17 +608,118 @@ public class BookingServiceImpl implements BookingService {
                 bookingRepository.delete(booking);
         }
 
-        private BigDecimal calculatePrice(
-                FootballField field,
-                long minutes
+
+        private BigDecimal calculateExtraServicePrice(List<BookingExtraServiceRequest> services) {
+
+                if (services == null || services.isEmpty()) {
+                        return BigDecimal.ZERO;
+                }
+
+                BigDecimal total = BigDecimal.ZERO;
+
+        for (BookingExtraServiceRequest item : services) {
+
+                validateExtraServiceRequest(item);
+
+                ExtraService service =
+                        extraServiceRepository
+                                .findById(item.getServiceId())
+                                        .orElseThrow(() ->
+                                                new RuntimeException(
+                                                        "Extra service not found"));
+
+                        if (!Boolean.TRUE.equals(
+                                service.getIsActive())) {
+
+                        throw new RuntimeException(
+                                "Extra service inactive");
+                        }
+
+                        BigDecimal itemPrice =
+                                service.getPrice()
+                                        .multiply(
+                                                BigDecimal.valueOf(
+                                                        item.getQuantity()));
+
+                        total = total.add(itemPrice);
+                }
+
+                return total;
+        }
+
+        private List<BookingExtraService> saveBookingExtraServices(
+                Booking booking,
+                List<BookingExtraServiceRequest> services
         ) {
 
-                return field.getPricePerHour()
-                        .multiply(BigDecimal.valueOf(minutes))
-                        .divide(
-                                BigDecimal.valueOf(60),
-                                2,
-                                RoundingMode.HALF_UP
+        if (services == null || services.isEmpty()) {
+                return List.of();
+        }
+
+        List<BookingExtraService> savedServices =
+                new ArrayList<>();
+
+        for (BookingExtraServiceRequest item : services) {
+
+                validateExtraServiceRequest(item);
+
+                ExtraService service =
+                        extraServiceRepository.findById(
+                                item.getServiceId()
+                        ).orElseThrow(
+                                () -> new RuntimeException(
+                                        "Extra service not found"
+                                )
                         );
+
+                BookingExtraService bookingService =
+                        BookingExtraService.builder()
+                                .booking(booking)
+                                .extraService(service)
+                                .quantity(item.getQuantity())
+                                .unitPrice(service.getPrice())
+                                .totalPrice(
+                                        service.getPrice().multiply(
+                                                BigDecimal.valueOf(
+                                                        item.getQuantity()
+                                                )
+                                        )
+                                )
+                                .build();
+
+                BookingExtraService savedService =
+                        bookingExtraServiceRepository.save(
+                        bookingService
+                );
+
+                savedServices.add(savedService);
+        }
+
+        return savedServices;
+        }
+
+        private void validateExtraServiceRequest(
+                BookingExtraServiceRequest item
+        ) {
+
+        if (item == null) {
+                throw new IllegalArgumentException(
+                        "Extra service is required"
+                );
+        }
+
+        if (item.getServiceId() == null) {
+                throw new IllegalArgumentException(
+                        "Extra service id is required"
+                );
+        }
+
+        if (item.getQuantity() == null
+                || item.getQuantity() <= 0) {
+
+                throw new IllegalArgumentException(
+                        "Extra service quantity must be greater than 0"
+                );
+        }
         }
 }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.booking.dto.request.BookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.response.BookingResponse;
@@ -25,7 +26,7 @@ public class UserBookingController {
     private final BookingService bookingService;
     
     @PostMapping
-    public ApiResponse<BookingResponse> createBooking(@RequestBody BookingRequest request, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<BookingResponse> createBooking(@Valid @RequestBody BookingRequest request, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<BookingResponse> response = new ApiResponse<>();
         response.setData(bookingService.createBooking(request, userId));
