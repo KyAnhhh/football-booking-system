@@ -141,8 +141,12 @@ public class CartServiceImpl implements CartService {
                 .stream()
                 .filter(ProductImage::isPrimary)
                 .findFirst()
+                .or(() -> productVariant.getProduct()
+                        .getImages()
+                        .stream()
+                        .findFirst())
                 .map(ProductImage::getImageUrl)
-                .orElse(null);
+                .orElse("");
 
         CartItem item = CartItem.builder()
                 .cart(cart)

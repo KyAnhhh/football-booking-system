@@ -20,8 +20,8 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
     @Query("""
         SELECT m FROM Maintenance m
         WHERE m.fieldId = :fieldId
-        AND m.startTime <= :endTime
-        AND m.endTime >= :startTime
+        AND m.startTime < :endTime
+        AND m.endTime > :startTime
     """)
     List<Maintenance> findConflictingMaintenances(
             @Param("fieldId") Long fieldId,
@@ -33,7 +33,7 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
         SELECT m FROM Maintenance m
         WHERE m.fieldId = :fieldId
         AND m.startTime <= :checkTime
-        AND m.endTime >= :checkTime
+        AND m.endTime > :checkTime
     """)
     List<Maintenance> findActiveMaintenanceAt(
             @Param("fieldId") Long fieldId,

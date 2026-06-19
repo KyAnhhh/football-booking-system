@@ -28,6 +28,7 @@ public class Holiday {
     private String description;
 
     @Builder.Default
+    @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
     @Column(name = "created_at", updatable = false)
@@ -39,6 +40,10 @@ public class Holiday {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (this.isActive == null) {
+            this.isActive = true;
+        }
     }
 
     @PreUpdate

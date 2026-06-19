@@ -28,10 +28,11 @@ export default function FootballFieldPage() {
 
   const [form, setForm] = useState({
     name: "",
-    location: "",
+    address: "",
     pricePerHour: "",
     type: "",
-    status: ""
+    imageUrl: "",
+    description: ""
   });
 
   const loadFields = async () => {
@@ -64,20 +65,22 @@ export default function FootballFieldPage() {
     if (field) {
       setEditingField(field);
       setForm({
-        name: field.name,
-        location: field.location,
-        pricePerHour: field.pricePerHour,
-        type: field.type,
-        status: field.status
+        name: field.name || "",
+        address: field.address || "",
+        pricePerHour: field.pricePerHour || "",
+        type: field.type || "",
+        imageUrl: field.imageUrl || "",
+        description: field.description || ""
       });
     } else {
       setEditingField(null);
       setForm({
         name: "",
-        location: "",
+        address: "",
         pricePerHour: "",
         type: "",
-        status: ""
+        imageUrl: "",
+        description: ""
       });
     }
     setShow(true);
@@ -272,12 +275,13 @@ export default function FootballFieldPage() {
             </Form.Group>
 
             <Form.Group>
-              <Form.Label>Location</Form.Label>
+              <Form.Label>Address</Form.Label>
               <Form.Control
-                value={form.location}
+                value={form.address}
                 onChange={(e) =>
-                  setForm({ ...form, location: e.target.value })
+                  setForm({ ...form, address: e.target.value })
                 }
+                required
               />
             </Form.Group>
 
@@ -285,10 +289,12 @@ export default function FootballFieldPage() {
               <Form.Label>Price Per Hour</Form.Label>
               <Form.Control
                 type="number"
+                min="0"
                 value={form.pricePerHour}
                 onChange={(e) =>
                   setForm({ ...form, pricePerHour: e.target.value })
                 }
+                required
               />
             </Form.Group>
 
@@ -301,24 +307,32 @@ export default function FootballFieldPage() {
                 }
               >
                 <option value="">Select</option>
-                <option value="5">5 vs 5</option>
-                <option value="7">7 vs 7</option>
-                <option value="11">11 vs 11</option>
+                <option value="FIVE_A_SIDE">5 vs 5</option>
+                <option value="SEVEN_A_SIDE">7 vs 7</option>
+                <option value="ELEVEN_A_SIDE">11 vs 11</option>
               </Form.Select>
             </Form.Group>
 
             <Form.Group>
-              <Form.Label>Status</Form.Label>
-              <Form.Select
-                value={form.status}
+              <Form.Label>Image URL</Form.Label>
+              <Form.Control
+                value={form.imageUrl}
                 onChange={(e) =>
-                  setForm({ ...form, status: e.target.value })
+                  setForm({ ...form, imageUrl: e.target.value })
                 }
-              >
-                <option value="">Select</option>
-                <option value="AVAILABLE">Available</option>
-                <option value="UNAVAILABLE">Unavailability</option>
-              </Form.Select>
+              />
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+              />
             </Form.Group>
 
             <Button type="submit" variant="success" className="mt-3">

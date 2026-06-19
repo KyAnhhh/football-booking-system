@@ -1,172 +1,272 @@
-.payment-football-field-page {
+.booking-payment-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #eef2ff, #f8fafc);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-}
-
-.payment-container {
-  width: 100%;
-  max-width: 460px;
-}
-
-.payment-title {
-  text-align: center;
-  font-size: 34px;
-  font-weight: 800;
-  color: #111827;
-  margin-bottom: 28px;
-}
-
-/* CARD */
-.payment-box {
-  background: white;
-  border-radius: 28px;
-  padding: 32px;
-  box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.08),
-    0 2px 10px rgba(0, 0, 0, 0.04);
-}
-
-/* FIELD NAME */
-.field-name {
-  font-size: 28px;
-  font-weight: 800;
-  color: #1e293b;
-  margin-bottom: 18px;
-  text-align: center;
-}
-
-/* INFO */
-.payment-info {
-  background: #f8fafc;
-  border-radius: 18px;
-  padding: 18px;
-  margin-bottom: 25px;
-}
-
-.payment-info p {
-  margin: 10px 0;
-  color: #475569;
-  font-size: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.payment-info span {
-  font-weight: 700;
+  background:
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%),
+    radial-gradient(circle at 12% 8%, rgba(22, 163, 74, 0.12), transparent 30%);
   color: #0f172a;
+  padding: 30px clamp(14px, 4vw, 56px) 56px;
 }
 
-/* PRICE */
-.payment-price-box {
-  margin-top: 20px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  padding: 18px;
-  border-radius: 18px;
-  text-align: center;
-  color: white;
+.booking-payment-shell {
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
-.price-label {
-  font-size: 14px;
-  opacity: 0.9;
-  margin-bottom: 6px;
+.booking-payment-hero {
+  min-height: 190px;
+  border-radius: 28px;
+  padding: clamp(24px, 4vw, 42px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(22, 101, 52, 0.72)),
+    url("https://images.unsplash.com/photo-1556056504-5c7696c4c28d?auto=format&fit=crop&w=1600&q=80")
+      center/cover;
+  color: #fff;
+  margin-bottom: 24px;
 }
 
-.payment-football-price {
-  font-size: 30px;
+.booking-payment-hero p {
+  margin: 0 0 8px;
+  color: #bbf7d0;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.booking-payment-hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 50px);
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.booking-payment-hero span {
+  max-width: 620px;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.7;
+}
+
+.booking-payment-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.booking-payment-card,
+.booking-payment-qr-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 22px 52px rgba(15, 23, 42, 0.08);
+  padding: clamp(20px, 3vw, 28px);
+}
+
+.booking-payment-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.booking-payment-card-header span {
+  color: #64748b;
+  font-size: 13px;
   font-weight: 800;
 }
 
-/* QR */
-.qr-box {
-  margin: 28px 0;
-  display: flex;
-  justify-content: center;
+.booking-payment-card-header h2,
+.booking-payment-qr-title h2 {
+  margin: 4px 0 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 950;
 }
 
-.qr-box img {
-  width: 220px;
-  height: 220px;
-  border-radius: 18px;
-  padding: 14px;
-  background: white;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-}
-
-/* STATUS */
-.status {
-  margin: 10px auto 25px;
+.booking-payment-status {
   width: fit-content;
-  padding: 10px 18px;
+  margin: 0;
   border-radius: 999px;
-  font-weight: 700;
-  font-size: 14px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
-/* STATUS COLORS */
-.status.pending {
-  background: #fff7ed;
+.booking-payment-status.pending {
+  background: #ffedd5;
   color: #c2410c;
 }
 
-.status.confirmed {
+.booking-payment-status.confirmed {
   background: #dcfce7;
   color: #166534;
 }
 
-.status.cancelled {
+.booking-payment-status.cancelled,
+.booking-payment-status.expired {
   background: #fee2e2;
   color: #b91c1c;
 }
 
-/* BUTTON */
-.confirm-btn {
+.booking-payment-info {
+  display: grid;
+  gap: 12px;
+}
+
+.booking-payment-info > div {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.booking-payment-info svg {
+  grid-row: span 2;
+  color: #16a34a;
+}
+
+.booking-payment-info span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.booking-payment-info strong {
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.booking-payment-total {
+  margin-top: 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #0f172a, #14532d);
+  color: #fff;
+  padding: 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.booking-payment-total span {
+  color: rgba(255, 255, 255, 0.74);
+  font-weight: 800;
+}
+
+.booking-payment-total strong {
+  font-size: clamp(26px, 4vw, 34px);
+  line-height: 1;
+}
+
+.booking-payment-confirm {
   width: 100%;
+  min-height: 54px;
+  margin-top: 18px;
   border: none;
   border-radius: 16px;
-  padding: 16px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-
-  color: white;
-  font-size: 17px;
-  font-weight: 700;
+  background: #16a34a;
+  color: #fff;
+  font-weight: 950;
   cursor: pointer;
-  transition: 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 16px 30px rgba(22, 163, 74, 0.24);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.confirm-btn:hover {
+.booking-payment-confirm:hover {
   transform: translateY(-2px);
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
 }
 
-.confirm-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+.booking-payment-qr-card {
+  position: sticky;
+  top: 20px;
+  text-align: center;
 }
 
-/* RESPONSIVE */
-@media (max-width: 576px) {
+.booking-payment-qr-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  text-align: left;
+}
 
-  .payment-box {
-    padding: 24px;
+.booking-payment-qr-title svg {
+  color: #16a34a;
+}
+
+.booking-payment-qr-title p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.booking-payment-qr-card img {
+  width: min(260px, 100%);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  background: #fff;
+  padding: 14px;
+}
+
+.booking-payment-qr-loading,
+.booking-payment-state {
+  border: 1px dashed #cbd5e1;
+  border-radius: 20px;
+  padding: 42px 18px;
+  color: #64748b;
+  font-weight: 900;
+  text-align: center;
+}
+
+.booking-payment-state {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  border: none;
+  border-radius: 0;
+}
+
+@media (max-width: 900px) {
+  .booking-payment-grid {
+    grid-template-columns: 1fr;
   }
 
-  .field-name {
-    font-size: 24px;
+  .booking-payment-qr-card {
+    position: static;
+  }
+}
+
+@media (max-width: 620px) {
+  .booking-payment-page {
+    padding: 18px 12px 36px;
   }
 
-  .payment-football-price {
-    font-size: 26px;
+  .booking-payment-hero,
+  .booking-payment-card,
+  .booking-payment-qr-card {
+    border-radius: 20px;
   }
 
-  .qr-box img {
-    width: 180px;
-    height: 180px;
+  .booking-payment-card-header,
+  .booking-payment-total {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

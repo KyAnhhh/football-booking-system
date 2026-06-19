@@ -44,6 +44,9 @@ public class FieldPricingRuleServiceImpl
 
         rule.setField(field);
         rule.setIsActive(true);
+        if (rule.getSlotDuration() == null) {
+            rule.setSlotDuration(90);
+        }
 
         FieldPricingRule savedRule =
                 fieldPricingRuleRepository.save(rule);
@@ -52,11 +55,21 @@ public class FieldPricingRuleServiceImpl
     }
 
     @Override
+    public List<FieldPricingRuleResponse> getAll() {
+
+        return fieldPricingRuleRepository
+                .findAllActive()
+                .stream()
+                .map(fieldPricingRuleMapper::toResponse)
+                .toList();
+    }
+
+    @Override
     public List<FieldPricingRuleResponse> getByField(
             Long fieldId) {
 
         return fieldPricingRuleRepository
-                .findByFieldIdAndIsActiveTrue(fieldId)
+                .findActiveByFieldId(fieldId)
                 .stream()
                 .map(fieldPricingRuleMapper::toResponse)
                 .toList();
@@ -87,6 +100,9 @@ public class FieldPricingRuleServiceImpl
                                         "Football field not found"));
 
         rule.setField(field);
+        if (rule.getSlotDuration() == null) {
+            rule.setSlotDuration(90);
+        }
 
         FieldPricingRule updatedRule =
                 fieldPricingRuleRepository.save(rule);
@@ -133,11 +149,16 @@ public class FieldPricingRuleServiceImpl
                     "End time must be after start time");
         }
 
-        if (request.getPricePerHour() == null
-                || request.getPricePerHour()
+        if (request.getPricePerSlot() == null
+                || request.getPricePerSlot()
                         .compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(
-                    "Price per hour must be greater than 0");
+                    "Price per slot must be greater than 0");
+        }
+
+        if (request.getSlotDuration() != null && request.getSlotDuration() <= 0) {
+            throw new IllegalArgumentException(
+                    "Slot duration must be greater than 0");
         }
     }
 

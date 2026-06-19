@@ -41,4 +41,8 @@ public interface VoucherService {
             Long userId,
             Long bookingId
     );
+
+    void refundVoucherForBooking(
+            Long bookingId
+    );
 }

@@ -24,7 +24,9 @@ public class FieldPricingRuleResponse {
 
     private LocalTime endTime;
 
-    private BigDecimal pricePerHour;
+    private BigDecimal pricePerSlot;
+
+    private Integer slotDuration;
 
     private Boolean isActive;
 }

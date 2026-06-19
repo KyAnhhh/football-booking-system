@@ -110,7 +110,7 @@ public class BookingServiceImpl implements BookingService {
                                 new RuntimeException("User not found"));
 
                 FootballField field =
-                        fieldRepository.findById(request.getFieldId())
+                        fieldRepository.findByIdForUpdate(request.getFieldId())
                                 .orElseThrow(() ->
                                         new RuntimeException("Field not found"));
 
@@ -339,6 +339,7 @@ public class BookingServiceImpl implements BookingService {
                 boolean isBooked =
                         bookings.stream().anyMatch(b ->
                                 b.getStatus() != BookingStatus.CANCELLED &&
+                                b.getStatus() != BookingStatus.EXPIRED &&
                                 slotStart.isBefore(b.getEndTime()) &&
                                 slotEnd.isAfter(b.getStartTime())
                         );
@@ -348,11 +349,21 @@ public class BookingServiceImpl implements BookingService {
 
                 boolean isUnderMaintenance = !maintenanceService.isFieldAvailable(fieldId, slotStart, slotEnd);
 
+                BigDecimal slotPrice = BigDecimal.ZERO;
+                if (!isUnderMaintenance) {
+                    try {
+                        slotPrice = pricingService.calculateSlotPrice(fieldId, slotStart);
+                    } catch (Exception e) {
+                        slotPrice = BigDecimal.ZERO;
+                    }
+                }
+
                 result.add(
                         SlotResponse.builder()
                                 .startTime(slotStart.toLocalTime())
                                 .endTime(slotEnd.toLocalTime())
                                 .available(!isBooked && !isPastSlot && !isUnderMaintenance)
+                                .price(slotPrice)
                                 .build()
                 );
 
@@ -453,7 +464,8 @@ public class BookingServiceImpl implements BookingService {
                 // PENDING -> CONFIRMED
                 // PENDING -> CANCELLED
                 if (newStatus != BookingStatus.CONFIRMED
-                        && newStatus != BookingStatus.CANCELLED) {
+                        && newStatus != BookingStatus.CANCELLED
+                        && newStatus != BookingStatus.EXPIRED) {
 
                         throw new RuntimeException(
                                 "Invalid status transition from PENDING"
@@ -482,6 +494,12 @@ public class BookingServiceImpl implements BookingService {
 
         if (newStatus == BookingStatus.CONFIRMED) {
                 confirmPendingBooking(booking);
+        } else if (newStatus == BookingStatus.CANCELLED
+                || newStatus == BookingStatus.EXPIRED) {
+                closePendingBookingWithoutPayment(
+                        booking,
+                        newStatus
+                );
         } else {
                 booking.setStatus(newStatus);
         }
@@ -492,6 +510,7 @@ public class BookingServiceImpl implements BookingService {
         if(newStatus == BookingStatus.CONFIRMED
                 || newStatus == BookingStatus.CANCELLED
                 || newStatus == BookingStatus.COMPLETED
+                || newStatus == BookingStatus.EXPIRED
         ) {
                 emailService.sendEmailWhenBookingStatusChange(
                         updatedBooking.getUser().getEmail(),
@@ -542,14 +561,49 @@ public class BookingServiceImpl implements BookingService {
                 );
         }
 
+        private void closePendingBookingWithoutPayment(
+                Booking booking,
+                BookingStatus targetStatus
+        ) {
+
+                if (booking.getStatus() != BookingStatus.PENDING) {
+                        booking.setStatus(targetStatus);
+                        return;
+                }
+
+                Payment payment =
+                        booking.getPayment();
+
+                if (payment != null
+                        && payment.getPaymentStatus() == PaymentStatus.UNPAID) {
+
+                payment.setPaymentStatus(
+                        PaymentStatus.FAILED
+                );
+
+                payment.setPaymentDate(
+                        LocalDateTime.now()
+                );
+                }
+
+                voucherService.refundVoucherForBooking(
+                        booking.getId()
+                );
+
+                booking.setStatus(targetStatus);
+        }
+
         @Override
+        @Transactional
         public void cancelBooking(
                 Long bookingId,
                 Long userId
         ) {
 
                 Booking booking =
-                        bookingRepository.getReferenceById(bookingId);
+                        bookingRepository.findByIdForUpdate(bookingId)
+                                .orElseThrow(() ->
+                                        new RuntimeException("Booking not found"));
 
                 if (!booking.getUser().getId().equals(userId)) {
 
@@ -566,6 +620,13 @@ public class BookingServiceImpl implements BookingService {
                 );
                 }
 
+                if (booking.getStatus() != BookingStatus.PENDING) {
+
+                throw new IllegalStateException(
+                        "Only pending bookings can be cancelled by user"
+                );
+                }
+
                 if (booking.getStartTime()
                         .isBefore(LocalDateTime.now())) {
 
@@ -574,23 +635,8 @@ public class BookingServiceImpl implements BookingService {
                 );
                 }
 
-                Payment payment =
-                        booking.getPayment();
-
-                if (payment != null &&
-                        payment.getPaymentStatus()
-                                == PaymentStatus.UNPAID) {
-
-                payment.setPaymentStatus(
-                        PaymentStatus.FAILED
-                );
-
-                payment.setPaymentDate(
-                        LocalDateTime.now()
-                );
-                }
-
-                booking.setStatus(
+                closePendingBookingWithoutPayment(
+                        booking,
                         BookingStatus.CANCELLED
                 );
 

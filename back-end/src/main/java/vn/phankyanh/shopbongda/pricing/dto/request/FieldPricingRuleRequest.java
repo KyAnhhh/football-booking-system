@@ -1,6 +1,7 @@
 package vn.phankyanh.shopbongda.pricing.dto.request;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;
@@ -23,7 +24,10 @@ public class FieldPricingRuleRequest {
     @NotNull(message = "End time is required")
     private LocalTime endTime;
 
-    @NotNull(message = "Price per hour is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Price per hour must be greater than 0")
-    private BigDecimal pricePerHour;
+    @NotNull(message = "Price per slot is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Price per slot must be greater than 0")
+    private BigDecimal pricePerSlot;
+
+    @Min(value = 1, message = "Slot duration must be at least 1 minute")
+    private Integer slotDuration;
 }

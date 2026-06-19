@@ -125,6 +125,20 @@
   color: #991b1b;
 }
 
+.completed {
+  background:
+    rgba(59, 130, 246, 0.16);
+
+  color: #1d4ed8;
+}
+
+.expired {
+  background:
+    rgba(100, 116, 139, 0.18);
+
+  color: #334155;
+}
+
 /* ================= CONTENT ================= */
 .booking-content {
   padding: 24px;
@@ -174,6 +188,47 @@
   font-weight: 700;
 
   color: #2563eb;
+}
+
+.booking-breakdown {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.booking-breakdown div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 14px;
+  color: #475569;
+}
+
+.booking-breakdown-total {
+  margin-top: 6px;
+  border-top: 1px solid #e2e8f0;
+  color: #0f172a !important;
+  font-weight: 800;
+}
+
+.booking-extra-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.booking-extra-list span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 /* ================= BUTTONS ================= */
@@ -321,4 +376,10 @@
   border: none;
   padding: 10px 14px;
   border-radius: 10px;
+}
+
+.btn-cancel-disabled {
+  background: #cbd5e1;
+  color: #475569;
+  cursor: not-allowed !important;
 }

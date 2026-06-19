@@ -19,6 +19,15 @@ public class FieldPricingRuleController {
 
     private final FieldPricingRuleService fieldPricingRuleService;
 
+    @GetMapping
+    public ApiResponse<List<FieldPricingRuleResponse>> getAll() {
+
+        ApiResponse<List<FieldPricingRuleResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setData(fieldPricingRuleService.getAll());
+        apiResponse.setMessage("Get all field pricing rules successfully");
+        return apiResponse;
+    }
+
     @PostMapping
     public ApiResponse<FieldPricingRuleResponse> create(
             @Valid @RequestBody FieldPricingRuleRequest request) {

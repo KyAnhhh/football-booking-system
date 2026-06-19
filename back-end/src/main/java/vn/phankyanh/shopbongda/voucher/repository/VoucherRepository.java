@@ -18,6 +18,15 @@ public interface VoucherRepository
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
     SELECT v FROM Voucher v
+    WHERE v.id = :id
+    """)
+    Optional<Voucher> findByIdForUpdate(
+            @Param("id") Long id
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    SELECT v FROM Voucher v
     WHERE v.code = :code
     """)
     Optional<Voucher> findByCodeForUpdate(

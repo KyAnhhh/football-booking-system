@@ -154,7 +154,11 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     }
 
     private void validateTimeRange(LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime.isAfter(endTime)) {
+        if (startTime == null || endTime == null) {
+            throw new IllegalArgumentException("Start time and end time are required");
+        }
+
+        if (!endTime.isAfter(startTime)) {
             throw new IllegalArgumentException("Start time must be before end time");
         }
     }

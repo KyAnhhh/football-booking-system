@@ -56,10 +56,20 @@ public class VoucherUsage {
     @Column(name = "used_at", nullable = false)
     private LocalDateTime usedAt;
 
+    @Column(name = "is_refunded", nullable = false)
+    private Boolean isRefunded;
+
+    @Column(name = "refunded_at")
+    private LocalDateTime refundedAt;
+
     @PrePersist
     protected void onCreate() {
         if (this.usedAt == null) {
             this.usedAt = LocalDateTime.now();
+        }
+
+        if (this.isRefunded == null) {
+            this.isRefunded = false;
         }
     }
 }

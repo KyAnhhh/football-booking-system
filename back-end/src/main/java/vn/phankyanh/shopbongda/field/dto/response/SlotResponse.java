@@ -1,5 +1,6 @@
 package vn.phankyanh.shopbongda.field.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalTime;
 
 import lombok.AllArgsConstructor;
@@ -15,4 +16,5 @@ public class SlotResponse {
     private LocalTime startTime;
     private LocalTime endTime;
     private boolean available;
+    private BigDecimal price;
 }

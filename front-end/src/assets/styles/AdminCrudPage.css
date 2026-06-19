@@ -1,0 +1,101 @@
+.admin-crud-page {
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
+
+.admin-crud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.admin-crud-header h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.admin-crud-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-crud-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.admin-crud-table th {
+  background: #0d6efd;
+  color: #fff;
+  padding: 12px;
+  font-weight: 700;
+}
+
+.admin-crud-table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-crud-table tr:hover {
+  background: #eef2ff;
+}
+
+.admin-crud-row-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-crud-empty {
+  padding: 28px;
+  text-align: center;
+  background: #fff;
+  border-radius: 12px;
+  color: #64748b;
+}
+
+.admin-crud-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-crud-badge.active {
+  color: #065f46;
+  background: #d1fae5;
+}
+
+.admin-crud-badge.inactive {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+@media (max-width: 900px) {
+  .admin-crud-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-crud-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

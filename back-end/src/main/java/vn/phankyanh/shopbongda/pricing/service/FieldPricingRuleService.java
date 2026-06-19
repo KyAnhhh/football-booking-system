@@ -8,6 +8,8 @@ public interface FieldPricingRuleService {
     FieldPricingRuleResponse create(
             FieldPricingRuleRequest request);
 
+    List<FieldPricingRuleResponse> getAll();
+
     List<FieldPricingRuleResponse> getByField(
             Long fieldId);
 

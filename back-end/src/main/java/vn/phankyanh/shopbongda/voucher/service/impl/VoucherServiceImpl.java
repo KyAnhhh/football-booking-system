@@ -116,8 +116,47 @@ public class VoucherServiceImpl implements VoucherService {
                         .userId(userId)
                         .voucherCode(result.getVoucherCode())
                         .discountAmount(result.getDiscountAmount())
+                        .isRefunded(false)
                         .usedAt(LocalDateTime.now())
                         .build();
+
+        voucherUsageRepository.save(usage);
+    }
+
+    @Override
+    @Transactional
+    public void refundVoucherForBooking(
+            Long bookingId
+    ) {
+
+        if (bookingId == null) {
+            return;
+        }
+
+        VoucherUsage usage =
+                voucherUsageRepository.findByBookingIdForUpdate(bookingId)
+                        .orElse(null);
+
+        if (usage == null || Boolean.TRUE.equals(usage.getIsRefunded())) {
+            return;
+        }
+
+        Voucher voucher =
+                voucherRepository.findByIdForUpdate(usage.getVoucherId())
+                        .orElse(null);
+
+        if (voucher != null) {
+            Integer quantity =
+                    voucher.getQuantity() == null
+                            ? 0
+                            : voucher.getQuantity();
+
+            voucher.setQuantity(quantity + 1);
+            voucherRepository.save(voucher);
+        }
+
+        usage.setIsRefunded(true);
+        usage.setRefundedAt(LocalDateTime.now());
 
         voucherUsageRepository.save(usage);
     }

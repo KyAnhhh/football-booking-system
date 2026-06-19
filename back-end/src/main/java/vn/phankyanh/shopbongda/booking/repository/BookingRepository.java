@@ -65,6 +65,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     AND b.startTime < :endTime
     AND b.endTime > :startTime
     AND b.status <> 'CANCELLED'
+    AND b.status <> 'EXPIRED'
     """)
     List<Booking> findConflictsForUpdate(
             Long fieldId,

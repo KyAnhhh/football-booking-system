@@ -34,8 +34,11 @@ public class FieldPricingRule {
     @Column(nullable = false)
     private LocalTime endTime;
 
-    @Column(nullable = false)
-    private BigDecimal pricePerHour;
+    @Column(name = "price_per_slot", nullable = false)
+    private BigDecimal pricePerSlot;
+
+    @Column(name = "slot_duration", nullable = false)
+    private Integer slotDuration;
 
     @Column(nullable = false)
     private Boolean isActive;

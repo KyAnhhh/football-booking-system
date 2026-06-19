@@ -1,315 +1,280 @@
-import { useEffect, useState } from "react";
-import { getFields, getMaintenanceStatus } from "../../services/fieldService";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
+import { MapPin, Search, ShieldCheck, SlidersHorizontal, Wrench } from "lucide-react";
+import { getFields, getMaintenanceStatus } from "../../services/fieldService";
 import "../../assets/styles/FootballField.css";
 
-export default function FootballField() {
+const fieldTypes = [
+  { label: "Tat ca", value: "" },
+  { label: "San 5", value: "FIVE_A_SIDE" },
+  { label: "San 7", value: "SEVEN_A_SIDE" },
+  { label: "San 11", value: "ELEVEN_A_SIDE" },
+];
 
+const priceRanges = [
+  { label: "Tat ca", value: "" },
+  { label: "Duoi 200k", value: "UNDER_200" },
+  { label: "200k - 500k", value: "200_500" },
+  { label: "Tren 500k", value: "OVER_500" },
+];
+
+const formatMoney = (value) => `${Number(value || 0).toLocaleString("vi-VN")} VND`;
+
+export default function FootballField() {
+  const navigate = useNavigate();
   const [fields, setFields] = useState([]);
   const [maintenanceMap, setMaintenanceMap] = useState({});
-
   const [keyword, setKeyword] = useState("");
-
+  const [priceRange, setPriceRange] = useState("");
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     type: "",
     minPrice: "",
     maxPrice: "",
   });
 
-  const navigate = useNavigate();
+  const activeFilterCount = useMemo(() => {
+    return [keyword.trim(), filters.type, priceRange].filter(Boolean).length;
+  }, [keyword, filters.type, priceRange]);
 
-  // LOAD FIELDS
-  const loadFields = async (
-    customKeyword = keyword,
-    customFilters = filters
-  ) => {
-
+  const loadFields = async (customKeyword = keyword, customFilters = filters) => {
     try {
+      setLoading(true);
 
       const params = {
         page: 0,
-        size: 10,
+        size: 24,
       };
 
-      // KEYWORD
-      if (customKeyword?.trim()) {
-        params.keyword = customKeyword.trim();
-      }
-
-      // TYPE
-      if (customFilters.type) {
-        params.type = customFilters.type;
-      }
-
-      // PRICE
-      if (customFilters.minPrice) {
-        params.minPrice = customFilters.minPrice;
-      }
-
-      if (customFilters.maxPrice) {
-        params.maxPrice = customFilters.maxPrice;
-      }
-
-      console.log("PARAMS:", params);
+      if (customKeyword?.trim()) params.keyword = customKeyword.trim();
+      if (customFilters.type) params.type = customFilters.type;
+      if (customFilters.minPrice) params.minPrice = customFilters.minPrice;
+      if (customFilters.maxPrice) params.maxPrice = customFilters.maxPrice;
 
       const data = await getFields(params);
+      const content = data?.content || [];
+      setFields(content);
 
-      console.log("DATA:", data);
+      if (content.length === 0) {
+        setMaintenanceMap({});
+        return;
+      }
 
-      setFields(data.content || []);
-
-      // Load maintenance status for each field
-      if (data.content && data.content.length > 0) {
-        const maintenancePromises = data.content.map(async (field) => {
+      const maintenanceResults = await Promise.all(
+        content.map(async (field) => {
           try {
-            const maintenanceStatus = await getMaintenanceStatus(field.id);
-            // Fix: Trích xuất đúng object data bên trong response nếu API trả về bọc qua một lớp data vỏ
-            const maintenanceData = maintenanceStatus.data ? maintenanceStatus.data : maintenanceStatus;
+            const status = await getMaintenanceStatus(field.id);
+            const maintenanceData = status?.data || status || {};
             return { fieldId: field.id, ...maintenanceData };
           } catch (error) {
             console.error(`Failed to load maintenance for field ${field.id}:`, error);
             return { fieldId: field.id, underMaintenance: false };
           }
-        });
+        })
+      );
 
-        const maintenanceResults = await Promise.all(maintenancePromises);
-        const newMaintenanceMap = {};
-        maintenanceResults.forEach((result) => {
-          newMaintenanceMap[result.fieldId] = result;
-        });
-        setMaintenanceMap(newMaintenanceMap);
-      }
-
+      setMaintenanceMap(
+        maintenanceResults.reduce((map, item) => {
+          map[item.fieldId] = item;
+          return map;
+        }, {})
+      );
     } catch (error) {
       console.error(error);
+      setFields([]);
+      setMaintenanceMap({});
+    } finally {
+      setLoading(false);
     }
   };
 
-  // LOAD FIRST
   useEffect(() => {
-    loadFields();
-  }, []);
-
-  // AUTO SEARCH
-  useEffect(() => {
-
     const debounce = setTimeout(() => {
       loadFields(keyword, filters);
-    }, 400);
+    }, 350);
 
     return () => clearTimeout(debounce);
-
   }, [keyword, filters]);
 
-  // PRICE FILTER
   const handlePriceFilter = (value) => {
-
-    let newFilters = {
+    const nextFilters = {
       ...filters,
       minPrice: "",
       maxPrice: "",
     };
 
-    if (value === "UNDER_200") {
-      newFilters.maxPrice = 200000;
-    }
-
+    if (value === "UNDER_200") nextFilters.maxPrice = 200000;
     if (value === "200_500") {
-      newFilters.minPrice = 200000;
-      newFilters.maxPrice = 500000;
+      nextFilters.minPrice = 200000;
+      nextFilters.maxPrice = 500000;
     }
+    if (value === "OVER_500") nextFilters.minPrice = 500000;
 
-    if (value === "OVER_500") {
-      newFilters.minPrice = 500000;
-    }
-
-    setFilters(newFilters);
+    setPriceRange(value);
+    setFilters(nextFilters);
   };
 
-  // TYPE FILTER
   const handleTypeFilter = (value) => {
-
-    const newFilters = {
-      ...filters,
+    setFilters((current) => ({
+      ...current,
       type: value,
-    };
+    }));
+  };
 
-    setFilters(newFilters);
+  const resetFilters = () => {
+    setKeyword("");
+    setPriceRange("");
+    setFilters({
+      type: "",
+      minPrice: "",
+      maxPrice: "",
+    });
   };
 
   return (
-    <div className="field-page">
+    <div className="football-page">
+      <section className="football-hero">
+        <div>
+          <span className="football-eyebrow">Đặt sân nhanh</span>
+          <h1>Chọn sân bóng phù hợp cho trận đấu tiếp theo</h1>
+          <p>Lọc theo loại sân, mức giá và trạng thái bảo trì để đặt lịch nhanh hơn.</p>
+        </div>
+        <div className="football-hero-stat">
+          <strong>{fields.length}</strong>
+          <span>sân đang hiển thị</span>
+        </div>
+      </section>
 
-      <h2 className="title">Sân bóng</h2>
+      <div className="football-layout">
+        <aside className="football-filters">
+          <div className="football-filter-heading">
+            <SlidersHorizontal size={20} />
+            <h2>Bộ lọc</h2>
+          </div>
 
-      <div className="field-layout">
-
-        {/* SIDEBAR */}
-        <div className="field-sidebar">
-
-          <h4>Bộ lọc</h4>
-
-          {/* SEARCH */}
-          <Form.Group className="mb-4">
-
+          <Form.Group className="football-search">
             <Form.Label>Tìm sân</Form.Label>
-
-            <Form.Control
-              type="text"
-              placeholder="Nhập tên sân..."
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-
+            <div className="football-search-control">
+              <Search size={18} />
+              <Form.Control
+                type="text"
+                placeholder="Nhập tên sân..."
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+              />
+            </div>
           </Form.Group>
 
-          <h6>Loại sân</h6>
-          <Button
-            variant={filters.type === "" ? "primary" : "outline-dark"}
-            onClick={() => handleTypeFilter("")}
-          >
-            Tất cả
-          </Button>
-
-          <Button
-            variant={filters.type === "FIVE_A_SIDE" ? "primary" : "outline-dark"}
-            onClick={() => handleTypeFilter("FIVE_A_SIDE")}
-          >
-            Sân 5
-          </Button>
-
-          <Button
-            variant={filters.type === "SEVEN_A_SIDE" ? "primary" : "outline-dark"}
-            onClick={() => handleTypeFilter("SEVEN_A_SIDE")}
-          >
-            Sân 7
-          </Button>
-
-          <Button
-            variant={filters.type === "ELEVEN_A_SIDE" ? "primary" : "outline-dark"}
-            onClick={() => handleTypeFilter("ELEVEN_A_SIDE")}
-          >
-            Sân 11
-          </Button>
-
-          <h6>Mức giá</h6>
-          <Button
-            variant={
-              filters.maxPrice === 200000 &&
-              !filters.minPrice
-                ? "primary"
-                : "outline-dark"
-            }
-            onClick={() => handlePriceFilter("UNDER_200")}
-          >
-            Dưới 200k
-          </Button>
-
-          <Button
-            variant={
-              filters.minPrice === 200000 &&
-              filters.maxPrice === 500000
-                ? "primary"
-                : "outline-dark"
-            }
-            onClick={() => handlePriceFilter("200_500")}
-          >
-            200k - 500k
-          </Button>
-
-          <Button
-            variant={
-              filters.minPrice === 500000 &&
-              !filters.maxPrice
-                ? "primary"
-                : "outline-dark"
-            }
-            onClick={() => handlePriceFilter("OVER_500")}
-          >
-            Trên 500k
-          </Button>
-        </div>
-
-        {/* FIELD LIST */}
-        <div className="field-grid">
-
-          {fields.length > 0 ? (
-
-            fields.map((f) => {
-              // Use maintenance info from API response if available, otherwise from maintenanceMap
-              const maintenanceFromApi = f.underMaintenance ? f : null;
-              const maintenanceFromMap = maintenanceMap[f.id];
-              const maintenance = maintenanceFromApi || maintenanceFromMap;
-              // Fix: Thay đổi từ .isUnderMaintenance sang .underMaintenance theo đúng cấu trúc JSON trả về
-              const isUnderMaintenance = maintenance?.underMaintenance || false;
-              const maintenanceStartTime = maintenance?.maintenanceStartTime;
-              const maintenanceEndTime = maintenance?.maintenanceEndTime;
-              const maintenanceReason = maintenance?.maintenanceReason;
-
-              return (
-                <div key={f.id} className={`field-card ${isUnderMaintenance ? 'under-maintenance' : ''}`}>
-                  {isUnderMaintenance && (
-                    <div className="maintenance-badge">
-                      <span className="badge-dot" /> Đang bảo trì
-                    </div>
-                  )}
-
-                  <h3>{f.name}</h3>
-
-                  <img
-                    src={f.imageUrl}
-                    alt={f.name}
-                  />
-
-                  <p>{f.address}</p>
-
-                  <p className="field-price">
-                    Giá: {f.pricePerHour} VND/h
-                  </p>
-
-                  <Button
-                    className="btn-custom"
-                    disabled={isUnderMaintenance}
-                    onClick={() =>
-                      !isUnderMaintenance && navigate(`/football-fields/${f.id}/detail`)
-                    }
-                    title={isUnderMaintenance ? `Đang bảo trì từ ${new Date(maintenanceStartTime).toLocaleString('vi-VN')} đến ${new Date(maintenanceEndTime).toLocaleString('vi-VN')}. Lý do: ${maintenanceReason}` : ""}
-                    aria-disabled={isUnderMaintenance}
-                  >
-                    {isUnderMaintenance ? "Đang bảo trì" : "Xem chi tiết"}
-                  </Button>
-
-                  {isUnderMaintenance && maintenanceStartTime && maintenanceEndTime && (
-                    <div className="maintenance-info">
-                      <span className="info-icon">⚠️</span>
-                      <span>Bảo trì từ: {new Date(maintenanceStartTime).toLocaleString('vi-VN')} đến {new Date(maintenanceEndTime).toLocaleString('vi-VN')}</span>
-                      {maintenanceReason && (
-                        <span className="info-reason">
-                          <br />Lý do: {maintenanceReason}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {!isUnderMaintenance && (
-                    <div className="status-active">
-                      <span className="status-dot" /> Đang hoạt động
-                    </div>
-                  )}
-                </div>
-              );
-            })
-
-          ) : (
-
-            <div className="no-data">
-              Không tìm thấy sân phù hợp
+          <div className="football-filter-block">
+            <h3>Loại sân</h3>
+            <div className="football-segments">
+              {fieldTypes.map((type) => (
+                <button
+                  key={type.value}
+                  type="button"
+                  className={filters.type === type.value ? "active" : ""}
+                  onClick={() => handleTypeFilter(type.value)}
+                >
+                  {type.label}
+                </button>
+              ))}
             </div>
+          </div>
 
+          <div className="football-filter-block">
+            <h3>Mức giá</h3>
+            <div className="football-segments">
+              {priceRanges.map((range) => (
+                <button
+                  key={range.value}
+                  type="button"
+                  className={priceRange === range.value ? "active" : ""}
+                  onClick={() => handlePriceFilter(range.value)}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {activeFilterCount > 0 && (
+            <Button className="football-reset" type="button" onClick={resetFilters}>
+              Xóa bộ lọc
+            </Button>
           )}
+        </aside>
 
-        </div>
+        <main className="football-results">
+          {loading ? (
+            <div className="football-empty">Đang tải danh sách sân...</div>
+          ) : fields.length === 0 ? (
+            <div className="football-empty">Không tìm thấy sân phù hợp</div>
+          ) : (
+            <div className="football-grid">
+              {fields.map((field) => {
+                const maintenance = field.underMaintenance ? field : maintenanceMap[field.id];
+                const isUnderMaintenance = maintenance?.underMaintenance || false;
+                const maintenanceStartTime = maintenance?.maintenanceStartTime;
+                const maintenanceEndTime = maintenance?.maintenanceEndTime;
+                const maintenanceReason = maintenance?.maintenanceReason;
+
+                return (
+                  <article key={field.id} className={`football-card ${isUnderMaintenance ? "maintenance" : ""}`}>
+                    <div className="football-card-media">
+                      <img src={field.imageUrl || "/no-image.png"} alt={field.name} />
+                      <span className={`football-status ${isUnderMaintenance ? "danger" : "success"}`}>
+                        {isUnderMaintenance ? (
+                          <>
+                            <Wrench size={14} /> Bảo trì
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck size={14} /> Sẵn sàng
+                          </>
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="football-card-body">
+                      <div className="football-card-top">
+                        <h2>{field.name}</h2>
+                        <span>{field.type}</span>
+                      </div>
+
+                      <p className="football-address">
+                        <MapPin size={16} />
+                        {field.address || "Chưa có địa chỉ"}
+                      </p>
+
+                      <div className="football-price-row">
+                        <span>Giá tham khảo</span>
+                        <strong>{formatMoney(field.pricePerHour)}</strong>
+                      </div>
+
+                      {isUnderMaintenance && maintenanceStartTime && maintenanceEndTime && (
+                        <div className="football-maintenance-note">
+                          <strong>Bảo trì:</strong>{" "}
+                          {new Date(maintenanceStartTime).toLocaleString("vi-VN")} -{" "}
+                          {new Date(maintenanceEndTime).toLocaleString("vi-VN")}
+                          {maintenanceReason && <span>Lý do: {maintenanceReason}</span>}
+                        </div>
+                      )}
+
+                      <Button
+                        className="football-card-action"
+                        disabled={isUnderMaintenance}
+                        onClick={() => navigate(`/football-fields/${field.id}/detail`)}
+                      >
+                        {isUnderMaintenance ? "Đang bảo trì" : "Xem lịch sân"}
+                      </Button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

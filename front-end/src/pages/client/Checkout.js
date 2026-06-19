@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import Swal from "sweetalert2";
+import { useEffect, useMemo, useState } from "react";
+import Swal from "sweetalert";
 import { useLocation } from "react-router-dom";
 import { getMyCart } from "../../services/cartService";
 import { checkout, createOrder } from "../../services/orderService";
@@ -9,598 +9,531 @@ import {
 } from "../../services/shippingAddressService";
 import "../../assets/styles/Checkout.css";
 import { getQrCode } from "../../services/qrCodeService";
+import {
+  CheckCircle2,
+  CreditCard,
+  MapPin,
+  Package,
+  QrCode,
+  Truck,
+} from "lucide-react";
 
-const phoneRegex = /^(0|\+84)[0-9]{9}$/;
+const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(Number(value || 0));
 
 const calculateShippingFee = (items) => {
-  if (items.length === 0) return 0;
-
-  const totalQty = items.reduce(
-    (sum, i) => sum + i.totalQuantity,
+  if (!items.length) return 0;
+  const totalQuantity = items.reduce(
+    (sum, item) => sum + Number(item.quantity || item.totalQuantity || 0),
     0
   );
 
-  if (totalQty >= 10) return 0;
-  if (totalQty >= 5) return 30000;
+  if (totalQuantity >= 10) return 0;
+  if (totalQuantity >= 5) return 30000;
   return 50000;
 };
 
-const validateCheckout = ({
-  selectedItemIds,
-  useNewAddress,
-  newAddress,
-  selectedAddressId,
-}) => {
+const getItemId = (item) => item.cartItemId ?? item.id ?? item.productVariantId;
 
-  if (selectedItemIds.length === 0)
-    return "Vui lòng chọn ít nhất 1 sản phẩm";
+const getItemBasePrice = (item) => Number(item.priceAtAddedTime || item.price || 0);
 
-  if (useNewAddress) {
-    if (!newAddress.fullName || newAddress.fullName.length < 2)
-      return "Họ tên không hợp lệ";
+const getItemDiscountPercent = (item) => Number(item.discount || 0);
 
-    if (!phoneRegex.test(newAddress.phone))
-      return "Số điện thoại không hợp lệ";
-
-    if (!newAddress.address || newAddress.address.length < 5)
-      return "Địa chỉ không hợp lệ";
-  } else {
-    if (!selectedAddressId)
-      return "Vui lòng chọn địa chỉ giao hàng";
-  }
-
-  return null;
+const getItemPrice = (item) => {
+  const price = getItemBasePrice(item);
+  const discount = getItemDiscountPercent(item);
+  return price - (price * discount) / 100;
 };
 
-const CheckoutItems = ({ cartItems, selectedItemIds, toggleItem }) => (
-  <div className="checkout-card">
-    <h3>Sản phẩm</h3>
+const getItemQuantity = (item) => Number(item.quantity || item.totalQuantity || 0);
 
-    {cartItems.length === 0 && <p>Giỏ hàng trống</p>}
-
-    {cartItems.map((item) => (
-      <div className="cart-item" key={item.id}>
-        <div className="cart-left">
-          <input
-            type="checkbox"
-            checked={selectedItemIds.includes(item.id)}
-            onChange={() => toggleItem(item.id)}
-          />
-
-          <img
-            src={item.productThumbnail || "/no-image.png"}
-            className="cart-product-image"
-            alt=""
-          />
-
-          <div className="cart-info">
-            <span className="cart-name">
-              {item.productName} ({item.sizeName})
-            </span>
-            <span className="cart-meta">
-              SL: {item.totalQuantity}
-            </span>
-          </div>
+function CheckoutItems({ items, selectedItemIds, toggleItem, checkoutMode }) {
+  return (
+    <section className="checkout-panel">
+      <div className="checkout-panel-title">
+        <Package size={20} />
+        <div>
+          <h2>Sản phẩm</h2>
+          <p>{items.length} sản phẩm trong đơn hàng</p>
         </div>
       </div>
-    ))}
-  </div>
-);
 
-const orderDateObj = new Date(Date.now());
-const deliveryDateObj = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-const orderDayOnly = orderDateObj.toLocaleDateString('vi-VN');
-const deliveryDayOnly = deliveryDateObj.toLocaleDateString('vi-VN');
-const CheckoutAddress = ({
+      <div className="checkout-items">
+        {items.map((item) => {
+          const itemId = getItemId(item);
+          const selected = selectedItemIds.includes(itemId);
+          const discount = getItemDiscountPercent(item);
+          const image =
+            item.thumbnail ||
+            item.productThumbnail ||
+            "https://placehold.co/180x180/f1f5f9/0f172a?text=Product";
+
+          return (
+            <label className="checkout-item" key={itemId}>
+              {checkoutMode !== "BUY_NOW" && (
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={() => toggleItem(itemId)}
+                />
+              )}
+              <img src={image} alt={item.productName} />
+              <div className="checkout-item-info">
+                <h3>{item.productName}</h3>
+                <span>Size: {item.sizeName || item.sizeCode || "N/A"}</span>
+                <div className="checkout-item-price">
+                  {discount > 0 && (
+                    <small>{formatCurrency(getItemBasePrice(item))}</small>
+                  )}
+                  <strong>{formatCurrency(getItemPrice(item))}</strong>
+                  {discount > 0 && <em>-{discount}%</em>}
+                </div>
+              </div>
+              <div className="checkout-item-qty">x{getItemQuantity(item)}</div>
+            </label>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function CheckoutAddress({
   addresses,
-  useNewAddress,
-  setUseNewAddress,
   selectedAddressId,
   setSelectedAddressId,
+  useNewAddress,
+  setUseNewAddress,
   newAddress,
   setNewAddress,
   paymentMethod,
   setPaymentMethod,
-}) => (
-  <div className="checkout-card">
-    <h3>Địa chỉ giao hàng</h3>
+}) {
+  const deliveryDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 3);
+    return date.toLocaleDateString("vi-VN");
+  }, []);
 
-    <label className="radio-group">
-      <input
-        type="radio"
-        name="addressType"
-        checked={!useNewAddress}
-        onChange={() => setUseNewAddress(false)}
-      />
-      <span className="custom-radio"></span>
-      Địa chỉ đã lưu
-    </label>
-
-    {!useNewAddress && (
-    <>
-      {addresses.length > 0 ? (
-        <select
-          value={selectedAddressId || ""}
-          onChange={(e) => setSelectedAddressId(Number(e.target.value))}
-        >
-          {addresses.map((addr) => (
-            <option key={addr.id} value={addr.id}>
-              {addr.fullName} – {addr.address}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <p style={{ color: "#888", marginTop: "8px" }}>
-          Bạn chưa có địa chỉ. Hãy chọn "Thêm địa chỉ mới".
-        </p>
-      )}
-    </>
-  )}
-
-    <label className="radio-group">
-      <input
-        type="radio"
-        name="addressType"
-        checked={useNewAddress}
-        onChange={() => setUseNewAddress(true)}
-      />
-      <span className="custom-radio"></span>
-      Thêm địa chỉ mới
-    </label>
-
-    {useNewAddress && (
-      <>
-        <input
-          placeholder="Họ tên"
-          value={newAddress.fullName}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, fullName: e.target.value })
-          }
-        />
-        <input
-          placeholder="Số điện thoại"
-          value={newAddress.phone}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, phone: e.target.value })
-          }
-        />
-        <input
-          placeholder="Địa chỉ"
-          value={newAddress.address}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, address: e.target.value })
-          }
-        />
-      </>
-    )}
-
-    <h3>Thanh toán</h3>
-    <div className="payment-methods">
-      <label className={`payment-card ${paymentMethod === "COD" ? "active" : ""}`}>
-        <input
-          type="radio"
-          name="paymentMethod"
-          value="COD"
-          checked={paymentMethod === "COD"}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-        />
+  return (
+    <section className="checkout-panel">
+      <div className="checkout-panel-title">
+        <MapPin size={20} />
         <div>
-          <strong>COD</strong>
-          <p>Thanh toán khi nhận hàng</p>
+          <h2>Giao hàng và thanh toán</h2>
+          <p>Dự kiến giao hàng: {deliveryDate}</p>
         </div>
-      </label>
+      </div>
 
-        <label className={`payment-card ${paymentMethod === "VNPAY" ? "active" : ""}`}>
-          <input
-            type="radio"
-            name="paymentMethod"
-            value="VNPAY"
-            checked={paymentMethod === "VNPAY"}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          />
-
-          <div className="payment-content">
-
-            <div className="payment-logo">
-              <img
-                src="https://res.cloudinary.com/do8twj1im/image/upload/v1779120854/ylfqrkcbaadgs73wrcgn.png"
-                alt="vnpay"
+      {addresses.length > 0 && !useNewAddress && (
+        <div className="checkout-address-list">
+          {addresses.map((address) => (
+            <label className="checkout-address-card" key={address.id}>
+              <input
+                type="radio"
+                checked={selectedAddressId === address.id}
+                onChange={() => setSelectedAddressId(address.id)}
               />
-            </div>
-
-            <div>
-              <strong>VNPAY</strong>
-              <p>Thanh toán online qua VNPay</p>
-            </div>
-
-          </div>
-        </label>
-
-      <label className={`payment-card ${paymentMethod === "VIETQR" ? "active" : ""}`}>
-        <input
-          type="radio"
-          name="paymentMethod"
-          value="VIETQR"
-          checked={paymentMethod === "VIETQR"}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-        />
-
-        <div className="payment-content">
-
-          <div className="payment-logo">
-            <img
-              src="https://res.cloudinary.com/do8twj1im/image/upload/v1779120893/o4oefylronic76jhgkq9.png"
-              alt="vietqr"
-            />
-          </div>
-
-          <div>
-            <strong>VIETQR</strong>
-            <p>Chuyển khoản QR ngân hàng</p>
-          </div>
+              <div>
+                <strong>{address.receiverName}</strong>
+                <span>{address.phone}</span>
+                <p>
+                  {address.addressLine}, {address.ward}, {address.district},{" "}
+                  {address.city}
+                </p>
+              </div>
+            </label>
+          ))}
         </div>
-      </label>
+      )}
 
-    </div>
-    <h3>Thời gian đặt hàng: {orderDayOnly}</h3>
-    <h3>Thời gian giao hàng dự kiến: {deliveryDayOnly} </h3>
-  </div>
-);
+      <button
+        type="button"
+        className="checkout-link-btn"
+        onClick={() => setUseNewAddress(!useNewAddress)}
+      >
+        {useNewAddress ? "Dùng địa chỉ đã lưu" : "Thêm địa chỉ mới"}
+      </button>
 
-const CheckoutSummary = ({ items, loading, onCheckout, paymentMethod, showQR }) => {
-  const subTotal = items.reduce((sum, i) => {
-  const discountPercent = i.discount || 0;
-  const priceAfterDiscount =
-    i.priceAtAddedTime * (100 - discountPercent) / 100;
-    
+      {(useNewAddress || addresses.length === 0) && (
+        <div className="checkout-address-form">
+          <input
+            placeholder="Tên người nhân"
+            value={newAddress.receiverName}
+            onChange={(event) =>
+              setNewAddress({ ...newAddress, receiverName: event.target.value })
+            }
+          />
+          <input
+            placeholder="Số điện thoại"
+            value={newAddress.phone}
+            onChange={(event) =>
+              setNewAddress({ ...newAddress, phone: event.target.value })
+            }
+          />
+          <input
+            placeholder="Tỉnh / Thành phố"
+            value={newAddress.city}
+            onChange={(event) =>
+              setNewAddress({ ...newAddress, city: event.target.value })
+            }
+          />
+          <input
+            placeholder="Quận / Huyện"
+            value={newAddress.district}
+            onChange={(event) =>
+              setNewAddress({ ...newAddress, district: event.target.value })
+            }
+          />
+          <input
+            placeholder="Xã"
+            value={newAddress.ward}
+            onChange={(event) =>
+              setNewAddress({ ...newAddress, ward: event.target.value })
+            }
+          />
+          <input
+            placeholder="Địa chỉ chi tiết"
+            value={newAddress.addressLine}
+            onChange={(event) =>
+              setNewAddress({ ...newAddress, addressLine: event.target.value })
+            }
+          />
+        </div>
+      )}
 
-  return sum + priceAfterDiscount * i.totalQuantity;
-}, 0);
-
-const totalDiscount = items.reduce((sum, i) => {
-  const discountPercent = i.discount || 0;
-  return (
-    sum +
-    (i.priceAtAddedTime * discountPercent / 100) *
-      i.totalQuantity
+      <div className="checkout-payment-methods">
+        {[
+          { value: "COD", label: "COD", icon: Truck },
+          { value: "VNPAY", label: "VNPay", icon: CreditCard },
+          { value: "VIETQR", label: "VietQR", icon: QrCode },
+        ].map((method) => {
+          const Icon = method.icon;
+          return (
+            <button
+              type="button"
+              key={method.value}
+              className={paymentMethod === method.value ? "active" : ""}
+              onClick={() => setPaymentMethod(method.value)}
+            >
+              <Icon size={18} />
+              {method.label}
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
-}, 0);
+}
 
-const shippingFee = calculateShippingFee(items);
-const total = subTotal + shippingFee;
+function CheckoutSummary({ selectedItems, shippingFee, onCheckout, loading }) {
+  const originalSubtotal = selectedItems.reduce(
+    (sum, item) => sum + getItemBasePrice(item) * getItemQuantity(item),
+    0
+  );
+  const totalDiscount = selectedItems.reduce((sum, item) => {
+    const price = getItemBasePrice(item);
+    const discount = getItemDiscountPercent(item);
+    return sum + (price * discount) / 100 * getItemQuantity(item);
+  }, 0);
+  const total = originalSubtotal - totalDiscount + shippingFee;
 
   return (
-    <div className="checkout-card checkout-summary">
-      <h3>Đơn hàng</h3>
-
-      <div className="summary-row">
-        <span>Tạm tính</span>
-        <span>{subTotal.toLocaleString()} ₫</span>
+    <aside className="checkout-summary">
+      <div className="checkout-panel-title">
+        <CheckCircle2 size={20} />
+        <div>
+          <h2>Tổng tiền</h2>
+          <p>Kiểm tra trước khi đặt hàng</p>
+        </div>
       </div>
 
-      <div className="summary-row">
-        <span>Phí vận chuyển</span>
-        <span>{shippingFee.toLocaleString()} ₫</span>
+      <div className="checkout-summary-lines">
+        <div>
+          <span>Tạm tính</span>
+          <strong>{formatCurrency(originalSubtotal)}</strong>
+        </div>
+        <div>
+          <span>Giảm giá sản phẩm</span>
+          <strong>-{formatCurrency(totalDiscount)}</strong>
+        </div>
+        <div>
+          <span>Phí vận chuyển</span>
+          <strong>{shippingFee === 0 ? "Mien phi" : formatCurrency(shippingFee)}</strong>
+        </div>
       </div>
 
-      <div className="summary-row discount">
-        <span>Giảm giá</span>
-        <span>-{totalDiscount.toLocaleString()} ₫</span>
-      </div>
-
-      <div className="summary-total">
-        <span>Tổng cộng</span>
-        <span>{total.toLocaleString()} ₫</span>
+      <div className="checkout-total-row">
+        <span>Cần thanh toán</span>
+        <strong>{formatCurrency(total)}</strong>
       </div>
 
       <button
-        className="checkout-btn"
+        type="button"
+        className="checkout-submit-btn"
         onClick={onCheckout}
-        disabled={loading || showQR}
+        disabled={loading || !selectedItems.length}
       >
-        {loading ? "Đang xử lý..." 
-          : paymentMethod === "COD" 
-          ? "Đặt hàng" 
-          : "Tạo đơn & hiển thị QR"
-        }
+        {loading ? "Đang xử lý..." : "Đặt hàng"}
       </button>
-    </div>
+    </aside>
   );
-};
+}
 
 export default function Checkout() {
   const [cartItems, setCartItems] = useState([]);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
-
   const [addresses, setAddresses] = useState([]);
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
-
-  const location = useLocation();
-  const checkoutMode = location.state?.mode || "CART_CHECKOUT";
-  const buyNowProduct = location.state?.product || null;
-  
-  const [newAddress, setNewAddress] = useState({
-    fullName: "",
-    phone: "",
-    address: "",
-  });
-
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
-
   const [showQR, setShowQR] = useState(false);
-
   const [orderId, setOrderId] = useState(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [newAddress, setNewAddress] = useState({
+    receiverName: "",
+    phone: "",
+    city: "",
+    district: "",
+    ward: "",
+    addressLine: "",
+  });
 
-  const [qrCodeUrl, setQrCodeUrl] = useState(null);
+  const location = useLocation();
+  const checkoutMode = location.state?.mode || "CART";
+  const buyNowProduct = location.state?.product || null;
 
   useEffect(() => {
-    if(!orderId) return;
-
-    let objectUrl;
-
-    const loadUrl = async () => {
+    const loadQr = async () => {
+      if (!orderId) return;
       try {
         const url = await getQrCode(orderId);
-        objectUrl = url;
         setQrCodeUrl(url);
       } catch (error) {
-        console.error("Lỗi khi tải QR code:", error);
+        Swal("Loi", "Khong lay duoc ma QR thanh toan", "error");
       }
     };
 
-    loadUrl();
-
-    return () => {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
+    loadQr();
   }, [orderId]);
 
   useEffect(() => {
-    const checkoutItemIds = location.state?.itemIds || [];
-    
-    const loadCheckoutData = async () => {
-      if (checkoutMode === "BUY_NOW" && buyNowProduct) {
-        setCartItems([{
-          id: `temp_${buyNowProduct.productVariantId}`,
-          productId: buyNowProduct.productId,
-          productName: buyNowProduct.productName,
-          productThumbnail: buyNowProduct.productThumbnail,
-          productVariantId: buyNowProduct.productVariantId,
-          sizeName: buyNowProduct.sizeName,
-          priceAtAddedTime: buyNowProduct.priceAtAddedTime,
-          totalQuantity: buyNowProduct.totalQuantity,
-          discount: buyNowProduct.discount || 0
-        }]);
-        setSelectedItemIds([`temp_${buyNowProduct.productVariantId}`]);
-      } else {
-
-        const cartRes = await getMyCart();
-
-        const allItems = (cartRes.items || []).map(item => ({
-          ...item,
-          discount: item.discount ?? 0
-        }));
-
-        const filteredItems = checkoutItemIds.length
-          ? allItems.filter((i) => checkoutItemIds.includes(i.id))
-          : allItems;
-        setCartItems(filteredItems);
-        setSelectedItemIds(filteredItems.map((i) => i.id));
-      }
-    };
-
-    const loadAddresses = async () => {
+    const loadData = async () => {
       try {
-        const res = await getMyAddress();
-
-            console.log("FULL RES:", res);
-    console.log("TYPE:", typeof res);
-    console.log("DATA:", res.data);
-
-        if (!res) {
-          setAddresses([]);
-          return;
-        }
-
-        const address = res;
-
-        if (address) {
-          setAddresses([address]);
-          setSelectedAddressId(address.id);
+        if (checkoutMode === "BUY_NOW" && buyNowProduct) {
+          const tempItem = {
+            ...buyNowProduct,
+            cartItemId: `temp_${buyNowProduct.productVariantId}`,
+            quantity: buyNowProduct.totalQuantity,
+          };
+          setCartItems([tempItem]);
+          setSelectedItemIds([tempItem.cartItemId]);
         } else {
-          setAddresses([]);
+          const response = await getMyCart();
+          const items = response?.items || [];
+          const selectedFromCart = location.state?.itemIds || [];
+          const filteredItems = selectedFromCart.length
+            ? items.filter((item) => selectedFromCart.includes(getItemId(item)))
+            : items;
+
+          setCartItems(filteredItems);
+          setSelectedItemIds(filteredItems.map((item) => getItemId(item)));
         }
 
+        const addressResponse = await getMyAddress();
+        const loadedAddresses = Array.isArray(addressResponse)
+          ? addressResponse
+          : addressResponse
+            ? [addressResponse]
+            : [];
+
+        setAddresses(loadedAddresses);
+        if (loadedAddresses.length > 0) {
+          setSelectedAddressId(loadedAddresses[0].id);
+        } else {
+          setUseNewAddress(true);
+        }
       } catch (error) {
-        console.error("Lỗi khi tải địa chỉ:", error);
-        setAddresses([]);
+        Swal("Lỗi", error.message || "Không thể tải dữ liệu checkout", "error");
       }
     };
 
-    loadCheckoutData();
-    loadAddresses();
+    loadData();
   }, [checkoutMode, buyNowProduct, location.state?.itemIds]);
+
+  const selectedItems = useMemo(
+    () =>
+      cartItems.filter((item) =>
+        selectedItemIds.includes(getItemId(item))
+      ),
+    [cartItems, selectedItemIds]
+  );
+
+  const shippingFee = useMemo(
+    () => calculateShippingFee(selectedItems),
+    [selectedItems]
+  );
 
   const toggleItem = (id) => {
     setSelectedItemIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((x) => x !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
   };
 
-  const handleCheckout = async () => {
-    const error = validateCheckout({
-      selectedItemIds,
-      useNewAddress,
-      newAddress,
-      selectedAddressId,
-    });
-
-    if (error) {
-      Swal.fire({ icon: "warning", title: "Lỗi", text: error });
-      return;
+  const validateCheckout = () => {
+    if (!selectedItems.length) {
+      Swal("Chưa chọn địa chỉ", "Vui lòng chọn ít nhất một sản phẩm.", "warning");
+      return false;
     }
+
+    if (useNewAddress || addresses.length === 0) {
+      const isMissing = Object.values(newAddress).some((value) => !value.trim());
+      if (isMissing) {
+        Swal("Thiếu địa chỉ", "Vui lòng nhập đầy đủ thông tin giao hàng.", "warning");
+        return false;
+      }
+
+      if (!phoneRegex.test(newAddress.phone)) {
+        Swal("Số điện thoại không hợp lệ", "Vui lòng kiểm tra lại số điện thoại.", "warning");
+        return false;
+      }
+    } else if (!selectedAddressId) {
+      Swal("Chauw chọn địa chỉ", "Vui lòng chọn địa chỉ giao hàng.", "warning");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleCheckout = async () => {
+    if (!validateCheckout()) return;
 
     try {
       setLoading(true);
-      let addressId = selectedAddressId;
+      let shippingAddressId = selectedAddressId;
 
-      if (useNewAddress) {
-        const res = await createAddress(newAddress);
-        addressId = res.id;
+      if (useNewAddress || addresses.length === 0) {
+        const createdAddress = await createAddress(newAddress);
+        shippingAddressId = createdAddress.id;
       }
 
       let response;
       if (checkoutMode === "BUY_NOW") {
-        const totalQty = buyNowProduct.totalQuantity;
-        let shippingCost = 0;
-        if (totalQty >= 10) shippingCost = 0;
-        else if (totalQty >= 5) shippingCost = 30000;
-        else shippingCost = 50000;
         response = await createOrder({
-          shippingAddressId: addressId,
+          shippingAddressId,
           paymentMethod,
-          items: [{
-            productVariantId: buyNowProduct.productVariantId,
-            quantity: buyNowProduct.totalQuantity,
-          }],
-          shippingCost: shippingCost,
+          shippingCost: shippingFee,
+          items: selectedItems.map((item) => ({
+            productVariantId: item.productVariantId,
+            quantity: getItemQuantity(item),
+            priceAtAddedTime: item.priceAtAddedTime,
+          })),
         });
-        setOrderId(response.id);
       } else {
-        const requestBody = {
-          shippingAddressId: addressId,
+        response = await checkout({
+          shippingAddressId,
           paymentMethod,
-          cartItemIds: selectedItemIds.map(id => Number(id)),
-        };
-        console.log("Checkout request body:", requestBody);
-        response = await checkout(requestBody);
-
-        setOrderId(response.id);
+          cartItemIds: selectedItemIds.map(Number),
+          shippingCost: shippingFee,
+        });
       }
 
-      Swal.fire({
-        icon: paymentMethod === "VIETQR" ? "info" : "success",
-        title:
-          paymentMethod === "VIETQR"
-            ? "Đơn hàng đã được tạo"
-            : "Đặt hàng thành công 🎉",
-        text:
-          paymentMethod === "VIETQR"
-            ? "Vui lòng quét mã QR để thanh toán đơn hàng"
-            : "Đơn hàng của bạn đã được đặt thành công. Shop sẽ sớm liên hệ!",
-        confirmButtonText: "OK"
-      }).then(() => {
-        if (paymentMethod === "VIETQR") {
-          setShowQR(true);
-        } else {
-          window.location.href = "/";
-        }
-      });
+      setOrderId(response.id);
 
-    } catch (e) {
-      console.error("Checkout error:", e);
-      Swal.fire({
-        icon: "error",
-        title: "Checkout thất bại",
-        text: e?.message || e?.response?.message || "Có lỗi xảy ra",
-      });
+      if (paymentMethod === "VIETQR") {
+        setShowQR(true);
+      } else {
+        Swal("Thành công", "Đơn hàng đã được tạo thành công.", "success").then(
+          () => {
+            window.location.href = "/";
+          }
+        );
+      }
+    } catch (error) {
+      Swal("Lỗi", error.message || "Không thể đặt hàng", "error");
     } finally {
       setLoading(false);
     }
   };
-  const handleConfirmTransfer = async () => {
-    Swal.fire({
-      icon: "info",
-      title: "Đã ghi nhận",
-      text: "Đơn hàng của bạn đang được xử lý."
-    });
-    setTimeout(() => {
+
+  const handleConfirmTransfer = () => {
+    Swal(
+      "Đã ghi nhận",
+      "Cảm ơn bạn. Admin sẽ kiểm tra giao dịch và xử lí đơn hàng.",
+      "success"
+    ).then(() => {
       window.location.href = "/";
-    }, 3000);
-  }
+    });
+  };
 
   return (
-    <div className="checkout-container">
-      <h2>Trang thanh toán</h2>
+    <div className="checkout-page">
+      <section className="checkout-hero">
+        <div>
+          <p>Checkout</p>
+          <h1>Hoàn tất đơn hàng</h1>
+          <span>
+            Kiểm tra sản phẩm, địa chỉ và phương thanh toán trước khi thanh toán.
+          </span>
+        </div>
+      </section>
 
-      <div className="checkout-grid">
-        <div className="checkout-left">
+      <div className="checkout-layout">
+        <div className="checkout-main">
           <CheckoutItems
-            cartItems={cartItems}
+            items={cartItems}
             selectedItemIds={selectedItemIds}
             toggleItem={toggleItem}
+            checkoutMode={checkoutMode}
           />
 
           <CheckoutAddress
             addresses={addresses}
-            useNewAddress={useNewAddress}
-            setUseNewAddress={setUseNewAddress}
             selectedAddressId={selectedAddressId}
             setSelectedAddressId={setSelectedAddressId}
+            useNewAddress={useNewAddress}
+            setUseNewAddress={setUseNewAddress}
             newAddress={newAddress}
             setNewAddress={setNewAddress}
             paymentMethod={paymentMethod}
             setPaymentMethod={setPaymentMethod}
           />
+
+          {showQR && (
+            <section className="checkout-qr-panel">
+              <div className="checkout-panel-title">
+                <QrCode size={20} />
+                <div>
+                  <h2>Thanh toán VietQR</h2>
+                  <p>Quét mã và xác nhận sau thanh toán.</p>
+                </div>
+              </div>
+
+              {qrCodeUrl ? (
+                <img src={qrCodeUrl} alt="QR thanh toan" />
+              ) : (
+                <div className="checkout-qr-loading">Đang tạo mã QR...</div>
+              )}
+
+              <button type="button" onClick={handleConfirmTransfer}>
+                Tôi đã chuyển khoản
+              </button>
+            </section>
+          )}
         </div>
 
         <CheckoutSummary
-          items={cartItems.filter((i) =>
-            selectedItemIds.includes(i.id)
-          )}
-          loading={loading}
+          selectedItems={selectedItems}
+          shippingFee={shippingFee}
           onCheckout={handleCheckout}
-          paymentMethod={paymentMethod}
-          showQR={showQR}
+          loading={loading}
         />
-
-        {/* Hiển thị QR-CODE */}
-        {paymentMethod === "VIETQR" && showQR && orderId && (
-          <div className="checkout-card qr-box">
-  <div className="qr-content">
-
-    <div className="qr-info">
-      <h3>Quét mã QR để thanh toán</h3>
-
-      <p className="qr-status">
-        ⏳ Trạng thái: <b>Chờ thanh toán</b>
-      </p>
-
-      <p>
-        Đơn hàng đã được tạo, vui lòng hoàn tất chuyển khoản
-      </p>
-
-      <p>
-        Nội dung chuyển khoản:
-        <b> Đơn hàng #{orderId}</b>
-      </p>
-    </div>
-
-    <div className="qr-image-wrapper">
-      <img
-        src={qrCodeUrl}
-        alt="QR thanh toán"
-      />
-    </div>
-
-    <div className="qr-action">
-      <button
-        className="checkout-btn"
-        onClick={handleConfirmTransfer}
-      >
-        Tôi đã chuyển khoản
-      </button>
-    </div>
-
-  </div>
-</div>
-        )}
       </div>
     </div>
   );

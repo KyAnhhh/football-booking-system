@@ -11,6 +11,10 @@ import PaymentPage from "../pages/admin/PaymentPage";
 import FootballFieldPage from "../pages/admin/FootballFieldPage";
 import BookingPage from "../pages/admin/BookingPage";
 import MaintenanceManagementPage from "../pages/admin/MaintenanceManagementPage";
+import PricingRulePage from "../pages/admin/PricingRulePage";
+import VoucherPage from "../pages/admin/VoucherPage";
+import ExtraServicePage from "../pages/admin/ExtraServicePage";
+import HolidayPage from "../pages/admin/HolidayPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
@@ -35,6 +39,10 @@ const AdminRoutes = (
     <Route path="football-fields" element={<FootballFieldPage />} />
     <Route path="bookings" element={<BookingPage />} />
     <Route path="maintenance" element={<MaintenanceManagementPage />} />
+    <Route path="pricing-rules" element={<PricingRulePage />} />
+    <Route path="vouchers" element={<VoucherPage />} />
+    <Route path="extra-services" element={<ExtraServicePage />} />
+    <Route path="holidays" element={<HolidayPage />} />
   </Route>
 );
 

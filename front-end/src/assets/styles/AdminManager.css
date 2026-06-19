@@ -1,0 +1,457 @@
+:root {
+  --admin-bg: #f6f8fb;
+  --admin-surface: #ffffff;
+  --admin-surface-soft: #f8fafc;
+  --admin-border: #e5e7eb;
+  --admin-border-strong: #cbd5e1;
+  --admin-text: #111827;
+  --admin-muted: #64748b;
+  --admin-primary: #1f6feb;
+  --admin-primary-strong: #1554c0;
+  --admin-success-bg: #dcfce7;
+  --admin-success-text: #166534;
+  --admin-warning-bg: #fef3c7;
+  --admin-warning-text: #92400e;
+  --admin-danger-bg: #fee2e2;
+  --admin-danger-text: #991b1b;
+  --admin-info-bg: #dbeafe;
+  --admin-info-text: #1d4ed8;
+  --admin-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+body .content {
+  background:
+    radial-gradient(circle at top left, rgba(31, 111, 235, 0.08), transparent 30%),
+    var(--admin-bg);
+}
+
+body .admin-crud-page,
+body .field-page,
+body .booking-page,
+body .maintenance-page,
+body .user-page,
+body .brand-page,
+body .category-page,
+body .order-page,
+body .payment-page,
+body .size-page,
+body .container {
+  min-height: calc(100vh - 120px);
+  padding: 0;
+  background: transparent;
+  color: var(--admin-text);
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+body .admin-crud-header,
+body .field-header,
+body .booking-header,
+body .maintenance-header,
+body .user-header,
+body .brand-header,
+body .category-header,
+body .order-header,
+body .payment-header,
+body .product-header,
+body .size-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 22px;
+  padding: 22px;
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
+}
+
+body .admin-crud-header h2,
+body .field-header h2,
+body .booking-header h2,
+body .maintenance-header h2,
+body .user-header h2,
+body .brand-header h2,
+body .category-header h2,
+body .order-header h2,
+body .payment-header h2,
+body .product-header h2,
+body .size-header h2 {
+  margin: 0;
+  color: var(--admin-text);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+body .admin-crud-actions,
+body .filters,
+body .user-actions,
+body .payment-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body .filters .form-control,
+body .filters .form-select,
+body .admin-crud-actions .form-control,
+body .admin-crud-actions .form-select,
+body .user-actions .form-control,
+body .user-actions .form-select,
+body .payment-actions input,
+body .search-box input,
+body .field-filter select {
+  min-width: 210px;
+  height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 12px !important;
+  background: #fff;
+  color: var(--admin-text);
+  font-size: 14px;
+  box-shadow: none;
+}
+
+body .filters .form-control:focus,
+body .filters .form-select:focus,
+body .admin-crud-actions .form-control:focus,
+body .admin-crud-actions .form-select:focus,
+body .user-actions .form-control:focus,
+body .payment-actions input:focus,
+body .search-box input:focus,
+body .field-filter select:focus,
+body .modal-body .form-control:focus,
+body .modal-body .form-select:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 4px rgba(31, 111, 235, 0.12);
+}
+
+body .admin-crud-page .btn,
+body .field-page .btn,
+body .booking-page .btn,
+body .maintenance-page .btn,
+body .user-page .btn,
+body .brand-page .btn,
+body .category-page .btn,
+body .order-page .btn,
+body .payment-page .btn,
+body .container .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  border-radius: 12px !important;
+  border-width: 1px;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+body .admin-crud-page .btn:hover,
+body .field-page .btn:hover,
+body .booking-page .btn:hover,
+body .maintenance-page .btn:hover,
+body .user-page .btn:hover,
+body .brand-page .btn:hover,
+body .category-page .btn:hover,
+body .order-page .btn:hover,
+body .payment-page .btn:hover,
+body .container .btn:hover {
+  transform: translateY(-1px);
+}
+
+body .admin-crud-page .btn-primary,
+body .field-page .btn-primary,
+body .maintenance-page .add-btn,
+body .add-field,
+body .user-actions .btn-primary,
+body .brand-header .btn-primary,
+body .category-header .btn-primary {
+  border-color: var(--admin-primary) !important;
+  background: var(--admin-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(31, 111, 235, 0.22);
+}
+
+body .admin-crud-table,
+body .field-table,
+body .booking-table,
+body .maintenance-table,
+body .user-table,
+body .brand-table,
+body .category-table,
+body .order-table,
+body .payment-table,
+body .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
+}
+
+body .admin-crud-table thead,
+body .field-table thead,
+body .booking-table thead,
+body .maintenance-table thead,
+body .user-table thead,
+body .brand-table thead,
+body .category-table thead,
+body .order-table thead,
+body .payment-table thead,
+body .table thead {
+  background: var(--admin-surface-soft) !important;
+}
+
+body .admin-crud-table th,
+body .field-table th,
+body .booking-table th,
+body .maintenance-table th,
+body .user-table th,
+body .brand-table th,
+body .category-table th,
+body .order-table th,
+body .payment-table th,
+body .table th {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-surface-soft) !important;
+  color: #475569 !important;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body .admin-crud-table td,
+body .field-table td,
+body .booking-table td,
+body .maintenance-table td,
+body .user-table td,
+body .brand-table td,
+body .category-table td,
+body .order-table td,
+body .payment-table td,
+body .table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+body .admin-crud-table tbody tr,
+body .field-table tbody tr,
+body .booking-table tbody tr,
+body .maintenance-table tbody tr,
+body .user-table tbody tr,
+body .brand-table tbody tr,
+body .category-table tbody tr,
+body .order-table tbody tr,
+body .payment-table tbody tr,
+body .table tbody tr {
+  transition: background-color 0.18s ease;
+}
+
+body .admin-crud-table tbody tr:hover,
+body .field-table tbody tr:hover,
+body .booking-table tbody tr:hover,
+body .maintenance-table tbody tr:hover,
+body .user-table tbody tr:hover,
+body .brand-table tbody tr:hover,
+body .category-table tbody tr:hover,
+body .order-table tbody tr:hover,
+body .payment-table tbody tr:hover,
+body .table tbody tr:hover {
+  background: #f8fbff !important;
+  transform: none;
+}
+
+body .admin-crud-row-actions,
+body .booking-actions,
+body .maintenance-table td:last-child,
+body .field-table td:last-child,
+body .user-table td:last-child,
+body .brand-table td:last-child,
+body .category-table td:last-child,
+body .order-table td:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+body .admin-crud-badge,
+body .badge,
+body [class^="status-"],
+body .status-available,
+body .status-confirmed,
+body .status-completed,
+body .status-pending,
+body .status-cancelled,
+body .status-expired,
+body .badge-upcoming,
+body .badge-ongoing,
+body .badge-completed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: none;
+}
+
+body .admin-crud-badge.active,
+body .status-available,
+body .status-confirmed,
+body .status-completed,
+body .badge-completed {
+  background: var(--admin-success-bg) !important;
+  color: var(--admin-success-text) !important;
+}
+
+body .status-pending,
+body .badge-upcoming,
+body .badge-ongoing {
+  background: var(--admin-warning-bg) !important;
+  color: var(--admin-warning-text) !important;
+}
+
+body .admin-crud-badge.inactive,
+body .status-cancelled {
+  background: var(--admin-danger-bg) !important;
+  color: var(--admin-danger-text) !important;
+}
+
+body .status-expired {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+body .admin-crud-empty,
+body .no-data,
+body .loading,
+body .text-center.text-muted {
+  padding: 42px 20px;
+  border: 1px dashed var(--admin-border-strong);
+  border-radius: 16px;
+  background: var(--admin-surface);
+  color: var(--admin-muted);
+  text-align: center;
+  box-shadow: var(--admin-shadow);
+}
+
+body .pagination,
+body .pagination-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
+  color: var(--admin-muted);
+  font-weight: 700;
+}
+
+body .modal-content {
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  border-radius: 18px !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+body .modal-header {
+  border-bottom: 1px solid var(--admin-border);
+  background: #fff !important;
+  color: var(--admin-text) !important;
+}
+
+body .modal-title {
+  color: var(--admin-text);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+body .modal-body {
+  padding: 22px;
+}
+
+body .modal-body .form-label {
+  margin-bottom: 6px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+body .modal-body .form-control,
+body .modal-body .form-select {
+  min-height: 42px;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 12px !important;
+}
+
+body .table-wrapper {
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+body .admin-booking-breakdown {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--admin-surface-soft);
+}
+
+@media (max-width: 900px) {
+  body .admin-crud-header,
+  body .field-header,
+  body .booking-header,
+  body .maintenance-header,
+  body .user-header,
+  body .brand-header,
+  body .category-header,
+  body .order-header,
+  body .payment-header,
+  body .product-header,
+  body .size-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  body .admin-crud-actions,
+  body .filters,
+  body .user-actions,
+  body .payment-actions {
+    justify-content: flex-start;
+  }
+
+  body .admin-crud-table,
+  body .field-table,
+  body .booking-table,
+  body .maintenance-table,
+  body .user-table,
+  body .brand-table,
+  body .category-table,
+  body .order-table,
+  body .payment-table,
+  body .table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

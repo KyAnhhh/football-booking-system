@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
-
 import {
   BsSpeedometer2,
   BsPeople,
@@ -12,15 +11,36 @@ import {
   BsHouseDoor,
   BsPersonCircle,
   BsBoxArrowRight,
-  BsTools
+  BsTools,
+  BsCalendarEvent,
+  BsTicketPerforated,
+  BsCashCoin,
+  BsPlusSquare,
 } from "react-icons/bs";
 
 import "../assets/styles/AdminLayout.css";
+import "../assets/styles/AdminManager.css";
+
+const navItems = [
+  { to: "/admin", label: "Dashboard", icon: BsSpeedometer2, end: true },
+  { to: "/admin/users", label: "Users", icon: BsPeople },
+  { to: "/admin/products", label: "Products", icon: BsBoxSeam },
+  { to: "/admin/brands", label: "Brand", icon: BsTags },
+  { to: "/admin/categories", label: "Category", icon: BsGrid },
+  { to: "/admin/orders", label: "Orders", icon: BsReceipt },
+  { to: "/admin/sizes", label: "Sizes", icon: BsRulers },
+  { to: "/admin/payments", label: "Payments", icon: BsReceipt },
+  { to: "/admin/football-fields", label: "Football Fields", icon: BsReceipt },
+  { to: "/admin/maintenance", label: "Maintenance", icon: BsTools },
+  { to: "/admin/pricing-rules", label: "Pricing Rules", icon: BsCashCoin },
+  { to: "/admin/vouchers", label: "Vouchers", icon: BsTicketPerforated },
+  { to: "/admin/extra-services", label: "Extra Services", icon: BsPlusSquare },
+  { to: "/admin/holidays", label: "Holidays", icon: BsCalendarEvent },
+  { to: "/admin/bookings", label: "Bookings", icon: BsReceipt },
+];
 
 export default function AdminLayout() {
-
   const [collapsed, setCollapsed] = useState(false);
-
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -30,171 +50,65 @@ export default function AdminLayout() {
 
   return (
     <div className={`admin-layout ${collapsed ? "collapsed" : ""}`}>
-
-      {/* Sidebar */}
       <aside className="sidebar">
-
         <div className="sidebar-header">
-          <button
-            className="toggle-btn"
-            onClick={() => setCollapsed(!collapsed)}
-          >
+          <button className="toggle-btn" onClick={() => setCollapsed(!collapsed)}>
             ☰
           </button>
 
-          {!collapsed && (
-            <h2 className="logo">
-              ⚽ Shop Bóng Đá
-            </h2>
-          )}
+          {!collapsed && <h2 className="logo">Football Admin</h2>}
         </div>
 
         <nav className="admin-nav">
           <ul>
-
-            <li>
-              <NavLink to="/admin" end>
-                <BsSpeedometer2 />
-                <span>Dashboard</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/users">
-                <BsPeople />
-                <span>Users</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/products">
-                <BsBoxSeam />
-                <span>Products</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/brands">
-                <BsTags />
-                <span>Brand</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/categories">
-                <BsGrid />
-                <span>Category</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/orders">
-                <BsReceipt />
-                <span>Orders</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/sizes">
-                <BsRulers />
-                <span>Sizes</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/payments">
-                <BsReceipt />
-                <span>Payments</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/football-fields">
-                <BsReceipt />
-                <span>Football Fields</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/maintenance">
-                <BsTools />
-                <span>Maintenance</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink to="/admin/bookings">
-                <BsReceipt />
-                <span>Bookings</span>
-              </NavLink>
-            </li>
-
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.to}>
+                  <NavLink to={item.to} end={item.end}>
+                    <Icon />
+                    <span>{item.label}</span>
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
-
       </aside>
 
-      {/* Main */}
       <div className="main">
-
-        {/* Navbar */}
         <header className="navbar">
-
           <div className="navbar-left">
-
-            <button
-              className="toggle-btn mobile"
-              onClick={() => setCollapsed(!collapsed)}
-            >
+            <button className="toggle-btn mobile" onClick={() => setCollapsed(!collapsed)}>
               ☰
             </button>
-
             <h3>Admin Panel</h3>
-
           </div>
 
-          {/* User Dropdown */}
-          <div
-            className={`admin-user-menu ${
-              userMenuOpen ? "show" : ""
-            }`}
-          >
-
-            <div
-              className="admin-user-trigger"
-              onClick={() =>
-                setUserMenuOpen(!userMenuOpen)
-              }
-            >
+          <div className={`admin-user-menu ${userMenuOpen ? "show" : ""}`}>
+            <div className="admin-user-trigger" onClick={() => setUserMenuOpen(!userMenuOpen)}>
               <BsPersonCircle />
               <span>Admin</span>
             </div>
 
             <div className="admin-user-dropdown">
-
               <NavLink to="/">
                 <BsHouseDoor />
-                <span>Quay về trang chủ</span>
+                <span>Back to site</span>
               </NavLink>
 
               <button onClick={handleLogout}>
                 <BsBoxArrowRight />
-                <span>Đăng xuất</span>
+                <span>Logout</span>
               </button>
-
             </div>
-
           </div>
-
         </header>
 
-        {/* Content */}
         <div className="content">
           <Outlet />
         </div>
-
       </div>
-
     </div>
   );
 }

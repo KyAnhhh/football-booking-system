@@ -1,365 +1,356 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useEffect, useMemo, useState } from "react";
 import { getProducts } from "../../services/productService";
 import { getCategories } from "../../services/categoryService";
 import { getBrands } from "../../services/brandService";
-
 import "../../assets/styles/Product.css";
+import { useNavigate } from "react-router-dom";
+import {
+  Eye,
+  RotateCcw,
+  Search,
+  ShoppingBag,
+  SlidersHorizontal,
+  Tag,
+} from "lucide-react";
+
+const priceRanges = [
+  { label: "Duoi 500k", min: 0, max: 500000 },
+  { label: "500k - 1 trieu", min: 500000, max: 1000000 },
+  { label: "Tren 1 trieu", min: 1000000, max: null },
+];
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(Number(value || 0));
+
+const getLowestVariant = (product) => {
+  const variants = product?.variants || [];
+  if (!variants.length) return null;
+
+  return variants.reduce((lowest, current) =>
+    Number(current.price || 0) < Number(lowest.price || 0) ? current : lowest
+  );
+};
 
 export default function Product() {
   const [products, setProducts] = useState([]);
   const [pageNo, setPageNo] = useState(0);
   const [search, setSearch] = useState("");
   const [totalPages, setTotalPages] = useState(0);
-
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [minPrice, setMinPrice] = useState(null);
   const [maxPrice, setMaxPrice] = useState(null);
-
   const [selectedPriceRange, setSelectedPriceRange] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    getCategories(0, 100).then((res) => {
-      setCategories(res.content || []);
-    });
+    const loadFilters = async () => {
+      try {
+        const [categoryRes, brandRes] = await Promise.all([
+          getCategories(),
+          getBrands(),
+        ]);
+        setCategories(categoryRes?.content || categoryRes || []);
+        setBrands(brandRes?.content || brandRes || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-    getBrands(0, 100).then((res) => {
-      setBrands(res.content || []);
-    });
+    loadFilters();
   }, []);
 
   useEffect(() => {
-    getProducts(
-      pageNo,
-      10,
-      "id",
-      "asc",
-      search,
-      selectedCategory,
-      selectedBrand,
-      minPrice,
-      maxPrice
-    ).then((res) => {
-      setProducts(res.content || []);
-      setTotalPages(res.page?.totalPages || 0);
-    });
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await getProducts(
+          pageNo,
+          10,
+          "id",
+          "asc",
+          search,
+          selectedCategory,
+          selectedBrand,
+          minPrice,
+          maxPrice
+        );
+
+        setProducts(response?.content || []);
+        setTotalPages(response?.totalPages || 0);
+      } catch (error) {
+        console.error(error);
+        setProducts([]);
+        setTotalPages(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
   }, [pageNo, search, selectedCategory, selectedBrand, minPrice, maxPrice]);
 
-  const checkLogin = (callback) => {
+  const activeFilterCount = useMemo(
+    () =>
+      [search, selectedCategory, selectedBrand, selectedPriceRange].filter(
+        Boolean
+      ).length,
+    [search, selectedCategory, selectedBrand, selectedPriceRange]
+  );
+
+  const checkLogin = () => {
     const token = sessionStorage.getItem("accessToken");
     if (!token) {
       navigate("/login");
+      return false;
+    }
+    return true;
+  };
+
+  const handlePriceRangeChange = (rangeLabel) => {
+    setSelectedPriceRange(rangeLabel);
+    setPageNo(0);
+
+    const range = priceRanges.find((item) => item.label === rangeLabel);
+    if (!range) {
+      setMinPrice(null);
+      setMaxPrice(null);
       return;
     }
-    callback();
+
+    setMinPrice(range.min);
+    setMaxPrice(range.max);
+  };
+
+  const resetFilters = () => {
+    setSearch("");
+    setSelectedCategory("");
+    setSelectedBrand("");
+    setSelectedPriceRange("");
+    setMinPrice(null);
+    setMaxPrice(null);
+    setPageNo(0);
   };
 
   return (
-    <div className="client-products-layout">
+    <div className="shop-page">
+      <section className="shop-hero">
+        <div>
+          <p className="shop-eyebrow">Football gear</p>
+          <h1>Sản phẩm bóng đá</h1>
+          <p>
+            Tìm giày, áo đấu và phụ kiện với bộ lọc rõ ràng, giá hiển thị theo biến thể thấp nhất
+          </p>
+        </div>
 
-      {/* SIDEBAR */}
-      <div className="filter-sidebar">
-        <h3>Bộ lọc sản phẩm</h3>
+        <div className="shop-hero-stat">
+          <ShoppingBag size={22} />
+          <strong>{products.length}</strong>
+          <span>sản phẩm đang hiển thị</span>
+        </div>
+      </section>
 
-        <input
-          className="search-input"
-          placeholder="Tìm sản phẩm..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPageNo(0);
-          }}
-        />
+      <div className="shop-layout">
+        <aside className="shop-filter-panel">
+          <div className="shop-filter-header">
+            <div>
+              <span>Bo loc</span>
+              <strong>{activeFilterCount} đang áp dụng</strong>
+            </div>
+            <SlidersHorizontal size={22} />
+          </div>
 
-        <div className="filter-group">
+          <label className="shop-search-box">
+            <Search size={18} />
+            <input
+              type="text"
+              value={search}
+              placeholder="Tìm tên sản phẩm..."
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPageNo(0);
+              }}
+            />
+          </label>
 
-  <h4>Giá</h4>
+          <div className="shop-filter-group">
+            <label>Danh mục</label>
+            <select
+              value={selectedCategory}
+              onChange={(event) => {
+                setSelectedCategory(event.target.value);
+                setPageNo(0);
+              }}
+            >
+              <option value="">Tất cả danh mục</option>
+              {categories.map((category) => (
+                <option key={category.id || category.name} value={category.name}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-  <div className="filter-buttons">
+          <div className="shop-filter-group">
+            <label>Thương hiệu</label>
+            <select
+              value={selectedBrand}
+              onChange={(event) => {
+                setSelectedBrand(event.target.value);
+                setPageNo(0);
+              }}
+            >
+              <option value="">Tất cả thương hiệu</option>
+              {brands.map((brand) => (
+                <option key={brand.id || brand.name} value={brand.name}>
+                  {brand.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-    <button
-      className={selectedPriceRange === "" ? "active" : ""}
-      onClick={() => {
-        setSelectedPriceRange("");
-        setMinPrice("");
-        setMaxPrice("");
-        setPageNo(0);
-      }}
-    >
-      Tất cả
-    </button>
+          <div className="shop-filter-group">
+            <label>Khoảng giá</label>
+            <div className="shop-price-options">
+              <button
+                type="button"
+                className={!selectedPriceRange ? "active" : ""}
+                onClick={() => handlePriceRangeChange("")}
+              >
+                Tat ca
+              </button>
+              {priceRanges.map((range) => (
+                <button
+                  type="button"
+                  key={range.label}
+                  className={selectedPriceRange === range.label ? "active" : ""}
+                  onClick={() => handlePriceRangeChange(range.label)}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-    <button
-      className={
-        selectedPriceRange === "under200"
-          ? "active"
-          : ""
-      }
-      onClick={() => {
-        setSelectedPriceRange("under200");
-        setMinPrice("");
-        setMaxPrice(200000);
-        setPageNo(0);
-      }}
-    >
-      Dưới 200k
-    </button>
+          <button className="shop-reset-btn" type="button" onClick={resetFilters}>
+            <RotateCcw size={17} />
+            Đặt lại bộ lọc
+          </button>
+        </aside>
 
-    <button
-      className={
-        selectedPriceRange === "200to500"
-          ? "active"
-          : ""
-      }
-      onClick={() => {
-        setSelectedPriceRange("200to500");
-        setMinPrice(200000);
-        setMaxPrice(500000);
-        setPageNo(0);
-      }}
-    >
-      200k - 500k
-    </button>
+        <main className="shop-content">
+          <div className="shop-content-header">
+            <div>
+              <p className="shop-eyebrow">Catalogue</p>
+              <h2>Danh sách sản phẩm</h2>
+            </div>
+            <span>Trang {pageNo + 1} / {Math.max(totalPages, 1)}</span>
+          </div>
 
-    <button
-      className={
-        selectedPriceRange === "500to1000"
-          ? "active"
-          : ""
-      }
-      onClick={() => {
-        setSelectedPriceRange("500to1000");
-        setMinPrice(500000);
-        setMaxPrice(1000000);
-        setPageNo(0);
-      }}
-    >
-      500k - 1tr
-    </button>
+          {loading ? (
+            <div className="shop-state">Đang tải sản phẩm...</div>
+          ) : products.length === 0 ? (
+            <div className="shop-state">
+              Không có sản phẩm phù hợp với bộ lọc hiện tại
+            </div>
+          ) : (
+            <div className="shop-grid">
+              {products.map((product) => {
+                const lowestVariant = getLowestVariant(product);
+                const price = Number(lowestVariant?.price || 0);
+                const discount = Number(product.discount || 0);
+                const finalPrice = price - (price * discount) / 100;
+                const thumbnail =
+                  product.imageUrls?.[0] ||
+                  "https://placehold.co/600x600/f1f5f9/0f172a?text=Product";
 
-    <button
-      className={
-        selectedPriceRange === "1000to2000"
-          ? "active"
-          : ""
-      }
-      onClick={() => {
-        setSelectedPriceRange("1000to2000");
-        setMinPrice(1000000);
-        setMaxPrice(2000000);
-        setPageNo(0);
-      }}
-    >
-      1tr - 2tr
-    </button>
-
-    <button
-      className={
-        selectedPriceRange === "over2000"
-          ? "active"
-          : ""
-      }
-      onClick={() => {
-        setSelectedPriceRange("over2000");
-        setMinPrice(2000000);
-        setMaxPrice("");
-        setPageNo(0);
-      }}
-    >
-      Trên 2tr
-    </button>
-
-  </div>
-
-</div>
-
-        <div className="filter-group">
-
-  <h4>Danh mục</h4>
-
-  <div className="filter-buttons">
-
-    <button
-      className={selectedCategory === "" ? "active" : ""}
-      onClick={() => {
-        setSelectedCategory("");
-        setPageNo(0);
-      }}
-    >
-      Tất cả
-    </button>
-
-    {categories.map((c) => (
-
-      <button
-        key={c.id}
-        className={
-          selectedCategory === c.name
-            ? "active"
-            : ""
-        }
-        onClick={() => {
-          setSelectedCategory(c.name);
-          setPageNo(0);
-        }}
-      >
-        {c.name}
-      </button>
-
-    ))}
-
-  </div>
-
-</div>
-
-        <div className="filter-group">
-
-  <h4>Thương hiệu</h4>
-
-  <div className="filter-buttons">
-
-    <button
-      className={selectedBrand === "" ? "active" : ""}
-      onClick={() => {
-        setSelectedBrand("");
-        setPageNo(0);
-      }}
-    >
-      Tất cả
-    </button>
-
-    {brands.map((b) => (
-
-      <button
-        key={b.id}
-        className={
-          selectedBrand === b.name
-            ? "active"
-            : ""
-        }
-        onClick={() => {
-          setSelectedBrand(b.name);
-          setPageNo(0);
-        }}
-      >
-        {b.name}
-      </button>
-
-    ))}
-
-  </div>
-
-</div>
-      </div>
-
-      {/* PRODUCT CONTENT */}
-      <div className="product-content">
-
-        <h2 className="title">⚽ Shop Đồ Bóng Đá</h2>
-
-        <div className="product-grid">
-          {products.map((p) => {
-            const minPrice = p.variants?.length
-              ? Math.min(...p.variants.map((v) => v.price))
-              : null;
-
-            return (
-              <div key={p.id} className="product-card">
-                <div className="product-image">
-                  <img
-                    src={p.imageUrls?.[0] || "/no-image.png"}
-                    alt={p.name}
-                  />
-
-                  {p.discount > 0 && (
-                    <span className="discount-badge">
-                      -{p.discount}%
-                    </span>
-                  )}
-                </div>
-
-                <div className="product-info">
-                  <h4 className="product-name">{p.name}</h4>
-
-                  <div className="price-wrapper">
-                    {p.discount > 0 && (
-                      <span className="price-old">
-                        {minPrice?.toLocaleString()}đ
-                      </span>
-                    )}
-
-                    <span className="price-new">
-                      {minPrice
-                        ? (
-                            p.discount > 0
-                              ? minPrice -
-                                (minPrice * p.discount) / 100
-                              : minPrice
-                          ).toLocaleString() + "đ"
-                        : "Liên hệ"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="product-actions">
-                  <button
-                    className="detail-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      checkLogin(() => {
-                        navigate(`/products/product-details/${p.id}`);
+                return (
+                  <article className="shop-product-card" key={product.id}>
+                    <button
+                      type="button"
+                      className="shop-product-media"
+                      onClick={() =>
+                        checkLogin() &&
+                        navigate(`/products/product-details/${product.id}`)
                       }
-                      )
-                    }}
-                  >
-                    Xem chi tiết
-                  </button>
+                    >
+                      {discount > 0 && (
+                        <span className="shop-discount-badge">-{discount}%</span>
+                      )}
+                      <img src={thumbnail} alt={product.name} />
+                    </button>
 
-                  <button
-                    className="buy-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    <div className="shop-product-info">
+                      <div className="shop-product-meta">
+                        <Tag size={15} />
+                        <span>
+                          {product.brandName ||
+                            product.brand?.name ||
+                            product.categoryName ||
+                            "San pham"}
+                        </span>
+                      </div>
+                      <h3>{product.name}</h3>
 
-                      checkLogin(() => {
-                        navigate(`/products/product-details/${p.id}`);
-                      })
-                    }}
-                  >
-                    Mua ngay
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                      <div className="shop-price-row">
+                        {discount > 0 && (
+                          <span className="shop-old-price">
+                            {formatCurrency(price)}
+                          </span>
+                        )}
+                        <strong>{formatCurrency(finalPrice)}</strong>
+                      </div>
 
-        {/* PAGINATION */}
-        <div className="pagination">
-          <button
-            disabled={pageNo === 0}
-            onClick={() => setPageNo((prev) => prev - 1)}
-          >
-            ← Trước
-          </button>
+                      <div className="shop-card-actions">
+                        <button
+                          type="button"
+                          className="shop-secondary-btn"
+                          onClick={() =>
+                            checkLogin() && navigate(`/products/product-details/${product.id}`)
+                          }
+                        >
+                          <Eye size={17} />
+                          Chi tiết
+                        </button>
+                        <button
+                          type="button"
+                          className="shop-primary-btn"
+                          onClick={() =>
+                            checkLogin() && navigate(`/products/product-details/${product.id}`)
+                          }
+                        >
+                          Mua ngay
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
 
-          <span>
-            Trang {pageNo + 1} / {totalPages}
-          </span>
-
-          <button
-            disabled={pageNo + 1 >= totalPages}
-            onClick={() => setPageNo((prev) => prev + 1)}
-          >
-            Sau →
-          </button>
-        </div>
+          {totalPages > 1 && (
+            <div className="shop-pagination">
+              {Array.from({ length: totalPages }, (_, index) => (
+                <button
+                  type="button"
+                  key={index}
+                  className={pageNo === index ? "active" : ""}
+                  onClick={() => setPageNo(index)}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

@@ -20,8 +20,6 @@ export default function BookingPage() {
 
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(null);
 
-  const [loadingAction, setLoadingAction] = useState(false);
-
   const loadBookings = async () => {
     try {
       const data = await getBookings({
@@ -49,13 +47,10 @@ export default function BookingPage() {
 
   const handleUpdateStatus = async (id, status) => {
     try {
-      setLoadingAction(true);
       await updateBookingStatus(id, status);
       await loadBookings();
     } catch (err) {
       console.error("Update status failed:", err);
-    } finally {
-      setLoadingAction(false);
     }
   };
 
@@ -68,9 +63,24 @@ export default function BookingPage() {
       setConfirmDeleteModal(null);
     } catch (err) {
       console.error("Delete failed:", err);
-    } finally {
-      setLoadingAction(false);
     }
+  };
+
+  const formatMoney = (value) => {
+    return `${Number(value || 0).toLocaleString("vi-VN")} VND`;
+  };
+
+  const formatDate = (value) => {
+    return value ? new Date(value).toLocaleDateString("vi-VN") : "-";
+  };
+
+  const formatTime = (value) => {
+    return value
+      ? new Date(value).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "-";
   };
 
   return (
@@ -101,6 +111,7 @@ export default function BookingPage() {
             <option value="CONFIRMED">Confirmed</option>
             <option value="CANCELLED">Cancelled</option>
             <option value="COMPLETED">Completed</option>
+            <option value="EXPIRED">Expired</option>
           </Form.Select>
         </div>
       </div>
@@ -126,12 +137,18 @@ export default function BookingPage() {
                 <td>{b.id}</td>
                 <td>{b.userName}</td>
                 <td>{b.fieldName}</td>
-                <td>{b.startTime?.split("T")[0]}</td>
+                <td>{formatDate(b.startTime)}</td>
                 <td>
-                  {b.startTime} - {b.endTime}
+                  {formatTime(b.startTime)} - {formatTime(b.endTime)}
                 </td>
                 <td>
-                  {Number(b.totalPrice).toLocaleString("vi-VN")} VND
+                  <strong>{formatMoney(b.finalPrice || b.totalPrice)}</strong>
+                  <div className="admin-booking-breakdown">
+                    <span>Field: {formatMoney(b.originalPrice || b.totalPrice)}</span>
+                    <span>Extra: {formatMoney(b.extraServicePrice)}</span>
+                    <span>Member: -{formatMoney(b.membershipDiscount)}</span>
+                    <span>Voucher: -{formatMoney(b.voucherDiscount)}</span>
+                  </div>
                 </td>
 
                 <td>
@@ -163,6 +180,16 @@ export default function BookingPage() {
                       }
                     >
                       Cancel
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        handleUpdateStatus(b.id, "EXPIRED")
+                      }
+                    >
+                      Expire
                     </Button>
                   </>
                 )}
