@@ -1,58 +1,100 @@
-import "../../assets/styles/Footer.css"
+import { CalendarDays, Mail, MapPin, Phone, ShieldCheck, ShoppingBag } from "lucide-react";
+import { Link } from "react-router-dom";
+import "../../assets/styles/Footer.css";
+
+const shopLinks = [
+  { label: "Sản phẩm", to: "/products" },
+  { label: "Sân bóng", to: "/football-fields" },
+  { label: "Bộ sưu tập", to: "/collections" },
+  { label: "Dịch vụ", to: "/service" },
+];
+
+const accountLinks = [
+  { label: "Tài khoản", to: "/profile" },
+  { label: "Giỏ hàng", to: "/cart" },
+  { label: "Đơn hàng của tôi", to: "/my-orders" },
+  { label: "Đặt sân của tôi", to: "/my-bookings" },
+];
 
 export default function Footer() {
   return (
     <footer className="fs-footer">
+      <div className="fs-footer-topline" />
+
       <div className="fs-footer-inner">
-        <div className="fs-footer-brand">
-          <a href="/" className="fs-footer-logo" aria-label="FootballShop Home">
-            <span className="fs-footer-ball">⚽</span>
-            <span className="fs-footer-title">Football Shop</span>
-          </a>
+        <section className="fs-footer-brand">
+          <Link to="/" className="fs-footer-logo" aria-label="Về trang chủ Football Shop">
+            <span className="fs-footer-mark">FS</span>
+            <span>
+              <span className="fs-footer-title">Football Shop</span>
+              <span className="fs-footer-kicker">Gear & sân bóng</span>
+            </span>
+          </Link>
           <p className="fs-footer-desc">
-            Trusted destination for quality football gear — jerseys, boots, accessories.
-            Play with confidence. Ship fast. Return easy.
+            Điểm đến cho đồ bóng đá, phụ kiện thi đấu và đặt sân nhanh gọn.
+            Chọn sản phẩm, đặt lịch, thanh toán rõ ràng trong cùng một trải nghiệm.
           </p>
-        </div>
-
-        <div className="fs-footer-col">
-          <h4>Shop</h4>
-          <ul>
-            <li><a href="/products">All Products</a></li>
-            <li><a href="/sale">On Sale</a></li>
-            <li><a href="/new">New Arrivals</a></li>
-          </ul>
-        </div>
-
-        <div className="fs-footer-col">
-          <h4>Support</h4>
-          <ul>
-            <li><a href="/contact">Contact</a></li>
-            <li><a href="/faq">FAQs</a></li>
-            <li><a href="/returns">Return Policy</a></li>
-          </ul>
-        </div>
-
-        <div className="fs-footer-col">
-          <h4>Follow</h4>
-          <div className="fs-footer-socials">
-            <a href="/" aria-label="Facebook">Facebook</a>
-            <a href="/" aria-label="Instagram">Instagram</a>
-            <a href="/" aria-label="Twitter">Twitter</a>
+          <div className="fs-footer-badges">
+            <span>
+              <ShieldCheck size={16} />
+              Giá minh bạch
+            </span>
+            <span>
+              <CalendarDays size={16} />
+              Đặt sân theo slot
+            </span>
           </div>
-        </div>
+        </section>
+
+        <section className="fs-footer-col">
+          <h4>Mua sắm</h4>
+          <ul>
+            {shopLinks.map((link) => (
+              <li key={link.to}>
+                <Link to={link.to}>{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="fs-footer-col">
+          <h4>Tài khoản</h4>
+          <ul>
+            {accountLinks.map((link) => (
+              <li key={link.to}>
+                <Link to={link.to}>{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="fs-footer-col fs-footer-contact">
+          <h4>Liên hệ</h4>
+          <ul>
+            <li>
+              <MapPin size={17} />
+              TP. Hồ Chí Minh, Việt Nam
+            </li>
+            <li>
+              <Phone size={17} />
+              0900 123 456
+            </li>
+            <li>
+              <Mail size={17} />
+              support@footballshop.vn
+            </li>
+          </ul>
+          <Link className="fs-footer-cta" to="/football-fields">
+            <ShoppingBag size={18} />
+            Đặt sân ngay
+          </Link>
+        </section>
       </div>
 
       <div className="fs-footer-bottom">
-        <div className="fs-footer-bottom-inner">
-          <span>© {new Date().getFullYear()} FootballShop</span>
-          <span className="fs-footer-sep">•</span>
-          <a href="/privacy">Privacy</a>
-          <span className="fs-footer-sep">•</span>
-          <a href="/terms">Terms</a>
-        </div>
+        <span>© {new Date().getFullYear()} Football Shop</span>
+        <span>Thiết kế cho trải nghiệm mua sắm và đặt sân bóng.</span>
       </div>
     </footer>
   );
 }
-

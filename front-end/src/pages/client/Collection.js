@@ -1,58 +1,63 @@
+import { Link } from "react-router-dom";
 import "../../assets/styles/Collection.css";
+import { ArrowRight } from "lucide-react";
 
 const collections = [
   {
     id: 1,
-    title: "Áo CLB Châu Âu",
-    desc: "Manchester United, Real Madrid, Barcelona, PSG...",
-    image:
-      "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16",
+    title: "Áo câu lạc bộ châu Âu",
+    desc: "Manchester United, Real Madrid, Barcelona, PSG và nhiều đội bóng lớn.",
+    image: "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: 2,
-    title: "Áo Đội Tuyển Quốc Gia",
-    desc: "Việt Nam, Brazil, Argentina, Pháp, Đức...",
-    image:
-      "https://images.unsplash.com/photo-1518091043644-c1d4457512c6",
+    title: "Áo đội tuyển quốc gia",
+    desc: "Việt Nam, Brazil, Argentina, Pháp, Đức và các mẫu áo thi đấu nổi bật.",
+    image: "https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: 3,
-    title: "Giày Bóng Đá",
-    desc: "Nike Mercurial, Adidas Predator, Puma Future...",
-    image:
-      "https://images.unsplash.com/photo-1517649763962-0c623066013b",
+    title: "Giày bóng đá",
+    desc: "Nike Mercurial, Adidas Predator, Puma Future và nhiều dòng giày sân cỏ.",
+    image: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
   },
- {
-  id: 4,
-  title: "Phụ Kiện Bóng Đá",
-  desc: "Găng tay, băng đội trưởng, balo thể thao...",
-  image:
-    "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1200&q=80",
+  {
+    id: 4,
+    title: "Phụ kiện bóng đá",
+    desc: "Găng tay, balo, băng đội trưởng và phụ kiện tập luyện hằng ngày.",
+    image: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1200&q=80",
   },
 ];
 
 export default function Collection() {
   return (
-    <div className="collection-page">
-      <div className="collection-hero">
-        <h1>Bộ Sưu Tập</h1>
-        <p>Khám phá thế giới bóng đá cùng Football Shop</p>
-      </div>
+    <div className="collection-core-page">
+      <section className="collection-core-hero">
+        <div>
+          <p>Bộ sưu tập</p>
+          <h1>Chọn nhanh theo nhu cầu thi đấu</h1>
+          <span>
+            Các nhóm sản phẩm được sắp xếp theo thói quen mua sắm của người chơi
+            bóng đá.
+          </span>
+        </div>
+      </section>
 
-      <div className="collection-grid">
+      <section className="collection-core-grid">
         {collections.map((item) => (
-          <div className="collection-card" key={item.id}>
+          <article className="collection-core-card" key={item.id}>
             <img src={item.image} alt={item.title} />
-            <div className="collection-content">
+            <div>
               <h3>{item.title}</h3>
               <p>{item.desc}</p>
-              <a href="/products" className="collection-btn">
-                Xem sản phẩm →
-              </a>
+              <Link to="/products">
+                Xem sản phẩm
+                <ArrowRight size={17} />
+              </Link>
             </div>
-          </div>
+          </article>
         ))}
-      </div>
+      </section>
     </div>
   );
 }

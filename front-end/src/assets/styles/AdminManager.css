@@ -76,7 +76,9 @@ body .category-header h2,
 body .order-header h2,
 body .payment-header h2,
 body .product-header h2,
-body .size-header h2 {
+body .size-header h2,
+body .size-header h3,
+body .product-header h3 {
   margin: 0;
   color: var(--admin-text);
   font-size: 24px;

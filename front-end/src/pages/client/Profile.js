@@ -1,157 +1,189 @@
 import { useEffect, useState } from "react";
 import { getProfile, updateProfile } from "../../services/userService";
-import { Container, Card, Button, Form, Alert } from "react-bootstrap";
 import "../../assets/styles/Profile.css";
+import { Mail, Phone, Save, UserRound } from "lucide-react";
 
 export default function Profile() {
-    const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [editMode, setEditMode] = useState(false);
-    const [updating, setUpdating] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [editData, setEditData] = useState({
+    username: "",
+    email: "",
+    phone: "",
+  });
+  const [editError, setEditError] = useState(null);
 
-    // Edit form data
-    const [editData, setEditData] = useState({
-        username: "",
-        email: "",
-        phone: "",
+  const fetchProfile = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getProfile();
+      setProfile(data);
+      setEditData({
+        username: data.username || "",
+        email: data.email || "",
+        phone: data.phone || "",
+      });
+    } catch (err) {
+      console.error("Error load profile:", err);
+      setError("Lỗi tải thông tin cá nhân: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const handleUpdate = async () => {
+    setEditError(null);
+    setUpdating(true);
+    try {
+      if (!editData.username || !editData.email || !editData.phone) {
+        setEditError("Vui lòng điền đầy đủ thông tin bắt buộc.");
+        return;
+      }
+
+      const result = await updateProfile({
+        username: editData.username,
+        email: editData.email,
+        phone: editData.phone,
+      });
+
+      setProfile(result);
+      setEditMode(false);
+      setEditError(null);
+    } catch (err) {
+      console.error("Update error:", err);
+      setEditError(err.message || "Lỗi khi cập nhật thông tin.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setEditError(null);
+    setEditData({
+      username: profile?.username || "",
+      email: profile?.email || "",
+      phone: profile?.phone || "",
     });
-    const [editError, setEditError] = useState(null);
+  };
 
-    useEffect(() => {
-        fetchProfile();
-    }, []);
+  if (loading) {
+    return <div className="profile-state">Đang tải hồ sơ...</div>;
+  }
 
-    const fetchProfile = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await getProfile();
-            setProfile(data);
-            setEditData({
-                username: data.username,
-                email: data.email,
-                phone: data.phone,
-            });
-        } catch (err) {
-            console.error("Error load profile:", err);
-            setError("Lỗi tải thông tin cá nhân: " + err.message);
-        }
-        setLoading(false);
-    };
+  return (
+    <div className="profile-page">
+      <section className="profile-hero">
+        <div>
+          <p>Tài khoản</p>
+          <h1>Thông tin cá nhân</h1>
+          <span>Cập nhật tên, email và số điện thoại để đơn hàng được xử lý chính xác.</span>
+        </div>
+      </section>
 
-    const handleUpdate = async () => {
-        setEditError(null);
-        setUpdating(true);
-        try {
-            if (!editData.username || !editData.email || !editData.phone) {
-                setEditError("Vui lòng điền đầy đủ thông tin bắt buộc");
-                setUpdating(false);
-                return;
-            }
+      <div className="profile-shell">
+        {error && <div className="profile-alert error">{error}</div>}
 
-            const payload = {
-                username: editData.username,
-                email: editData.email,
-                phone: editData.phone,
-            };
-
-            const result = await updateProfile(payload);
-            setProfile(result);
-            setEditMode(false);
-            setEditError(null);
-        } catch (err) {
-            console.error("Update error:", err);
-            setEditError(err.message || "Lỗi khi cập nhật thông tin");
-        }
-        setUpdating(false);
-    };
-
-    if (loading) return (
-        <Container style={{ marginTop: 30 }}>
-            <p>Đang tải...</p>
-        </Container>
-    );
-
-    return (
-        <Container style={{ marginTop: 30, marginBottom: 30 }}>
-            <h2 style={{ marginBottom: 20 }}>Thông tin cá nhân</h2>
-
-            {error && <Alert variant="danger">{error}</Alert>}
-
-            {!editMode ? (
-                <Card style={{ marginBottom: 20 }}>
-                    <Card.Header bg="primary" text="white">
-                        <Card.Title style={{ margin: 0 }}>Hồ sơ cá nhân</Card.Title>
-                    </Card.Header>
-                    <Card.Body>
-                        <div style={{ marginBottom: 10 }}>
-                            <p><strong>Họ và tên:</strong> {profile?.username}</p>
-                            <p><strong>Email:</strong> {profile?.email}</p>
-                            <p><strong>Số điện thoại:</strong> {profile?.phone}</p>
-                        </div>
-                    </Card.Body>
-                </Card>
-            ) : (
-                <Card style={{ marginBottom: 20 }}>
-                    <Card.Header bg="primary" text="white">
-                        <Card.Title style={{ margin: 0 }}>Cập nhật thông tin</Card.Title>
-                    </Card.Header>
-                    <Card.Body>
-                        {editError && <Alert variant="danger">{editError}</Alert>}
-
-                        <Form>
-                            <Form.Group className="mb-3">
-                                <Form.Label>Họ và tên</Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    value={editData.username}
-                                    onChange={(e) => setEditData({ ...editData, username: e.target.value })}
-                                    required
-                                />
-                            </Form.Group>
-
-                            <Form.Group className="mb-3">
-                                <Form.Label>Email</Form.Label>
-                                <Form.Control
-                                    type="email"
-                                    value={editData.email}
-                                    onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                                    required
-                                />
-                            </Form.Group>
-
-                            <Form.Group className="mb-3">
-                                <Form.Label>Số điện thoại</Form.Label>
-                                <Form.Control
-                                    type="tel"
-                                    value={editData.phone}
-                                    onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                                    required
-                                />
-                            </Form.Group>
-
-                        </Form>
-                    </Card.Body>
-                </Card>
-            )}
-
-            <div style={{ display: "flex", gap: 10 }}>
-                {!editMode ? (
-                    <Button variant="primary" onClick={() => setEditMode(true)}>
-                        Chỉnh sửa thông tin
-                    </Button>
-                ) : (
-                    <>
-                        <Button variant="primary" onClick={handleUpdate} disabled={updating}>
-                            {updating ? "Đang lưu..." : "Lưu thay đổi"}
-                        </Button>
-                        <Button variant="secondary" onClick={() => setEditMode(false)} disabled={updating}>
-                            Hủy
-                        </Button>
-                    </>
-                )}
+        <section className="profile-card">
+          <div className="profile-card-header">
+            <div className="profile-avatar">
+              <UserRound size={32} />
             </div>
-        </Container>
-    );
+            <div>
+              <span>Hồ sơ</span>
+              <h2>{profile?.username || "Người dùng"}</h2>
+            </div>
+          </div>
+
+          {!editMode ? (
+            <div className="profile-info-grid">
+              <div>
+                <UserRound size={18} />
+                <span>Họ và tên</span>
+                <strong>{profile?.username || "Chưa cập nhật"}</strong>
+              </div>
+              <div>
+                <Mail size={18} />
+                <span>Email</span>
+                <strong>{profile?.email || "Chưa cập nhật"}</strong>
+              </div>
+              <div>
+                <Phone size={18} />
+                <span>Số điện thoại</span>
+                <strong>{profile?.phone || "Chưa cập nhật"}</strong>
+              </div>
+            </div>
+          ) : (
+            <div className="profile-form">
+              {editError && <div className="profile-alert error">{editError}</div>}
+
+              <label>
+                <span>Họ và tên</span>
+                <input
+                  type="text"
+                  value={editData.username}
+                  onChange={(event) =>
+                    setEditData({ ...editData, username: event.target.value })
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={editData.email}
+                  onChange={(event) =>
+                    setEditData({ ...editData, email: event.target.value })
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Số điện thoại</span>
+                <input
+                  type="tel"
+                  value={editData.phone}
+                  onChange={(event) =>
+                    setEditData({ ...editData, phone: event.target.value })
+                  }
+                />
+              </label>
+            </div>
+          )}
+
+          <div className="profile-actions">
+            {!editMode ? (
+              <button type="button" onClick={() => setEditMode(true)}>
+                Chỉnh sửa thông tin
+              </button>
+            ) : (
+              <>
+                <button type="button" onClick={handleUpdate} disabled={updating}>
+                  <Save size={18} />
+                  {updating ? "Đang lưu..." : "Lưu thay đổi"}
+                </button>
+                <button
+                  type="button"
+                  className="profile-secondary-btn"
+                  onClick={cancelEdit}
+                  disabled={updating}
+                >
+                  Hủy
+                </button>
+              </>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }

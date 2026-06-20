@@ -1,8 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { getProducts } from "../../services/productService";
-import { getCategories } from "../../services/categoryService";
-import { getBrands } from "../../services/brandService";
-import "../../assets/styles/Product.css";
 import { useNavigate } from "react-router-dom";
 import {
   Eye,
@@ -12,11 +8,17 @@ import {
   SlidersHorizontal,
   Tag,
 } from "lucide-react";
+import { getBrands } from "../../services/brandService";
+import { getCategories } from "../../services/categoryService";
+import { getProducts } from "../../services/productService";
+import "../../assets/styles/Product.css";
+
+const PAGE_SIZE = 10;
 
 const priceRanges = [
-  { label: "Duoi 500k", min: 0, max: 500000 },
-  { label: "500k - 1 trieu", min: 500000, max: 1000000 },
-  { label: "Tren 1 trieu", min: 1000000, max: null },
+  { label: "Dưới 500k", min: 0, max: 500000 },
+  { label: "500k - 1 triệu", min: 500000, max: 1000000 },
+  { label: "Trên 1 triệu", min: 1000000, max: null },
 ];
 
 const formatCurrency = (value) =>
@@ -34,11 +36,21 @@ const getLowestVariant = (product) => {
   );
 };
 
+const getPageMetadata = (response, fallbackCount) => {
+  const page = response?.page || response || {};
+
+  return {
+    totalPages: Number(page.totalPages || 0),
+    totalElements: Number(page.totalElements || fallbackCount || 0),
+  };
+};
+
 export default function Product() {
   const [products, setProducts] = useState([]);
   const [pageNo, setPageNo] = useState(0);
   const [search, setSearch] = useState("");
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -73,7 +85,7 @@ export default function Product() {
         setLoading(true);
         const response = await getProducts(
           pageNo,
-          10,
+          PAGE_SIZE,
           "id",
           "asc",
           search,
@@ -83,12 +95,17 @@ export default function Product() {
           maxPrice
         );
 
-        setProducts(response?.content || []);
-        setTotalPages(response?.totalPages || 0);
+        const content = response?.content || [];
+        const pageMetadata = getPageMetadata(response, content.length);
+
+        setProducts(content);
+        setTotalPages(pageMetadata.totalPages);
+        setTotalElements(pageMetadata.totalElements);
       } catch (error) {
         console.error(error);
         setProducts([]);
         setTotalPages(0);
+        setTotalElements(0);
       } finally {
         setLoading(false);
       }
@@ -143,17 +160,18 @@ export default function Product() {
     <div className="shop-page">
       <section className="shop-hero">
         <div>
-          <p className="shop-eyebrow">Football gear</p>
+          <p className="shop-eyebrow">Cửa hàng bóng đá</p>
           <h1>Sản phẩm bóng đá</h1>
           <p>
-            Tìm giày, áo đấu và phụ kiện với bộ lọc rõ ràng, giá hiển thị theo biến thể thấp nhất
+            Tìm giày, áo đấu và phụ kiện với bộ lọc rõ ràng, giá hiển thị theo
+            biến thể thấp nhất.
           </p>
         </div>
 
         <div className="shop-hero-stat">
           <ShoppingBag size={22} />
-          <strong>{products.length}</strong>
-          <span>sản phẩm đang hiển thị</span>
+          <strong>{totalElements}</strong>
+          <span>sản phẩm phù hợp</span>
         </div>
       </section>
 
@@ -161,7 +179,7 @@ export default function Product() {
         <aside className="shop-filter-panel">
           <div className="shop-filter-header">
             <div>
-              <span>Bo loc</span>
+              <span>Bộ lọc</span>
               <strong>{activeFilterCount} đang áp dụng</strong>
             </div>
             <SlidersHorizontal size={22} />
@@ -224,7 +242,7 @@ export default function Product() {
                 className={!selectedPriceRange ? "active" : ""}
                 onClick={() => handlePriceRangeChange("")}
               >
-                Tat ca
+                Tất cả
               </button>
               {priceRanges.map((range) => (
                 <button
@@ -248,17 +266,19 @@ export default function Product() {
         <main className="shop-content">
           <div className="shop-content-header">
             <div>
-              <p className="shop-eyebrow">Catalogue</p>
+              <p className="shop-eyebrow">Danh mục</p>
               <h2>Danh sách sản phẩm</h2>
             </div>
-            <span>Trang {pageNo + 1} / {Math.max(totalPages, 1)}</span>
+            <span>
+              Trang {pageNo + 1} / {Math.max(totalPages, 1)}
+            </span>
           </div>
 
           {loading ? (
             <div className="shop-state">Đang tải sản phẩm...</div>
           ) : products.length === 0 ? (
             <div className="shop-state">
-              Không có sản phẩm phù hợp với bộ lọc hiện tại
+              Không có sản phẩm phù hợp với bộ lọc hiện tại.
             </div>
           ) : (
             <div className="shop-grid">
@@ -294,7 +314,7 @@ export default function Product() {
                           {product.brandName ||
                             product.brand?.name ||
                             product.categoryName ||
-                            "San pham"}
+                            "Sản phẩm"}
                         </span>
                       </div>
                       <h3>{product.name}</h3>
@@ -313,7 +333,8 @@ export default function Product() {
                           type="button"
                           className="shop-secondary-btn"
                           onClick={() =>
-                            checkLogin() && navigate(`/products/product-details/${product.id}`)
+                            checkLogin() &&
+                            navigate(`/products/product-details/${product.id}`)
                           }
                         >
                           <Eye size={17} />
@@ -323,7 +344,8 @@ export default function Product() {
                           type="button"
                           className="shop-primary-btn"
                           onClick={() =>
-                            checkLogin() && navigate(`/products/product-details/${product.id}`)
+                            checkLogin() &&
+                            navigate(`/products/product-details/${product.id}`)
                           }
                         >
                           Mua ngay

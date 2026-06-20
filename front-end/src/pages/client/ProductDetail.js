@@ -50,7 +50,7 @@ export default function ProductDetail() {
         maxPrice: 0,
         discount: 0,
         finalPrice: 0,
-        displayPrice: "Lien he",
+        displayPrice: "Liên hệ",
       };
     }
 
@@ -151,7 +151,7 @@ export default function ProductDetail() {
         onClick={() => navigate("/products")}
       >
         <ChevronLeft size={18} />
-        Quay lai san pham
+        Quay lại sản phẩm
       </button>
 
       <section className="product-detail-shell">
@@ -182,7 +182,7 @@ export default function ProductDetail() {
 
           <h1>{product.name}</h1>
           <p className="product-detail-description">
-            {product.description || "Thong tin san pham dang duoc cap nhat."}
+            {product.description || "Thông tin sản phẩm đang được cập nhật."}
           </p>
 
           <div className="product-detail-price-panel">
@@ -198,7 +198,7 @@ export default function ProductDetail() {
             )}
             {priceInfo.discount > 0 && (
               <span className="product-detail-discount">
-                Giam {priceInfo.discount}%
+                Giảm {priceInfo.discount}%
               </span>
             )}
           </div>
@@ -233,7 +233,7 @@ export default function ProductDetail() {
                         ? "Hết hàng"
                         : hasStockField
                           ? `${stock} con`
-                          : "Co san"}
+                          : "Có sẵn"}
                     </small>
                   </button>
                 );

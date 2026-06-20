@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getReviewsByProductId } from "../../services/reviewService";
 import "../../assets/styles/ReviewSection.css";
-import ReviewForm from "./ReviewForm";
 import ReviewItem from "./ReviewItem";
 import RatingSummary from "./RatingSumary";
 
 export default function ReviewSection({ productId }) {
-
   const [reviews, setReviews] = useState([]);
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     if (!productId) return;
 
     try {
@@ -18,29 +16,27 @@ export default function ReviewSection({ productId }) {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
     fetchReviews();
-    console.log("ReviewSection productId:", productId);
-
-  }, [productId]);
+  }, [fetchReviews]);
 
   return (
-    <div className="review-section">
-
+    <section className="review-section">
       <h3>Đánh giá sản phẩm</h3>
 
       <RatingSummary productId={productId} />
 
-      {reviews.length === 0 && (
-        <p>Chưa có đánh giá nào</p>
+      {reviews.length === 0 ? (
+        <p className="review-section-empty">Chưa có đánh giá nào.</p>
+      ) : (
+        <div className="review-section-list">
+          {reviews.map((review) => (
+            <ReviewItem key={review.id} review={review} />
+          ))}
+        </div>
       )}
-
-      {reviews.map((r) => (
-        <ReviewItem key={r.id} review={r} />
-      ))}
-
-    </div>
+    </section>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import swal from 'sweetalert';
-import { useNavigate } from "react-router-dom";
-import "../assets/styles/Login.css"; 
+import swal from "sweetalert";
+import { Link, useNavigate } from "react-router-dom";
+import "../assets/styles/Login.css";
 import { login } from "../services/authService";
 import { jwtDecode } from "jwt-decode";
 
@@ -11,76 +11,81 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async (event) => {
+    event.preventDefault();
     setLoading(true);
 
     try {
       const res = await login({ email, password });
-
-      let data;
       const contentType = res.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        data = { message: text };
-      }
+      const data =
+        contentType && contentType.includes("application/json")
+          ? await res.json()
+          : { message: await res.text() };
 
       if (res.ok) {
         sessionStorage.setItem("accessToken", data.accessToken);
         sessionStorage.setItem("refreshToken", data.refreshToken);
-        const decode = jwtDecode(data.accessToken);
-        
-        if (decode.role && decode.role.includes("ADMIN")){
-          setTimeout(() => {
-            navigate("/admin");
-          }, 2000);
-        } else{
-          setTimeout(() => {
-            navigate("/");
-          }, 2000);
-        }
+        const decoded = jwtDecode(data.accessToken);
+
+        setTimeout(() => {
+          navigate(decoded.role && decoded.role.includes("ADMIN") ? "/admin" : "/");
+        }, 800);
       } else {
-        swal({ text: "Email hoặc mật khẩu sai. Hãy nhập lại!" || "Đăng nhập thất bại", icon: "error" });
+        swal({ text: data.message || "Email hoặc mật khẩu không đúng.", icon: "error" });
       }
     } catch (err) {
       console.error("Lỗi đăng nhập:", err);
-      swal({ text: "Lỗi đăng nhập", icon: "error" });
+      swal({ text: "Không thể đăng nhập. Vui lòng thử lại.", icon: "error" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <form className="login-card" onSubmit={handleLogin}>
-        <h2>Sign in</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+    <div className="auth-page">
+      <section className="auth-visual">
+        <p>Shop Bóng Đá</p>
+        <h1>Đăng nhập để tiếp tục trận đấu</h1>
+        <span>Quản lý đơn hàng, lịch đặt sân, voucher và đánh giá trong tài khoản của bạn.</span>
+      </section>
+
+      <form className="auth-card" onSubmit={handleLogin}>
+        <h2>Đăng nhập</h2>
+        <p className="auth-muted">Nhập email và mật khẩu để truy cập hệ thống.</p>
+
+        <label>
+          <span>Email</span>
+          <input
+            type="email"
+            placeholder="Nhập email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </label>
+
+        <label>
+          <span>Mật khẩu</span>
+          <input
+            type="password"
+            placeholder="Nhập mật khẩu"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+        </label>
 
         <button type="submit" disabled={loading}>
           {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
 
-        <p className="forgot-password-text">
-          <a href="/forgot-password">Quên mật khẩu?</a>
-        </p>
-        <p className="signup-text">
-          Không có tài khoản? <a href="/register">Đăng ký</a>
-        </p>
+        <div className="auth-links">
+          <Link to="/forgot-password">Quên mật khẩu?</Link>
+          <span>
+            Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
+          </span>
+        </div>
       </form>
     </div>
   );

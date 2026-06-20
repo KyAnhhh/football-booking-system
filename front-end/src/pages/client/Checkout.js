@@ -163,7 +163,7 @@ function CheckoutAddress({
       {(useNewAddress || addresses.length === 0) && (
         <div className="checkout-address-form">
           <input
-            placeholder="Tên người nhân"
+            placeholder="Tên người nhận"
             value={newAddress.receiverName}
             onChange={(event) =>
               setNewAddress({ ...newAddress, receiverName: event.target.value })
@@ -316,7 +316,7 @@ export default function Checkout() {
         const url = await getQrCode(orderId);
         setQrCodeUrl(url);
       } catch (error) {
-        Swal("Loi", "Khong lay duoc ma QR thanh toan", "error");
+        Swal("Lỗi", "Không lấy được mã QR thanh toán.", "error");
       }
     };
 
@@ -360,7 +360,7 @@ export default function Checkout() {
           setUseNewAddress(true);
         }
       } catch (error) {
-        Swal("Lỗi", error.message || "Không thể tải dữ liệu checkout", "error");
+        Swal("Lỗi", error.message || "Không thể tải dữ liệu thanh toán.", "error");
       }
     };
 
@@ -388,7 +388,7 @@ export default function Checkout() {
 
   const validateCheckout = () => {
     if (!selectedItems.length) {
-      Swal("Chưa chọn địa chỉ", "Vui lòng chọn ít nhất một sản phẩm.", "warning");
+      Swal("Chưa chọn sản phẩm", "Vui lòng chọn ít nhất một sản phẩm.", "warning");
       return false;
     }
 
@@ -404,7 +404,7 @@ export default function Checkout() {
         return false;
       }
     } else if (!selectedAddressId) {
-      Swal("Chauw chọn địa chỉ", "Vui lòng chọn địa chỉ giao hàng.", "warning");
+      Swal("Chưa chọn địa chỉ", "Vui lòng chọn địa chỉ giao hàng.", "warning");
       return false;
     }
 
@@ -456,7 +456,7 @@ export default function Checkout() {
         );
       }
     } catch (error) {
-      Swal("Lỗi", error.message || "Không thể đặt hàng", "error");
+      Swal("Lỗi", error.message || "Không thể đặt hàng.", "error");
     } finally {
       setLoading(false);
     }
@@ -476,7 +476,7 @@ export default function Checkout() {
     <div className="checkout-page">
       <section className="checkout-hero">
         <div>
-          <p>Checkout</p>
+          <p>Thanh toán</p>
           <h1>Hoàn tất đơn hàng</h1>
           <span>
             Kiểm tra sản phẩm, địa chỉ và phương thanh toán trước khi thanh toán.

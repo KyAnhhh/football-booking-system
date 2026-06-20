@@ -2,10 +2,26 @@ import { useEffect, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import swal from "sweetalert2";
 import { cancelBooking, getMyBookings } from "../../services/bookingService";
-import { createBookingReview, getMyReviews } from "../../services/bookingReviewService";
+import {
+  createBookingReview,
+  getMyReviews,
+} from "../../services/bookingReviewService";
 import "../../assets/styles/MyBookings.css";
+import { CalendarDays, Clock, MapPin, Star } from "lucide-react";
 
-const formatMoney = (value) => `${Number(value || 0).toLocaleString("vi-VN")} VND`;
+const formatMoney = (value) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(Number(value || 0));
+
+const statusLabel = {
+  PENDING: "Đang chờ",
+  CONFIRMED: "Đã xác nhận",
+  CANCELLED: "Đã hủy",
+  COMPLETED: "Hoàn tất",
+  EXPIRED: "Đã hết hạn",
+};
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
@@ -13,14 +29,18 @@ export default function MyBookings() {
   const [reviewModal, setReviewModal] = useState(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     try {
+      setLoading(true);
       const data = await getMyBookings();
       setBookings(data || []);
     } catch (err) {
       console.error(err);
-      swal.fire("Error", "Failed to load bookings", "error");
+      swal.fire("Lỗi", "Không thể tải danh sách đặt sân.", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,9 +58,10 @@ export default function MyBookings() {
     loadMyReviews();
   }, []);
 
-  const hasReviewed = (bookingId) => {
-    return myReviews.some((review) => review.bookingId === bookingId || review.booking?.id === bookingId);
-  };
+  const hasReviewed = (bookingId) =>
+    myReviews.some(
+      (review) => review.bookingId === bookingId || review.booking?.id === bookingId
+    );
 
   const closeReviewModal = () => {
     setReviewModal(null);
@@ -53,43 +74,36 @@ export default function MyBookings() {
       await createBookingReview(reviewModal.id, { rating, comment });
       await load();
       await loadMyReviews();
-      swal.fire("Success", "Danh gia thanh cong", "success");
+      swal.fire("Thành công", "Đánh giá sân bóng thành công.", "success");
       closeReviewModal();
     } catch (err) {
       console.error(err);
-      swal.fire("Error", "Failed to create review", "error");
+      swal.fire("Lỗi", "Không thể gửi đánh giá.", "error");
     }
   };
 
   const handleCancel = async (id) => {
+    const result = await swal.fire({
+      title: "Hủy lịch đặt sân?",
+      text: "Lịch đặt sân sẽ được chuyển sang trạng thái đã hủy.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Hủy lịch",
+      cancelButtonText: "Giữ lại",
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       await cancelBooking(id);
       await load();
     } catch (err) {
       console.error(err);
-      swal.fire("Error", "Failed to cancel booking", "error");
-    }
-  };
-
-  const getStatusClass = (status) => {
-    switch (status) {
-      case "CONFIRMED":
-        return "status confirmed";
-      case "PENDING":
-        return "status pending";
-      case "CANCELLED":
-        return "status cancelled";
-      case "COMPLETED":
-        return "status completed";
-      case "EXPIRED":
-        return "status expired";
-      default:
-        return "status";
+      swal.fire("Lỗi", "Không thể hủy lịch đặt sân.", "error");
     }
   };
 
   const formatDate = (date) => new Date(date).toLocaleDateString("vi-VN");
-
   const formatTime = (date) =>
     new Date(date).toLocaleTimeString("vi-VN", {
       hour: "2-digit",
@@ -104,49 +118,58 @@ export default function MyBookings() {
 
   return (
     <div className="my-bookings-page">
-      <div className="my-booking-header">
-        <h2>My Football Bookings</h2>
-      </div>
+      <section className="my-bookings-hero">
+        <div>
+          <p>Lịch đặt sân</p>
+          <h1>Đặt sân của tôi</h1>
+          <span>Theo dõi lịch chơi, giá thanh toán, dịch vụ thêm và đánh giá sau trận.</span>
+        </div>
+      </section>
 
-      <div className="booking-grid">
-        {bookings.length === 0 ? (
-          <div className="empty-booking">No bookings found</div>
-        ) : (
-          bookings.map((booking) => (
-            <div key={booking.id} className="booking-card">
-              <div className="booking-image-wrapper">
+      {loading ? (
+        <div className="my-bookings-state">Đang tải lịch đặt sân...</div>
+      ) : bookings.length === 0 ? (
+        <div className="my-bookings-state">Bạn chưa có lịch đặt sân nào.</div>
+      ) : (
+        <section className="my-bookings-grid">
+          {bookings.map((booking) => (
+            <article key={booking.id} className="my-booking-card">
+              <div className="my-booking-media">
                 <img
-                  src={booking.fieldImage || "/no-image.png"}
-                  alt={booking.fieldName || "Football Field"}
-                  className="booking-image"
+                  src={
+                    booking.fieldImage ||
+                    "https://placehold.co/900x520/f1f5f9/0f172a?text=Football+Field"
+                  }
+                  alt={booking.fieldName || "Sân bóng"}
                 />
-                <span className={getStatusClass(booking.status)}>{booking.status}</span>
+                <span className={`my-booking-status ${booking.status?.toLowerCase()}`}>
+                  {statusLabel[booking.status] || booking.status}
+                </span>
               </div>
 
-              <div className="booking-content">
-                <h3>{booking.fieldName}</h3>
-                <div className="booking-location">{booking.fieldAddress}</div>
+              <div className="my-booking-content">
+                <h2>{booking.fieldName}</h2>
+                <p className="my-booking-address">
+                  <MapPin size={16} />
+                  {booking.fieldAddress || "Chưa cập nhật địa chỉ"}
+                </p>
 
-                <div className="booking-info">
-                  <div className="info-item">
-                    <span>Date</span>
-                    <span>{formatDate(booking.startTime)}</span>
+                <div className="my-booking-facts">
+                  <div>
+                    <CalendarDays size={17} />
+                    <span>Ngày</span>
+                    <strong>{formatDate(booking.startTime)}</strong>
                   </div>
-
-                  <div className="info-item">
-                    <span>Time</span>
-                    <span>
+                  <div>
+                    <Clock size={17} />
+                    <span>Khung giờ</span>
+                    <strong>
                       {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
-                    </span>
-                  </div>
-
-                  <div className="info-item price">
-                    <span>Total</span>
-                    <span>{formatMoney(booking.finalPrice || booking.totalPrice)}</span>
+                    </strong>
                   </div>
                 </div>
 
-                <div className="booking-breakdown">
+                <div className="my-booking-breakdown">
                   <div>
                     <span>Giá sân</span>
                     <strong>{formatMoney(booking.originalPrice || booking.totalPrice)}</strong>
@@ -160,17 +183,19 @@ export default function MyBookings() {
                     <strong>-{formatMoney(booking.membershipDiscount)}</strong>
                   </div>
                   <div>
-                    <span>Giảm voucher {booking.voucherCode ? `(${booking.voucherCode})` : ""}</span>
+                    <span>
+                      Giảm voucher {booking.voucherCode ? `(${booking.voucherCode})` : ""}
+                    </span>
                     <strong>-{formatMoney(booking.voucherDiscount)}</strong>
                   </div>
-                  <div className="booking-breakdown-total">
+                  <div className="total">
                     <span>Thanh toán</span>
                     <strong>{formatMoney(booking.finalPrice || booking.totalPrice)}</strong>
                   </div>
                 </div>
 
                 {booking.extraServices?.length > 0 && (
-                  <div className="booking-extra-list">
+                  <div className="my-booking-extra-list">
                     {booking.extraServices.map((service) => (
                       <span key={service.serviceId}>
                         {service.serviceName} x{service.quantity}
@@ -179,45 +204,53 @@ export default function MyBookings() {
                   </div>
                 )}
 
-                <div className="actions">
+                <div className="my-booking-actions">
                   {canCancelBooking(booking) ? (
-                    <button onClick={() => handleCancel(booking.id)} className="btn-cancel">
-                      Cancel Booking
+                    <button type="button" className="danger" onClick={() => handleCancel(booking.id)}>
+                      Hủy lịch
                     </button>
                   ) : booking.status === "PENDING" ? (
-                    <button className="btn-cancel-disabled" disabled>
+                    <button type="button" disabled>
                       Không thể hủy
                     </button>
                   ) : null}
 
-                  {booking.status === "CONFIRMED" && <button className="btn-ok">Booking Confirmed</button>}
+                  {booking.status === "CONFIRMED" && (
+                    <button type="button" className="success" disabled>
+                      Đã xác nhận
+                    </button>
+                  )}
 
                   {booking.status === "COMPLETED" && !hasReviewed(booking.id) && (
-                    <button className="btn-review" onClick={() => setReviewModal(booking)}>
+                    <button type="button" className="review" onClick={() => setReviewModal(booking)}>
+                      <Star size={16} />
                       Đánh giá
                     </button>
                   )}
 
                   {booking.status === "COMPLETED" && hasReviewed(booking.id) && (
-                    <button className="btn-reviewed" disabled>
+                    <button type="button" disabled>
                       Đã đánh giá
                     </button>
                   )}
                 </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            </article>
+          ))}
+        </section>
+      )}
 
-      <Modal show={!!reviewModal} onHide={closeReviewModal}>
+      <Modal show={!!reviewModal} onHide={closeReviewModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Đánh giá sân bóng</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group className="mb-3">
             <Form.Label>Số sao</Form.Label>
-            <Form.Select value={rating} onChange={(event) => setRating(Number(event.target.value))}>
+            <Form.Select
+              value={rating}
+              onChange={(event) => setRating(Number(event.target.value))}
+            >
               <option value={5}>5 sao</option>
               <option value={4}>4 sao</option>
               <option value={3}>3 sao</option>
@@ -228,7 +261,13 @@ export default function MyBookings() {
 
           <Form.Group>
             <Form.Label>Nội dung đánh giá</Form.Label>
-            <Form.Control as="textarea" rows={4} value={comment} onChange={(event) => setComment(event.target.value)} />
+            <Form.Control
+              as="textarea"
+              rows={4}
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder="Chia sẻ trải nghiệm của bạn..."
+            />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>

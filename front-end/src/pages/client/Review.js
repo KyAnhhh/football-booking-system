@@ -5,9 +5,9 @@ import { getMyOrders } from "../../services/orderService";
 import ReviewForm from "../../components/review/ReviewForm";
 import Swal from "sweetalert2";
 import "../../assets/styles/Review.css";
+import { ChevronLeft, Star } from "lucide-react";
 
 export default function ReviewPage() {
-
   const { id: orderItemId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,17 +24,17 @@ export default function ReviewPage() {
       try {
         const data = await getMyOrders();
         const orders = Array.isArray(data) ? data : [];
-        for (const o of orders) {
-          const found = (o.orderItems || o.items || []).find(
-            (it) => String(it.id) === String(orderItemId)
+        for (const order of orders) {
+          const found = (order.orderItems || order.items || []).find(
+            (item) => String(item.id) === String(orderItemId)
           );
           if (found) {
             setOrderItem(found);
             break;
           }
         }
-      } catch (e) {
-        console.error("Error fetching orders for review", e);
+      } catch (error) {
+        console.error("Error fetching orders for review", error);
       } finally {
         setLoadingItem(false);
       }
@@ -52,7 +52,7 @@ export default function ReviewPage() {
         setCanReview(Boolean(canReviewData));
       } catch (err) {
         console.error(err);
-        Swal.fire("Lỗi", "Không thể tải dữ liệu", "error");
+        Swal.fire("Lỗi", "Không thể tải dữ liệu đánh giá.", "error");
       } finally {
         setLoading(false);
       }
@@ -71,37 +71,44 @@ export default function ReviewPage() {
     navigate("/my-orders");
   };
 
-  if (loading || loadingItem) return <p>Đang tải...</p>;
+  if (loading || loadingItem) {
+    return <div className="review-page-state">Đang tải thông tin đánh giá...</div>;
+  }
 
   if (!orderItem) {
     return (
-      <p>
-        Không tìm thấy sản phẩm. <button onClick={() => navigate("/my-orders")}>Quay về đơn hàng</button>
-      </p>
+      <div className="review-page-state">
+        <p>Không tìm thấy sản phẩm cần đánh giá.</p>
+        <button type="button" onClick={() => navigate("/my-orders")}>
+          Quay về đơn hàng
+        </button>
+      </div>
     );
   }
 
   return (
     <div className="review-page">
-      <h2>Đánh giá sản phẩm</h2>
+      <button className="review-back-btn" type="button" onClick={() => navigate("/my-orders")}>
+        <ChevronLeft size={18} />
+        Quay về đơn hàng
+      </button>
 
-      {/* <div className="product-review-info">
-        <img
-          src={orderItem.product?.imageUrls?.[0]}
-          alt={orderItem.product?.name}
-          width="120"
-        />
-        <div>
-          <h3>{orderItem.product?.name}</h3>
-          <p>Số lượng: {orderItem.quantity}</p>
+      <section className="review-shell">
+        <div className="review-hero-card">
+          <Star size={26} />
+          <p>Đánh giá sản phẩm</p>
+          <h1>{orderItem.productName || orderItem.product?.name || "Sản phẩm"}</h1>
+          <span>Số lượng: {orderItem.quantity || 1}</span>
         </div>
-      </div> */}
 
-      {!canReview ? (
-        <p>Bạn không thể đánh giá sản phẩm này hoặc bạn đã đánh giá rồi.</p>
-      ) : (
-        <ReviewForm orderItemId={orderItemId} onSuccess={handleSuccess} />
-      )}
+        {!canReview ? (
+          <div className="review-warning-card">
+            Bạn không thể đánh giá sản phẩm này hoặc bạn đã đánh giá rồi.
+          </div>
+        ) : (
+          <ReviewForm orderItemId={orderItemId} onSuccess={handleSuccess} />
+        )}
+      </section>
     </div>
   );
 }

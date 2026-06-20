@@ -1,233 +1,347 @@
-/* ================= HEADER ================= */
 .fs-header {
-  width: 100%;
-  background: linear-gradient(90deg, #003b88 0%, #0074d9 100%);
-  color: #fff;
   position: sticky;
   top: 0;
   z-index: 60;
-  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
+  width: 100%;
+  background: rgba(249, 251, 247, 0.94);
+  border-bottom: 1px solid rgba(35, 68, 55, 0.12);
+  box-shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
+  backdrop-filter: blur(18px);
 }
 
 .fs-header-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 18px;
+  max-width: 1220px;
+  min-height: 76px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
-/* ================= LOGO ================= */
 .fs-logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  min-width: max-content;
+  color: #15352a;
   text-decoration: none;
-  color: white;
 }
 
-.fs-logo-ball {
-  font-size: 1.25rem;
-}
-
-.fs-logo-text {
-  font-weight: 700;
-  font-size: 1.125rem;
-  letter-spacing: 0.4px;
-}
-
-/* ================= NAV DESKTOP ================= */
-.fs-nav {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  flex: 1;
-  justify-content: center;
-}
-
-.fs-nav-link {
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-  padding: 8px 10px;
-  border-radius: 8px;
-  transition: background 0.18s ease, transform 0.12s ease;
-  white-space: nowrap;
-}
-
-.fs-nav-link:hover,
-.fs-nav-link:focus {
-  background: rgba(255,255,255,0.06);
-  transform: translateY(-2px);
-  outline: none;
-}
-
-/* ================= ACTIONS ================= */
-.fs-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* icon chung */
-.fs-icon-btn {
+.fs-logo-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
-  border-radius: 10px;
-  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 35% 30%, #f8fff3 0 16%, transparent 17%),
+    linear-gradient(135deg, #1f7a4d, #0f3d33);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  box-shadow: 0 12px 26px rgba(31, 122, 77, 0.28);
+}
+
+.fs-logo-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.fs-logo-text {
+  color: #15352a;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.fs-logo-subtext {
+  margin-top: 4px;
+  color: #6d7a72;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.fs-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.fs-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #435349;
+  font-size: 0.94rem;
+  font-weight: 800;
   text-decoration: none;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease;
+  white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
-/* hover CHUNG (cart, hamburger) */
-.fs-icon-btn:hover,
-.fs-icon-btn:focus {
-  background: rgba(255,255,255,0.06);
-  transform: translateY(-2px);
+.fs-nav-link:hover,
+.fs-nav-link:focus-visible {
+  background: rgba(31, 122, 77, 0.1);
+  color: #15352a;
   outline: none;
+  transform: translateY(-1px);
 }
 
-/* ================= CART ================= */
-.fs-cart-btn:hover {
-  background: rgba(255,255,255,0.08);
+.fs-nav-link.is-active {
+  background: #15352a;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(21, 53, 42, 0.16);
 }
 
-/* ================= USER MENU ================= */
+.fs-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: max-content;
+}
+
+.fs-icon-btn,
+.fs-menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(35, 68, 55, 0.12);
+  border-radius: 16px;
+  background: #ffffff;
+  color: #15352a;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.fs-icon-btn:hover,
+.fs-icon-btn:focus-visible,
+.fs-menu-toggle:hover,
+.fs-menu-toggle:focus-visible {
+  border-color: rgba(31, 122, 77, 0.38);
+  box-shadow: 0 12px 24px rgba(21, 53, 42, 0.12);
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .fs-user-menu {
   position: relative;
 }
 
-/* USER ICON: không nền – không border – không transform */
-.fs-user-menu .fs-icon-btn {
-  background: transparent;
-  box-shadow: none;
+.fs-user-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 210px;
+  height: 44px;
+  padding: 0 10px 0 6px;
+  border: 1px solid rgba(35, 68, 55, 0.12);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #15352a;
+  cursor: pointer;
+  font-weight: 800;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-.fs-user-menu .fs-icon-btn:hover,
-.fs-user-menu .fs-icon-btn:focus,
-.fs-user-menu .fs-icon-btn:active {
-  background: transparent;
-  box-shadow: none;
-  transform: none;
+.fs-user-trigger:hover,
+.fs-user-trigger:focus-visible {
+  border-color: rgba(31, 122, 77, 0.38);
+  box-shadow: 0 12px 24px rgba(21, 53, 42, 0.12);
+  outline: none;
+  transform: translateY(-1px);
 }
 
-/* ================= USER DROPDOWN ================= */
+.fs-user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e8f5ed;
+  color: #1f7a4d;
+}
+
+.fs-user-name {
+  max-width: 116px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .fs-user-dropdown {
   position: absolute;
-  top: 120%;
+  top: calc(100% + 12px);
   right: 0;
-  min-width: 200px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   display: none;
-  flex-direction: column;
-  overflow: hidden;
+  min-width: 238px;
+  padding: 8px;
+  border: 1px solid rgba(35, 68, 55, 0.12);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 24px 54px rgba(17, 24, 39, 0.16);
   z-index: 999;
-  animation: dropdownFade 0.2s ease;
 }
 
 .fs-user-dropdown.show {
-  display: flex;
+  display: grid;
+  animation: fsDropdownIn 0.18s ease;
 }
 
 .fs-user-dropdown a,
 .fs-user-dropdown button {
-  padding: 12px 16px;
-  font-size: 14px;
-  border: none;
-  background: none;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: #314238;
   cursor: pointer;
-  transition: background 0.2s;
-}
-
-.fs-user-dropdown a {
-  color: #333;
+  font-size: 0.92rem;
+  font-weight: 750;
+  text-align: left;
   text-decoration: none;
+  transition: background 0.16s ease, color 0.16s ease;
 }
 
 .fs-user-dropdown a:hover,
-.fs-user-dropdown button:hover {
-  background: #f2f6ff;
+.fs-user-dropdown a:focus-visible,
+.fs-user-dropdown button:hover,
+.fs-user-dropdown button:focus-visible {
+  background: #eff8f2;
+  color: #15352a;
+  outline: none;
 }
 
 .fs-user-dropdown button {
-  color: #d32f2f;
-  font-weight: 600;
+  color: #b42318;
 }
 
-/* ================= LOGIN BUTTON ================= */
+.fs-user-dropdown .admin-link {
+  color: #1f5fbf;
+}
+
 .fs-login-btn {
-  background: white;
-  color: #0a3d91;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #15352a;
+  color: #ffffff;
+  font-weight: 850;
   text-decoration: none;
-  transition: all 0.25s ease;
+  box-shadow: 0 14px 28px rgba(21, 53, 42, 0.18);
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.fs-login-btn:hover {
-  background: #f2f6ff;
-  color: #0044cc;
+.fs-login-btn:hover,
+.fs-login-btn:focus-visible {
+  background: #1f7a4d;
+  color: #ffffff;
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(31, 122, 77, 0.22);
 }
 
-/* ================= HAMBURGER ================= */
 .fs-menu-toggle {
   display: none;
-  background: transparent;
-  border: none;
-  color: white;
-  padding: 6px;
-  border-radius: 8px;
-  cursor: pointer;
 }
 
-/* ================= MOBILE MENU ================= */
 .fs-mobile-menu {
   display: none;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 20px 18px;
-  background: linear-gradient(
-    180deg,
-    rgba(0,64,136,0.95),
-    rgba(0,84,170,0.98)
-  );
-  border-top: 1px solid rgba(255,255,255,0.04);
+  width: min(100%, 1220px);
+  margin: 0 auto;
+  padding: 0 20px 18px;
 }
 
 .fs-mobile-link {
-  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: #314238;
+  cursor: pointer;
+  font-size: 0.96rem;
+  font-weight: 800;
+  text-align: left;
   text-decoration: none;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 600;
 }
 
-.fs-mobile-link:hover {
-  background: rgba(255,255,255,0.04);
+.fs-mobile-link:hover,
+.fs-mobile-link:focus-visible,
+.fs-mobile-link.is-active {
+  background: #eff8f2;
+  color: #15352a;
+  outline: none;
 }
 
-.admin-link {
-  font-weight: 600;
-  color: #0a3d91;
+.fs-mobile-login {
+  background: #15352a;
+  color: #ffffff;
 }
 
-.admin-link:hover {
-  background: #eef4ff;
+.fs-mobile-login:hover,
+.fs-mobile-login:focus-visible {
+  background: #1f7a4d;
+  color: #ffffff;
 }
 
-/* ================= RESPONSIVE ================= */
-@media (max-width: 768px) {
+.fs-mobile-logout {
+  color: #b42318;
+}
+
+.fs-mobile-divider {
+  height: 1px;
+  margin: 8px 0;
+  background: rgba(35, 68, 55, 0.1);
+}
+
+@media (max-width: 1080px) {
+  .fs-header-inner {
+    gap: 12px;
+  }
+
+  .fs-nav-link {
+    padding: 0 9px;
+    font-size: 0.9rem;
+  }
+
+  .fs-logo-subtext,
+  .fs-user-name {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .fs-header-inner {
+    min-height: 70px;
+    padding: 0 18px;
+  }
+
   .fs-nav {
     display: none;
   }
@@ -236,31 +350,66 @@
     display: inline-flex;
   }
 
+  .fs-user-trigger {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .fs-user-trigger > svg {
+    display: none;
+  }
+
   .fs-mobile-menu.show {
-    display: flex;
-    animation: slideDown 0.18s ease;
+    display: grid;
+    gap: 6px;
+    animation: fsMobileIn 0.2s ease;
   }
 }
 
-/* ================= ANIMATION ================= */
-@keyframes dropdownFade {
+@media (max-width: 520px) {
+  .fs-header-inner {
+    padding: 0 14px;
+  }
+
+  .fs-logo-mark,
+  .fs-icon-btn,
+  .fs-menu-toggle,
+  .fs-user-trigger {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+
+  .fs-logo-text {
+    font-size: 0.96rem;
+  }
+
+  .fs-login-btn {
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 0.9rem;
+  }
+}
+
+@keyframes fsDropdownIn {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fsMobileIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(-6px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
   }
 }

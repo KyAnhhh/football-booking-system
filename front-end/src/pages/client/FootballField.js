@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
 import { MapPin, Search, ShieldCheck, SlidersHorizontal, Wrench } from "lucide-react";
@@ -6,20 +6,31 @@ import { getFields, getMaintenanceStatus } from "../../services/fieldService";
 import "../../assets/styles/FootballField.css";
 
 const fieldTypes = [
-  { label: "Tat ca", value: "" },
-  { label: "San 5", value: "FIVE_A_SIDE" },
-  { label: "San 7", value: "SEVEN_A_SIDE" },
-  { label: "San 11", value: "ELEVEN_A_SIDE" },
+  { label: "Tất cả", value: "" },
+  { label: "Sân 5", value: "FIVE_A_SIDE" },
+  { label: "Sân 7", value: "SEVEN_A_SIDE" },
+  { label: "Sân 11", value: "ELEVEN_A_SIDE" },
 ];
 
 const priceRanges = [
-  { label: "Tat ca", value: "" },
-  { label: "Duoi 200k", value: "UNDER_200" },
+  { label: "Tất cả", value: "" },
+  { label: "Dưới 200k", value: "UNDER_200" },
   { label: "200k - 500k", value: "200_500" },
-  { label: "Tren 500k", value: "OVER_500" },
+  { label: "Trên 500k", value: "OVER_500" },
 ];
 
+const PAGE_SIZE = 9;
+
 const formatMoney = (value) => `${Number(value || 0).toLocaleString("vi-VN")} VND`;
+
+const getPageMetadata = (data, fallbackCount) => {
+  const page = data?.page || data || {};
+
+  return {
+    totalPages: Number(page.totalPages || 0),
+    totalElements: Number(page.totalElements || fallbackCount || 0),
+  };
+};
 
 export default function FootballField() {
   const navigate = useNavigate();
@@ -28,6 +39,9 @@ export default function FootballField() {
   const [keyword, setKeyword] = useState("");
   const [priceRange, setPriceRange] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pageNo, setPageNo] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [filters, setFilters] = useState({
     type: "",
     minPrice: "",
@@ -38,13 +52,13 @@ export default function FootballField() {
     return [keyword.trim(), filters.type, priceRange].filter(Boolean).length;
   }, [keyword, filters.type, priceRange]);
 
-  const loadFields = async (customKeyword = keyword, customFilters = filters) => {
+  const loadFields = useCallback(async (customKeyword, customFilters, customPageNo) => {
     try {
       setLoading(true);
 
       const params = {
-        page: 0,
-        size: 24,
+        page: customPageNo,
+        size: PAGE_SIZE,
       };
 
       if (customKeyword?.trim()) params.keyword = customKeyword.trim();
@@ -54,7 +68,11 @@ export default function FootballField() {
 
       const data = await getFields(params);
       const content = data?.content || [];
+      const pageMetadata = getPageMetadata(data, content.length);
+
       setFields(content);
+      setTotalPages(pageMetadata.totalPages);
+      setTotalElements(pageMetadata.totalElements);
 
       if (content.length === 0) {
         setMaintenanceMap({});
@@ -84,18 +102,20 @@ export default function FootballField() {
       console.error(error);
       setFields([]);
       setMaintenanceMap({});
+      setTotalPages(0);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const debounce = setTimeout(() => {
-      loadFields(keyword, filters);
+      loadFields(keyword, filters, pageNo);
     }, 350);
 
     return () => clearTimeout(debounce);
-  }, [keyword, filters]);
+  }, [keyword, filters, pageNo, loadFields]);
 
   const handlePriceFilter = (value) => {
     const nextFilters = {
@@ -113,6 +133,7 @@ export default function FootballField() {
 
     setPriceRange(value);
     setFilters(nextFilters);
+    setPageNo(0);
   };
 
   const handleTypeFilter = (value) => {
@@ -120,6 +141,7 @@ export default function FootballField() {
       ...current,
       type: value,
     }));
+    setPageNo(0);
   };
 
   const resetFilters = () => {
@@ -130,6 +152,7 @@ export default function FootballField() {
       minPrice: "",
       maxPrice: "",
     });
+    setPageNo(0);
   };
 
   return (
@@ -141,8 +164,8 @@ export default function FootballField() {
           <p>Lọc theo loại sân, mức giá và trạng thái bảo trì để đặt lịch nhanh hơn.</p>
         </div>
         <div className="football-hero-stat">
-          <strong>{fields.length}</strong>
-          <span>sân đang hiển thị</span>
+          <strong>{totalElements}</strong>
+          <span>sân phù hợp</span>
         </div>
       </section>
 
@@ -161,7 +184,10 @@ export default function FootballField() {
                 type="text"
                 placeholder="Nhập tên sân..."
                 value={keyword}
-                onChange={(event) => setKeyword(event.target.value)}
+                onChange={(event) => {
+                  setKeyword(event.target.value);
+                  setPageNo(0);
+                }}
               />
             </div>
           </Form.Group>
@@ -206,6 +232,14 @@ export default function FootballField() {
         </aside>
 
         <main className="football-results">
+          <div className="football-results-header">
+            <div>
+              <span>Danh sách sân</span>
+              <strong>{totalElements} sân phù hợp</strong>
+            </div>
+            <p>Trang {pageNo + 1} / {Math.max(totalPages, 1)}</p>
+          </div>
+
           {loading ? (
             <div className="football-empty">Đang tải danh sách sân...</div>
           ) : fields.length === 0 ? (
@@ -272,6 +306,21 @@ export default function FootballField() {
                   </article>
                 );
               })}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="football-pagination">
+              {Array.from({ length: totalPages }, (_, index) => (
+                <button
+                  type="button"
+                  key={index}
+                  className={pageNo === index ? "active" : ""}
+                  onClick={() => setPageNo(index)}
+                >
+                  {index + 1}
+                </button>
+              ))}
             </div>
           )}
         </main>

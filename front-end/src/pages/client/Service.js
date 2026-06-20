@@ -1,111 +1,86 @@
-import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../assets/styles/Service.css";
+import { BadgeCheck, PackageCheck, RotateCcw, Shirt, Truck } from "lucide-react";
 
 const services = [
   {
-    icon: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.2" />
-        <path d="M4 4c4 4 8 4 16 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
-    ),
-    title: "In Tên & Số Áo",
-    desc: "Tùy chỉnh tên, số theo form đội — bền màu, đẹp chuẩn.",
+    icon: Shirt,
+    title: "In tên và số áo",
+    desc: "Tùy chỉnh tên, số áo theo form đội với chất liệu bền màu và sắc nét.",
   },
   {
-    icon: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-        <path d="M3 7h13l4 7v4H6L3 7z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="7" cy="20" r="1" fill="currentColor" />
-        <circle cx="18" cy="20" r="1" fill="currentColor" />
-      </svg>
-    ),
-    title: "Giao Nhanh & Toàn Quốc",
-    desc: "Theo dõi đơn, nhiều lựa chọn vận chuyển và COD hỗ trợ.",
+    icon: Truck,
+    title: "Giao nhanh toàn quốc",
+    desc: "Theo dõi đơn hàng, hỗ trợ COD và nhiều lựa chọn vận chuyển phù hợp.",
   },
   {
-    icon: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-        <rect x="3" y="3" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.2" />
-        <path d="M7 15v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M17 15v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
-    ),
-    title: "Sản Phẩm Chính Hãng",
-    desc: "Kiểm định chất lượng — chính hãng hoặc hoàn tiền.",
+    icon: BadgeCheck,
+    title: "Sản phẩm chính hãng",
+    desc: "Kiểm tra nguồn gốc, chất lượng và thông tin sản phẩm trước khi bán.",
   },
   {
-    icon: (
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-        <path d="M12 2v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <path d="M20 12a8 8 0 11-16 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    title: "Đổi Trả Linh Hoạt",
-    desc: "Hỗ trợ đổi trả trong 7 ngày với điều kiện rõ ràng.",
+    icon: RotateCcw,
+    title: "Đổi trả linh hoạt",
+    desc: "Hỗ trợ đổi trả theo chính sách rõ ràng để bạn yên tâm mua sắm.",
   },
 ];
 
 export default function Service() {
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-
-    const items = el.querySelectorAll(".service-card");
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("reveal");
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12 }
-    );
-
-    items.forEach((it) => io.observe(it));
-
-    return () => io.disconnect();
-  }, []);
+  const navigate = useNavigate();
 
   return (
-    <section className="service-page modern" aria-labelledby="services-heading">
-      <div className="service-hero modern-hero">
-        <div className="hero-inner">
-          <h1 id="services-heading">Dịch Vụ Của Chúng Tôi</h1>
-          <p className="lead">Chất lượng — Nhanh chóng — Tận tâm. Đồng hành cùng đam mê bóng đá của bạn.</p>
-          <div className="hero-ctas">
-            <button className="btn primary" onClick={() => (window.location.href = "/products")}>
-              Khám Phá Sản Phẩm
+    <div className="service-core-page">
+      <section className="service-core-hero">
+        <div>
+          <p>Dịch vụ</p>
+          <h1>Hỗ trợ người chơi từ sản phẩm đến trận đấu</h1>
+          <span>
+            Các dịch vụ được thiết kế để việc mua sắm, giao hàng và chuẩn bị
+            thi đấu trở nên nhẹ nhàng hơn.
+          </span>
+          <div className="service-core-actions">
+            <button type="button" onClick={() => navigate("/products")}>
+              Khám phá sản phẩm
             </button>
-            <button className="btn ghost" onClick={() => (window.location.href = "/contact")}>
-              Liên Hệ Hỗ Trợ
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => navigate("/contact")}
+            >
+              Liên hệ hỗ trợ
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="service-grid modern-grid" ref={containerRef}>
-        {services.map((s, index) => (
-          <article
-            className="service-card"
-            key={s.title}
-            style={{ transitionDelay: `${index * 120}ms` }}
-            tabIndex={0}
-            aria-label={s.title}
-          >
-            <div className="service-icon">{s.icon}</div>
-            <h3 className="service-title">{s.title}</h3>
-            <p className="service-desc">{s.desc}</p>
-            <div className="card-footer">
-              <button className="btn small">Tìm hiểu</button>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
+      <section className="service-core-grid">
+        {services.map((service) => {
+          const Icon = service.icon;
+          return (
+            <article className="service-core-card" key={service.title}>
+              <div className="service-core-icon">
+                <Icon size={26} />
+              </div>
+              <h3>{service.title}</h3>
+              <p>{service.desc}</p>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="service-core-note">
+        <PackageCheck size={28} />
+        <div>
+          <h2>Cần hỗ trợ theo đội bóng?</h2>
+          <p>
+            Bạn có thể liên hệ shop để được tư vấn size, số lượng, in áo và lịch
+            giao phù hợp trước ngày thi đấu.
+          </p>
+        </div>
+        <button type="button" onClick={() => navigate("/contact")}>
+          Gửi yêu cầu
+        </button>
+      </section>
+    </div>
   );
 }

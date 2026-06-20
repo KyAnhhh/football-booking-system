@@ -13,10 +13,10 @@ const formatCurrency = (value) =>
   }).format(Number(value || 0));
 
 const statusText = {
-  PENDING: "Dang cho xac nhan",
-  CONFIRMED: "Da xac nhan",
-  CANCELLED: "Da huy",
-  EXPIRED: "Da het han",
+  PENDING: "Đang chờ xác nhận",
+  CONFIRMED: "Đã xác nhận",
+  CANCELLED: "Đã hủy",
+  EXPIRED: "Đã hết hạn",
 };
 
 export default function PaymentFootballField() {
@@ -78,14 +78,14 @@ export default function PaymentFootballField() {
 
   const confirmPayment = () => {
     swal({
-      title: "Xac nhan thanh toan",
-      text: "Ban da thuc hien chuyen khoan cho lich dat san nay chua?",
+      title: "Xác nhận thanh toán",
+      text: "Bạn đã thực hiện chuyển khoản cho lịch đặt sân này chưa?",
       icon: "warning",
-      buttons: ["Chua", "Da thanh toan"],
+      buttons: ["Chưa", "Đã thanh toán"],
     }).then((willConfirm) => {
       if (willConfirm) {
         swal(
-          "Cam on ban da thanh toan. Admin se kiem tra giao dich va xu ly lich dat san.",
+          "Cảm ơn bạn đã thanh toán. Admin sẽ kiểm tra giao dịch và xử lý lịch đặt sân.",
           {
             icon: "success",
           }
@@ -96,18 +96,18 @@ export default function PaymentFootballField() {
   };
 
   if (loading) {
-    return <div className="booking-payment-state">Dang tai thong tin thanh toan...</div>;
+    return <div className="booking-payment-state">Đang tải thông tin thanh toán...</div>;
   }
 
   if (!booking) {
-    return <div className="booking-payment-state">Khong tim thay lich dat san.</div>;
+    return <div className="booking-payment-state">Không tìm thấy lịch đặt sân.</div>;
   }
 
   return (
     <div className="booking-payment-page">
       <section className="booking-payment-shell">
         <div className="booking-payment-hero">
-          <p>Field payment</p>
+          <p>Thanh toán sân</p>
           <h1>Thanh toán lịch đặt sân</h1>
           <span>Quét QR theo đúng số tiền, sau đó bấm xác nhận để admin xử lý.</span>
         </div>

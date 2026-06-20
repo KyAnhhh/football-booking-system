@@ -1,129 +1,221 @@
-/* footer.css - FootballShop footer styling */
-
 .fs-footer {
-  background: linear-gradient(180deg, #003b88 0%, #002e6a 100%);
-  color: white;
-  margin-top: 48px;
-  font-size: 14px;
+  position: relative;
+  margin-top: 68px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(27, 85, 58, 0.94), rgba(15, 42, 36, 0.98)),
+    #102a24;
+  color: #f5fbf7;
 }
 
-/* inner grid */
+.fs-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7), transparent);
+  pointer-events: none;
+}
+
+.fs-footer-topline {
+  position: relative;
+  height: 4px;
+  background: linear-gradient(90deg, #d7f171, #4fc37a, #3da1ff);
+}
+
 .fs-footer-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 42px 24px;
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr 140px 140px 160px;
-  gap: 28px;
-  align-items: start;
+  grid-template-columns: minmax(280px, 1.45fr) minmax(130px, 0.7fr) minmax(160px, 0.8fr) minmax(240px, 1fr);
+  gap: 34px;
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 48px 24px 34px;
 }
 
-/* brand */
-.fs-footer-brand .fs-footer-logo {
-  display: flex;
+.fs-footer-brand {
+  max-width: 440px;
+}
+
+.fs-footer-logo {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  color: white;
+  gap: 12px;
+  color: #ffffff;
   text-decoration: none;
-  font-weight: 700;
-  font-size: 1.05rem;
+}
+
+.fs-footer-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 34% 28%, #ffffff 0 14%, transparent 15%),
+    linear-gradient(135deg, #d7f171, #1f7a4d);
+  color: #102a24;
+  font-size: 0.82rem;
+  font-weight: 950;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
+}
+
+.fs-footer-title,
+.fs-footer-kicker {
+  display: block;
+}
+
+.fs-footer-title {
+  font-size: 1.16rem;
+  font-weight: 950;
+}
+
+.fs-footer-kicker {
+  margin-top: 4px;
+  color: #c6e6d2;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .fs-footer-desc {
-  color: #cfe6ff;
-  margin-top: 10px;
-  line-height: 1.5;
-  font-size: 0.95rem;
+  margin: 18px 0 0;
+  color: #dcefe4;
+  font-size: 0.98rem;
+  line-height: 1.75;
 }
 
-/* columns */
+.fs-footer-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.fs-footer-badges span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fff7;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 .fs-footer-col h4 {
-  margin-bottom: 12px;
-  font-weight: 600;
-  color: #eaf6ff;
+  margin: 0 0 16px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .fs-footer-col ul {
-  list-style: none;
+  display: grid;
+  gap: 10px;
   padding: 0;
   margin: 0;
-}
-
-.fs-footer-col li {
-  margin-bottom: 8px;
+  list-style: none;
 }
 
 .fs-footer-col a {
-  color: #cfe6ff;
+  display: inline-flex;
+  width: fit-content;
+  color: #dcefe4;
+  font-weight: 700;
   text-decoration: none;
-  transition: color 140ms ease, transform 120ms ease;
+  transition: color 0.16s ease, transform 0.16s ease;
 }
 
 .fs-footer-col a:hover,
-.fs-footer-col a:focus {
-  color: #fff;
-  transform: translateX(4px);
+.fs-footer-col a:focus-visible {
+  color: #d7f171;
   outline: none;
+  transform: translateX(3px);
 }
 
-/* social links */
-.fs-footer-socials {
+.fs-footer-contact li {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
+  color: #dcefe4;
+  font-weight: 700;
+  line-height: 1.5;
 }
 
-.fs-footer-socials a {
-  color: #cfe6ff;
-  text-decoration: none;
+.fs-footer-contact svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #d7f171;
 }
 
-.fs-footer-socials a:hover {
-  color: #fff;
-}
-
-/* bottom bar */
-.fs-footer-bottom {
-  background: #00264e;
-  padding: 12px 0;
-  margin-top: 14px;
-}
-
-.fs-footer-bottom-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 8px 20px;
-  display: flex;
-  gap: 12px;
+.fs-footer-cta {
+  display: inline-flex !important;
   align-items: center;
-  justify-content: center;
-  color: #bfe0ff;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 15px;
+  margin-top: 18px;
+  border-radius: 999px;
+  background: #d7f171;
+  color: #102a24 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.2);
 }
 
-.fs-footer-bottom-inner a {
-  color: #bfe0ff;
-  text-decoration: none;
+.fs-footer-cta:hover,
+.fs-footer-cta:focus-visible {
+  color: #102a24 !important;
+  transform: translateY(-1px) !important;
 }
 
-.fs-footer-sep { opacity: 0.4; margin: 0 6px; }
+.fs-footer-bottom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 18px 24px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #bdd7c9;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
 
-/* responsiveness */
 @media (max-width: 980px) {
   .fs-footer-inner {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-@media (max-width: 640px) {
-  .fs-footer-inner {
-    grid-template-columns: 1fr;
-    padding: 28px 16px;
-    gap: 18px;
+@media (max-width: 680px) {
+  .fs-footer {
+    margin-top: 44px;
   }
 
-  .fs-footer-bottom-inner {
+  .fs-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding: 36px 18px 26px;
+  }
+
+  .fs-footer-brand {
+    max-width: none;
+  }
+
+  .fs-footer-bottom {
     flex-direction: column;
-    gap: 6px;
-    padding: 10px 16px;
+    align-items: flex-start;
+    padding: 18px;
   }
 }

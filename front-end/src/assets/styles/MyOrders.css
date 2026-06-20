@@ -1,17 +1,95 @@
-.my-orders {
-  max-width: 1000px;
-  margin: 30px auto;
-  padding: 0 16px;
+.my-orders-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%),
+    radial-gradient(circle at 85% 12%, rgba(37, 99, 235, 0.12), transparent 30%);
+  color: #0f172a;
+  padding: 30px clamp(14px, 4vw, 56px) 56px;
 }
 
-.my-orders h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
+.my-orders-hero,
+.my-orders-list,
+.my-orders-state {
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
-.empty-orders {
+.my-orders-hero {
+  min-height: 190px;
+  border-radius: 28px;
+  padding: clamp(24px, 4vw, 42px);
+  display: flex;
+  align-items: flex-end;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(29, 78, 216, 0.72)),
+    url("https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=1600&q=80")
+      center/cover;
+  color: #fff;
+  margin-bottom: 24px;
+}
+
+.my-orders-hero p {
+  margin: 0 0 8px;
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.my-orders-hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 50px);
+  font-weight: 950;
+}
+
+.my-orders-hero span {
+  display: block;
+  max-width: 620px;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.7;
+}
+
+.my-orders-list {
+  display: grid;
+  gap: 18px;
+}
+
+.my-orders-state {
+  min-height: 340px;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 22px 52px rgba(15, 23, 42, 0.08);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
   text-align: center;
-  color: #777;
-  margin-top: 40px;
-  font-size: 16px;
+  color: #64748b;
+  padding: 28px;
+}
+
+.my-orders-state h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 950;
+}
+
+.my-orders-state p {
+  margin: 0;
+  color: #64748b;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .my-orders-page {
+    padding: 18px 12px 36px;
+  }
+
+  .my-orders-hero,
+  .my-orders-state {
+    border-radius: 20px;
+  }
 }

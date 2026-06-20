@@ -1,42 +1,26 @@
-.review-section{
-  margin-top:40px;
-  border-top:1px solid #eee;
-  padding-top:20px;
+.review-section {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 22px;
 }
 
-.review-item{
-  border-bottom:1px solid #f0f0f0;
-  padding:10px 0;
+.review-section h3 {
+  margin: 0 0 16px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
 }
 
-.review-stars{
-  color:#f5a623;
-  font-size:16px;
+.review-section-empty {
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #64748b;
+  padding: 18px;
+  text-align: center;
+  font-weight: 800;
 }
 
-.review-form{
-  margin-top:20px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.review-form textarea{
-  height:80px;
-  padding:8px;
-  border:1px solid #ddd;
-}
-
-.review-form button{
-  width:150px;
-  padding:8px;
-  background:#e63946;
-  color:white;
-  border:none;
-  cursor:pointer;
-}
-
-.review-warning{
-  margin-top:15px;
-  color:#888;
+.review-section-list {
+  display: grid;
+  gap: 12px;
 }
