@@ -13,13 +13,15 @@ import {
 export default function RevenueChart({
     data
 }) {
+    const formatMoney = (value) =>
+        `${Number(value || 0).toLocaleString("vi-VN")} đ`;
 
     return (
 
         <div className="revenue-chart">
 
             <h2 className="revenue-chart-title">
-                Monthly Revenue
+                Doanh thu theo tháng
             </h2>
 
             <ResponsiveContainer
@@ -37,7 +39,7 @@ export default function RevenueChart({
 
                     <YAxis />
 
-                    <Tooltip />
+                    <Tooltip formatter={(value) => formatMoney(value)} />
 
                     <Line
                         type="monotone"

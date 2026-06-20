@@ -123,10 +123,10 @@ export default function SizePage() {
   return (
     <div className="container mt-4">
       <div className="size-header">
-        <h3>Size Management</h3>
+        <h3>Quản lý kích cỡ</h3>
 
         <Button className="mb-3" onClick={openCreate}>
-          + Thêm Size
+          + Thêm kích cỡ
         </Button>
       </div>
 
@@ -134,10 +134,10 @@ export default function SizePage() {
         <thead>
           <tr>
             <th>#</th>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th width="180">Actions</th>
+            <th>Mã</th>
+            <th>Tên</th>
+            <th>Mô tả</th>
+            <th width="180">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -152,14 +152,14 @@ export default function SizePage() {
                   size="sm"
                   onClick={() => openEdit(s)}
                 >
-                  Edit
+                  Sửa
                 </Button>{" "}
                 <Button
                   size="sm"
                   variant="danger"
                   onClick={() => handleDelete(s.id)}
                 >
-                  Delete
+                  Xóa
                 </Button>
               </td>
             </tr>
@@ -167,7 +167,7 @@ export default function SizePage() {
           {sizes.length === 0 && (
             <tr>
               <td colSpan={4} className="text-center">
-                No sizes found
+                Chưa có kích cỡ nào
               </td>
             </tr>
           )}
@@ -178,13 +178,13 @@ export default function SizePage() {
         <Form onSubmit={handleSubmit}>
           <Modal.Header closeButton>
             <Modal.Title>
-              {editing ? "Edit Size" : "Create Size"}
+              {editing ? "Sửa kích cỡ" : "Thêm kích cỡ"}
             </Modal.Title>
           </Modal.Header>
 
           <Modal.Body>
             <Form.Group>
-              <Form.Label>Size Code</Form.Label>
+              <Form.Label>Mã kích cỡ</Form.Label>
               <Form.Control
                 value={form.code}
                 onChange={(e) =>
@@ -198,7 +198,7 @@ export default function SizePage() {
             </Form.Group>
 
             <Form.Group className="mt-2">
-              <Form.Label>Name (optional)</Form.Label>
+              <Form.Label>Tên (không bắt buộc)</Form.Label>
               <Form.Control
                 value={form.name}
                 onChange={(e) =>
@@ -208,7 +208,7 @@ export default function SizePage() {
             </Form.Group>
             
             <Form.Group className="mt-2">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control
                 value={form.description}
                 onChange={(e) =>
@@ -220,7 +220,7 @@ export default function SizePage() {
 
           <Modal.Footer>
             <Button type="submit">
-              Save
+              Lưu
             </Button>
           </Modal.Footer>
         </Form>

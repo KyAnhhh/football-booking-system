@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getBookings,
   deleteBooking,
@@ -20,7 +20,7 @@ export default function BookingPage() {
 
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(null);
 
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     try {
       const data = await getBookings({
         page: pageNo,
@@ -39,11 +39,11 @@ export default function BookingPage() {
       console.error("Fetch bookings failed:", err);
       setBookings([]);
     }
-  };
+  }, [pageNo, pageSize, keyword, status]);
 
   useEffect(() => {
     loadBookings();
-  }, [pageNo, keyword, status]);
+  }, [loadBookings]);
 
   const handleUpdateStatus = async (id, status) => {
     try {
@@ -83,14 +83,22 @@ export default function BookingPage() {
       : "-";
   };
 
+  const statusLabels = {
+    PENDING: "Chờ xác nhận",
+    CONFIRMED: "Đã xác nhận",
+    CANCELLED: "Đã hủy",
+    COMPLETED: "Hoàn tất",
+    EXPIRED: "Hết hạn",
+  };
+
   return (
     <div className="booking-page">
       <div className="booking-header">
-        <h2>Booking Management</h2>
+        <h2>Quản lý đặt sân</h2>
 
         <div className="filters">
           <Form.Control
-            placeholder="Search user / field..."
+            placeholder="Tìm người đặt hoặc sân..."
             value={keyword}
             onChange={(e) => {
               setKeyword(e.target.value);
@@ -106,12 +114,12 @@ export default function BookingPage() {
               setPageNo(0);
             }}
           >
-            <option value="">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="CONFIRMED">Confirmed</option>
-            <option value="CANCELLED">Cancelled</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="EXPIRED">Expired</option>
+            <option value="">Tất cả trạng thái</option>
+            <option value="PENDING">Chờ xác nhận</option>
+            <option value="CONFIRMED">Đã xác nhận</option>
+            <option value="CANCELLED">Đã hủy</option>
+            <option value="COMPLETED">Hoàn tất</option>
+            <option value="EXPIRED">Hết hạn</option>
           </Form.Select>
         </div>
       </div>
@@ -120,13 +128,13 @@ export default function BookingPage() {
         <thead>
           <tr>
             <th>ID</th>
-            <th>User</th>
-            <th>Field</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Total Price</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>Người đặt</th>
+            <th>Sân</th>
+            <th>Ngày</th>
+            <th>Giờ</th>
+            <th>Tổng tiền</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
 
@@ -144,16 +152,16 @@ export default function BookingPage() {
                 <td>
                   <strong>{formatMoney(b.finalPrice || b.totalPrice)}</strong>
                   <div className="admin-booking-breakdown">
-                    <span>Field: {formatMoney(b.originalPrice || b.totalPrice)}</span>
-                    <span>Extra: {formatMoney(b.extraServicePrice)}</span>
-                    <span>Member: -{formatMoney(b.membershipDiscount)}</span>
+                    <span>Sân: {formatMoney(b.originalPrice || b.totalPrice)}</span>
+                    <span>Dịch vụ thêm: {formatMoney(b.extraServicePrice)}</span>
+                    <span>Thành viên: -{formatMoney(b.membershipDiscount)}</span>
                     <span>Voucher: -{formatMoney(b.voucherDiscount)}</span>
                   </div>
                 </td>
 
                 <td>
                   <span className={`status-${b.status?.toLowerCase()}`}>
-                    {b.status}
+                    {statusLabels[b.status] || b.status}
                   </span>
                 </td>
 
@@ -169,7 +177,7 @@ export default function BookingPage() {
                         handleUpdateStatus(b.id, "CONFIRMED")
                       }
                     >
-                      Confirm
+                      Xác nhận
                     </Button>
 
                     <Button
@@ -179,7 +187,7 @@ export default function BookingPage() {
                         handleUpdateStatus(b.id, "CANCELLED")
                       }
                     >
-                      Cancel
+                      Hủy
                     </Button>
 
                     <Button
@@ -189,7 +197,7 @@ export default function BookingPage() {
                         handleUpdateStatus(b.id, "EXPIRED")
                       }
                     >
-                      Expire
+                      Hết hạn
                     </Button>
                   </>
                 )}
@@ -204,7 +212,7 @@ export default function BookingPage() {
                         handleUpdateStatus(b.id, "COMPLETED")
                       }
                     >
-                      Complete
+                      Hoàn tất
                     </Button>
 
                     <Button
@@ -214,7 +222,7 @@ export default function BookingPage() {
                         handleUpdateStatus(b.id, "CANCELLED")
                       }
                     >
-                      Cancel
+                      Hủy
                     </Button>
                   </>
                 )}
@@ -225,7 +233,7 @@ export default function BookingPage() {
                   variant="danger"
                   onClick={() => setConfirmDeleteModal(b)}
                 >
-                  Delete
+                  Xóa
                 </Button>
 
               </td>
@@ -234,7 +242,7 @@ export default function BookingPage() {
           ) : (
             <tr>
               <td colSpan="8" style={{ textAlign: "center" }}>
-                No bookings found
+                Chưa có lượt đặt sân nào
               </td>
             </tr>
           )}
@@ -244,18 +252,18 @@ export default function BookingPage() {
       {pageData && (
         <div className="pagination">
           <Button disabled={pageNo === 0} onClick={() => setPageNo(pageNo - 1)}>
-            Prev
+            Trước
           </Button>
 
           <span>
-            Page {pageNo + 1} / {pageData.page.totalPages}
+            Trang {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
             disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
-            Next
+            Sau
           </Button>
         </div>
       )}
@@ -265,19 +273,19 @@ export default function BookingPage() {
         onHide={() => setConfirmDeleteModal(null)}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
+          <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
-          Delete booking <b>{confirmDeleteModal?.id}</b> ?
+          Bạn có chắc muốn xóa lượt đặt sân <b>{confirmDeleteModal?.id}</b> không?
         </Modal.Body>
 
         <Modal.Footer>
           <Button onClick={() => setConfirmDeleteModal(null)}>
-            Cancel
+            Hủy
           </Button>
           <Button variant="danger" onClick={handleDelete}>
-            Delete
+            Xóa
           </Button>
         </Modal.Footer>
       </Modal>

@@ -5,20 +5,48 @@ const handleResponse = async (response) => {
     const errText = await response.text();
     throw new Error(errText || "Lỗi không xác định từ server");
   }
+
   const result = await response.json();
   return result.data ?? result.message;
 };
 
 export const getDashboardSummary = async () => {
-    const response = await fetch(`${API_URL}/summary`, {
-        method: "GET",
-    });
-    return handleResponse(response);
-}
+  const response = await fetch(`${API_URL}/summary`, {
+    method: "GET",
+  });
+
+  return handleResponse(response);
+};
 
 export const getMonthlyRevenue = async () => {
-    const response = await fetch(`${API_URL}/monthly-revenue`, {
-        method: "GET",
-    });
-    return handleResponse(response);
-}
+  const response = await fetch(`${API_URL}/monthly-revenue`, {
+    method: "GET",
+  });
+
+  return handleResponse(response);
+};
+
+export const getAdminOverview = async ({
+  bookingStatus = "",
+  orderStatus = "",
+} = {}) => {
+  const params = new URLSearchParams();
+
+  if (bookingStatus) {
+    params.append("bookingStatus", bookingStatus);
+  }
+
+  if (orderStatus) {
+    params.append("orderStatus", orderStatus);
+  }
+
+  const query = params.toString();
+  const response = await fetch(
+    `${API_URL}/admin-overview${query ? `?${query}` : ""}`,
+    {
+      method: "GET",
+    }
+  );
+
+  return handleResponse(response);
+};

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import swal from "sweetalert";
 
 import {
@@ -14,15 +14,15 @@ export default function ImagePage({ product, onClose }) {
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const loadImages = async () => {
+  const loadImages = useCallback(async () => {
     if (!product?.id) return;
     const res = await getImageByProduct(product.id);
     setImages(res);
-  };
+  }, [product?.id]);
 
   useEffect(() => {
     loadImages();
-  }, [product?.id]);
+  }, [loadImages]);
 
   const validateFiles = (fileList) => {
     if (!fileList || fileList.length === 0) {

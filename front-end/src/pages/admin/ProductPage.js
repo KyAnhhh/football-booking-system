@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import swal from "sweetalert";
 import { Button, Modal, Form, Table } from "react-bootstrap";
 
@@ -30,8 +30,8 @@ export default function ProductPage() {
       // Paging + Sorting + Search
   const [pageNo, setPageNo] = useState(0);
   const [pageSize] = useState(10);
-  const [sortBy, setSortBy] = useState("id");
-  const [sortDir, setSortDir] = useState("asc");
+  const [sortBy] = useState("id");
+  const [sortDir] = useState("asc");
   const [search, setSearch] = useState("");
 
   const [pageData, setPageData] = useState(null);
@@ -44,17 +44,15 @@ export default function ProductPage() {
     categoryId: ""
   });
 
-  const [errors, setErrors] = useState({});
-
   const validateForm = () => {
     const newErrors = {};
 
     if (!form.name || form.name.trim().length < 3) {
-      newErrors.name = "Product name must be at least 3 characters";
+      newErrors.name = "Tên sản phẩm phải có ít nhất 3 ký tự";
     }
 
     if (form.description && form.description.length > 500) {
-      newErrors.description = "Description must be less than 500 characters";
+      newErrors.description = "Mô tả không được vượt quá 500 ký tự";
     }
 
     if (!form.brandId) {
@@ -65,11 +63,10 @@ export default function ProductPage() {
       newErrors.categoryId = "Please select a category";
     }
 
-    setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-const loadData = async () => {
+const loadData = useCallback(async () => {
   try {
     const [pRes, bRes, cRes] = await Promise.all([
       getProducts(pageNo, pageSize, sortBy, sortDir, search),
@@ -94,12 +91,12 @@ const loadData = async () => {
   } catch (err) {
     swal("Error", err.message, "error");
   }
-};
+}, [pageNo, pageSize, sortBy, sortDir, search]);
 
 
   useEffect(() => {
     loadData();
-  }, [pageNo, sortBy, sortDir, search]);
+  }, [loadData]);
 
   const openCreate = () => {
     setEditingProduct(null);
@@ -141,10 +138,10 @@ const loadData = async () => {
     try {
       if (editingProduct) {
         await updateProduct(editingProduct.id, payload);
-        swal("Success", "Product updated", "success");
+        swal("Thành công", "Đã cập nhật sản phẩm", "success");
       } else {
         await createProduct(payload);
-        swal("Success", "Product created", "success");
+        swal("Thành công", "Đã tạo sản phẩm", "success");
       }
 
       setShowModal(false);
@@ -156,7 +153,7 @@ const loadData = async () => {
 
   const handleDelete = async (id) => {
     const ok = await swal({
-      text: "Delete this product?",
+      text: "Bạn có chắc muốn xóa sản phẩm này?",
       buttons: true
     });
     if (!ok) return;
@@ -168,12 +165,12 @@ const loadData = async () => {
   return (
     <div className="container mt-4">
  <div className="product-header d-flex justify-content-between align-items-center">
-  <h2>Product Management</h2>
+  <h2>Quản lý sản phẩm</h2>
 
   <div className="d-flex gap-2">
     <Form.Control
       type="text"
-      placeholder="Search product..."
+      placeholder="Tìm sản phẩm..."
       value={search}
       onChange={(e) => {
         setSearch(e.target.value);
@@ -183,7 +180,7 @@ const loadData = async () => {
     />
 
     <Button onClick={openCreate}>
-      + New Product
+      + Thêm sản phẩm
     </Button>
   </div>
 </div>
@@ -193,11 +190,11 @@ const loadData = async () => {
         <thead>
           <tr>
             <th>#</th>
-            <th>Name</th>
+            <th>Tên sản phẩm</th>
             <th>Discount</th>
-            <th>Brand</th>
-            <th>Category</th>
-            <th width="320">Actions</th>
+            <th>Thương hiệu</th>
+            <th>Danh mục</th>
+            <th width="320">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -210,28 +207,28 @@ const loadData = async () => {
               <td>{p.categoryName}</td>
               <td>
                 <Button size="sm" onClick={() => openEdit(p)}>
-                  Edit
+                  Sửa
                 </Button>{" "}
                 <Button
                   size="sm"
                   variant="info"
                   onClick={() => setSelectedImageProduct(p)}
                 >
-                  Images
+                  Ảnh
                 </Button>{" "}
                 <Button
                   size="sm"
                   variant="secondary"
                   onClick={() => setSelectedVariantProduct(p)}
                 >
-                  Variants
+                  Biến thể
                 </Button>{" "}
                 <Button
                   size="sm"
                   variant="danger"
                   onClick={() => handleDelete(p.id)}
                 >
-                  Delete
+                  Xóa
                 </Button>
               </td>
             </tr>
@@ -245,18 +242,18 @@ const loadData = async () => {
       disabled={pageNo === 0}
       onClick={() => setPageNo(pageNo - 1)}
     >
-      Prev
+      Trước
     </Button>
 
     <span style={{ margin: "0 15px" }}>
-      Page {pageNo + 1} / {pageData.page?.totalPages}
+      Trang {pageNo + 1} / {pageData.page?.totalPages}
     </span>
 
     <Button
       disabled={pageNo + 1 >= pageData.page?.totalPages}
       onClick={() => setPageNo(pageNo + 1)}
     >
-      Next
+      Sau
     </Button>
   </div>
 )}
@@ -279,13 +276,13 @@ const loadData = async () => {
         <Form onSubmit={handleSubmit}>
           <Modal.Header closeButton>
             <Modal.Title>
-              {editingProduct ? "Edit Product" : "New Product"}
+              {editingProduct ? "Sửa sản phẩm" : "Thêm sản phẩm"}
             </Modal.Title>
           </Modal.Header>
 
           <Modal.Body>
             <Form.Group>
-              <Form.Label>Name</Form.Label>
+              <Form.Label>Tên sản phẩm</Form.Label>
               <Form.Control
                 value={form.name}
                 onChange={(e) =>
@@ -296,7 +293,7 @@ const loadData = async () => {
             </Form.Group>
 
             <Form.Group className="mt-2">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -308,7 +305,7 @@ const loadData = async () => {
             </Form.Group>
 
             <Form.Group className="mt-2">
-              <Form.Label>Discount</Form.Label>
+              <Form.Label>Giảm giá</Form.Label>
               <Form.Control
                 value={form.discount}
                 onChange={(e) =>
@@ -318,7 +315,7 @@ const loadData = async () => {
             </Form.Group>
 
             <Form.Group className="mt-2">
-              <Form.Label>Brand</Form.Label>
+              <Form.Label>Thương hiệu</Form.Label>
               <Form.Select
                 value={form.brandId}
                 onChange={(e) =>
@@ -326,7 +323,7 @@ const loadData = async () => {
                 }
                 required
               >
-                <option value="">-- Select brand --</option>
+                <option value="">-- Chọn thương hiệu --</option>
                 {brands.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -336,7 +333,7 @@ const loadData = async () => {
             </Form.Group>
 
             <Form.Group className="mt-2">
-              <Form.Label>Category</Form.Label>
+              <Form.Label>Danh mục</Form.Label>
               <Form.Select
                 value={form.categoryId}
                 onChange={(e) =>
@@ -344,7 +341,7 @@ const loadData = async () => {
                 }
                 required
               >
-                <option value="">-- Select category --</option>
+                <option value="">-- Chọn danh mục --</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -355,7 +352,7 @@ const loadData = async () => {
           </Modal.Body>
 
           <Modal.Footer>
-            <Button type="submit">Save</Button>
+            <Button type="submit">Lưu</Button>
           </Modal.Footer>
         </Form>
       </Modal>

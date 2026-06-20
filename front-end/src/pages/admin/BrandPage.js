@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { 
   getBrands, 
   createBrand, 
@@ -28,7 +28,7 @@ export default function BrandPage() {
     logoUrl: ""
   });
 
-  const loadBrands = async () => {
+  const loadBrands = useCallback(async () => {
     try {
       const data = await getBrands(pageNo, pageSize, sortBy, sortDir, search);
 
@@ -50,11 +50,11 @@ export default function BrandPage() {
       console.error("Fetch brands failed:", err);
       setBrands([]);
     }
-  };
+  }, [pageNo, pageSize, sortBy, sortDir, search]);
 
   useEffect(() => {
     loadBrands();
-  }, [pageNo, sortBy, sortDir, search]);
+  }, [loadBrands]);
 
   // Sort toggle
   const toggleSort = (field) => {
@@ -120,18 +120,18 @@ export default function BrandPage() {
   return (
     <div className="brand-page">
       <div className="brand-header">
-        <h2>Brand Management</h2>
+        <h2>Quản lý thương hiệu</h2>
         <div className="user-actions">
           <Form.Control
             type="text"
-            placeholder="Search by email..."
+            placeholder="Tìm thương hiệu..."
             value={search}
             onChange={handleSearchChange}
             style={{ width: "250px" }}
           />
 
           <Button variant="primary" onClick={() => handleShow()}>
-            + Thêm brand
+            + Thêm thương hiệu
           </Button>
         </div>
       </div>
@@ -140,10 +140,10 @@ export default function BrandPage() {
         <thead>
           <tr>
             <th onClick={() => toggleSort("id")}>ID</th>
-            <th onClick={() => toggleSort("name")}>Name</th>
-            <th onClick={() => toggleSort("description")}>Description</th>
+            <th onClick={() => toggleSort("name")}>Tên thương hiệu</th>
+            <th onClick={() => toggleSort("description")}>Mô tả</th>
             <th onClick={() => toggleSort("logo")}>Logo</th>
-            <th>Actions</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
 
@@ -161,7 +161,7 @@ export default function BrandPage() {
                       alt={b.name} 
                       style={{ width: "60px" }} 
                     />
-                  ) : "N/A"}
+                  ) : "Chưa có"}
                 </td>
                 <td>
                   <Button 
@@ -169,14 +169,14 @@ export default function BrandPage() {
                     variant="warning" 
                     onClick={() => handleShow(b)}
                   >
-                    Edit
+                    Sửa
                   </Button>{" "}
                   <Button 
                     size="sm" 
                     variant="danger"
                     onClick={() => setConfirmBrand(b)}
                   >
-                    Delete
+                    Xóa
                   </Button>
                 </td>
               </tr>
@@ -184,7 +184,7 @@ export default function BrandPage() {
           ) : (
             <tr>
               <td colSpan="5" style={{ textAlign: "center", color: "gray" }}>
-                No brands found.
+                Chưa có thương hiệu nào.
               </td>
             </tr>
           )}
@@ -197,18 +197,18 @@ export default function BrandPage() {
             disabled={pageNo === 0}
             onClick={() => setPageNo(pageNo - 1)}
           >
-            Prev
+            Trước
           </Button>
 
           <span style={{ margin: "0 10px" }}>
-            Page {pageNo + 1} / {pageData.page.totalPages}
+            Trang {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
             disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
-            Next
+            Sau
           </Button>
         </div>
       )}
@@ -217,14 +217,14 @@ export default function BrandPage() {
       <Modal show={show} onHide={() => setShow(false)}>
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingBrand ? "Edit Brand" : "Create Brand"}
+            {editingBrand ? "Sửa thương hiệu" : "Thêm thương hiệu"}
           </Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
+              <Form.Label>Tên thương hiệu</Form.Label>
               <Form.Control
                 type="text"
                 value={form.name}
@@ -234,7 +234,7 @@ export default function BrandPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -253,7 +253,7 @@ export default function BrandPage() {
             </Form.Group>
 
             <Button variant="success" type="submit">
-              {editingBrand ? "Update" : "Create"}
+              {editingBrand ? "Cập nhật" : "Tạo mới"}
             </Button>
           </Form>
         </Modal.Body>
@@ -265,14 +265,14 @@ export default function BrandPage() {
           <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bạn có chắc muốn xóa brand <b>{confirmBrand?.name}</b> không?
+          Bạn có chắc muốn xóa thương hiệu <b>{confirmBrand?.name}</b> không?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmBrand(null)}>
-            Cancel
+            Hủy
           </Button>
           <Button variant="danger" onClick={confirmDelete}>
-            Delete
+            Xóa
           </Button>
         </Modal.Footer>
       </Modal>

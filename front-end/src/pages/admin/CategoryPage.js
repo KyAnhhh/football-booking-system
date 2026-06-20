@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { 
   getCategories, 
   createCategory, 
@@ -30,7 +30,7 @@ export default function CategoryPage() {
 
   const [confirmCategory, setConfirmCategory] = useState(null);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const data = await getCategories(pageNo, pageSize, sortBy, sortDir, search);
       
@@ -52,11 +52,11 @@ export default function CategoryPage() {
       console.error("Fetch categories failed:", err);
       setCategories([]); // tránh break UI
     }
-  };
+  }, [pageNo, pageSize, sortBy, sortDir, search]);
 
   useEffect(() => {
     loadCategories();
-  }, [pageNo, sortBy, sortDir, search]);
+  }, [loadCategories]);
 
   // Sort toggle
   const toggleSort = (field) => {
@@ -117,18 +117,18 @@ export default function CategoryPage() {
   return (
     <div className="category-page">
       <div className="category-header">
-        <h2>Category Management</h2>
+        <h2>Quản lý danh mục</h2>
         <div className="user-actions">
           <Form.Control
             type="text"
-            placeholder="Search by email..."
+            placeholder="Tìm danh mục..."
             value={search}
             onChange={handleSearchChange}
             style={{ width: "250px" }}
           />
 
           <Button variant="primary" onClick={() => handleShow()}>
-            + Thêm Category
+            + Thêm danh mục
           </Button>
         </div>
       </div>
@@ -137,9 +137,9 @@ export default function CategoryPage() {
         <thead>
           <tr>
             <th onClick={() => toggleSort("id")}>ID</th>
-            <th onClick={() => toggleSort("name")}>Name</th>
-            <th onClick={() => toggleSort("description")}>Description</th>
-            <th>Actions</th>
+            <th onClick={() => toggleSort("name")}>Tên danh mục</th>
+            <th onClick={() => toggleSort("description")}>Mô tả</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
 
@@ -152,10 +152,10 @@ export default function CategoryPage() {
                 <td>{c.description}</td>
                 <td>
                   <Button variant="warning" size="sm" onClick={() => handleShow(c)}>
-                    Edit
+                    Sửa
                   </Button>{" "}
                   <Button variant="danger" size="sm" onClick={() => setConfirmCategory(c)}>
-                    Delete
+                    Xóa
                   </Button>
                 </td>
               </tr>
@@ -163,7 +163,7 @@ export default function CategoryPage() {
           ) : (
             <tr>
               <td colSpan="4" style={{ textAlign: "center", color: "gray" }}>
-                No categories found.
+                Chưa có danh mục nào.
               </td>
             </tr>
           )}
@@ -176,18 +176,18 @@ export default function CategoryPage() {
             disabled={pageNo === 0}
             onClick={() => setPageNo(pageNo - 1)}
           >
-            Prev
+            Trước
           </Button>
 
           <span style={{ margin: "0 10px" }}>
-            Page {pageNo + 1} / {pageData.page.totalPages}
+            Trang {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
             disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
-            Next
+            Sau
           </Button>
         </div>
       )}
@@ -195,13 +195,13 @@ export default function CategoryPage() {
       {/* Create/Edit Modal */}
       <Modal show={show} onHide={() => setShow(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingCategory ? "Edit Category" : "Create Category"}</Modal.Title>
+          <Modal.Title>{editingCategory ? "Sửa danh mục" : "Thêm danh mục"}</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
+              <Form.Label>Tên danh mục</Form.Label>
               <Form.Control 
                 type="text" 
                 value={form.name}
@@ -211,7 +211,7 @@ export default function CategoryPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control 
                 type="text" 
                 value={form.description}
@@ -220,7 +220,7 @@ export default function CategoryPage() {
             </Form.Group>
 
             <Button type="submit" variant="success">
-              {editingCategory ? "Update" : "Create"}
+              {editingCategory ? "Cập nhật" : "Tạo mới"}
             </Button>
           </Form>
         </Modal.Body>
@@ -232,11 +232,11 @@ export default function CategoryPage() {
           <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bạn có chắc chắn muốn xóa category <b>{confirmCategory?.name}</b> không?
+          Bạn có chắc chắn muốn xóa danh mục <b>{confirmCategory?.name}</b> không?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setConfirmCategory(null)}>Cancel</Button>
-          <Button variant="danger" onClick={confirmDelete}>Delete</Button>
+          <Button variant="secondary" onClick={() => setConfirmCategory(null)}>Hủy</Button>
+          <Button variant="danger" onClick={confirmDelete}>Xóa</Button>
         </Modal.Footer>
       </Modal>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getUsers, createUser, updateUser, deleteUser } from "../../services/userService";
 import { Modal, Button, Form } from "react-bootstrap";
 import "../../assets/styles/UserPage.css";
@@ -21,7 +21,7 @@ export default function UserPage() {
   // modal confirm delete
   const [confirmUser, setConfirmUser] = useState(null);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const data = await getUsers(pageNo, pageSize, sortBy, sortDir, search);
       setUsers(data.content);
@@ -29,11 +29,11 @@ export default function UserPage() {
     } catch (err) {
       console.error("Fetch users failed:", err);
     }
-  };
+  }, [pageNo, pageSize, sortBy, sortDir, search]);
 
   useEffect(() => {
     loadUsers();
-  }, [pageNo, sortBy, sortDir, search]);
+  }, [loadUsers]);
 
   // Sort toggle
   const toggleSort = (field) => {
@@ -107,12 +107,12 @@ export default function UserPage() {
   return (
     <div className="user-page">
       <div className="user-header">
-        <h2>User Management</h2>
+        <h2>Quản lý người dùng</h2>
 
         <div className="user-actions">
           <Form.Control
             type="text"
-            placeholder="Search by email..."
+            placeholder="Tìm theo email..."
             value={search}
             onChange={handleSearchChange}
             style={{ width: "250px" }}
@@ -128,10 +128,10 @@ export default function UserPage() {
         <thead>
           <tr>
             <th onClick={() => toggleSort("id")}>ID</th>
-            <th onClick={() => toggleSort("username")}>UserName</th>
-            <th onClick={() => toggleSort("phone")}>Phone</th>
+            <th onClick={() => toggleSort("username")}>Tên đăng nhập</th>
+            <th onClick={() => toggleSort("phone")}>Số điện thoại</th>
             <th onClick={() => toggleSort("email")}>Email</th>
-            <th>Actions</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
 
@@ -144,10 +144,10 @@ export default function UserPage() {
               <td>{u.email}</td>
               <td>
                 <Button size="sm" variant="warning" onClick={() => handleShow(u)}>
-                  Edit
+                  Sửa
                 </Button>{" "}
                 <Button size="sm" variant="danger" onClick={() => handleDeleteClick(u)}>
-                  Delete
+                  Xóa
                 </Button>
               </td>
             </tr>
@@ -162,18 +162,18 @@ export default function UserPage() {
             disabled={pageNo === 0}
             onClick={() => setPageNo(pageNo - 1)}
           >
-            Prev
+            Trước
           </Button>
 
           <span style={{ margin: "0 10px" }}>
-            Page {pageNo + 1} / {pageData.page.totalPages}
+            Trang {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
             disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
-            Next
+            Sau
           </Button>
         </div>
       )}
@@ -181,12 +181,12 @@ export default function UserPage() {
       {/* Modal Create / Edit User */}
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingUser ? "Edit User" : "Create User"}</Modal.Title>
+          <Modal.Title>{editingUser ? "Sửa người dùng" : "Thêm người dùng"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Username</Form.Label>
+              <Form.Label>Tên đăng nhập</Form.Label>
               <Form.Control
                 type="text"
                 value={form.username}
@@ -206,7 +206,7 @@ export default function UserPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Phone</Form.Label>
+              <Form.Label>Số điện thoại</Form.Label>
               <Form.Control
                 type="number"
                 value={form.phone}
@@ -216,17 +216,17 @@ export default function UserPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Password</Form.Label>
+              <Form.Label>Mật khẩu</Form.Label>
               <Form.Control
                 type="password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                placeholder={editingUser ? "Leave blank to keep old password" : ""}
+                placeholder={editingUser ? "Để trống nếu muốn giữ mật khẩu cũ" : ""}
               />
             </Form.Group>
 
-            <Button variant="success" type="submit" style={{ backgroundColor: "blue" }}>
-              {editingUser ? "Update" : "Create"}
+            <Button variant="success" type="submit">
+              {editingUser ? "Cập nhật" : "Tạo mới"}
             </Button>
           </Form>
         </Modal.Body>
@@ -238,14 +238,14 @@ export default function UserPage() {
           <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Bạn có chắc chắn muốn xóa user <b>{confirmUser?.username}</b> không?
+          Bạn có chắc chắn muốn xóa người dùng <b>{confirmUser?.username}</b> không?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmUser(null)}>
-            Cancel
+            Hủy
           </Button>
           <Button variant="danger" onClick={confirmDelete}>
-            Delete
+            Xóa
           </Button>
         </Modal.Footer>
       </Modal>

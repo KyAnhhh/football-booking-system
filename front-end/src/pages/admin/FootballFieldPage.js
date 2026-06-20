@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   getFields,
@@ -35,7 +35,7 @@ export default function FootballFieldPage() {
     description: ""
   });
 
-  const loadFields = async () => {
+  const loadFields = useCallback(async () => {
     try {
       const data = await getFields({
         page: pageNo,
@@ -55,11 +55,11 @@ export default function FootballFieldPage() {
       console.error("Fetch fields failed:", err);
       setFields([]);
     }
-  };
+  }, [pageNo, pageSize, keyword, status, type]);
 
   useEffect(() => {
     loadFields();
-  }, [pageNo, keyword, status, type]);
+  }, [loadFields]);
 
   const handleShow = (field = null) => {
     if (field) {
@@ -126,11 +126,11 @@ export default function FootballFieldPage() {
   return (
     <div className="field-page">
       <div className="field-header">
-        <h2>Football Field Management</h2>
+        <h2>Quản lý sân bóng</h2>
 
         <div className="filters">
           <Form.Control
-            placeholder="Search..."
+            placeholder="Tìm sân bóng..."
             value={keyword}
             onChange={(e) => {
               setKeyword(e.target.value);
@@ -143,22 +143,22 @@ export default function FootballFieldPage() {
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
-            <option value="">All Status</option>
-            <option value="AVAILABLE">Available</option>
-            <option value="UNAVAILABLE">Unavailability</option>
+            <option value="">Tất cả trạng thái</option>
+            <option value="AVAILABLE">Khả dụng</option>
+            <option value="UNAVAILABLE">Không khả dụng</option>
           </Form.Select>
 
           <Form.Select
             value={type}
             onChange={(e) => setType(e.target.value)}
           >
-            <option value="">All Type</option>
+            <option value="">Tất cả loại sân</option>
             <option value="FIVE_A_SIDE">5 vs 5</option>
             <option value="SEVEN_A_SIDE">7 vs 7</option>
             <option value="ELEVEN_A_SIDE">11 vs 11</option>
           </Form.Select>
 
-          <Button className="add-field" onClick={() => handleShow()}>+ Add Field</Button>
+          <Button className="add-field" onClick={() => handleShow()}>+ Thêm sân</Button>
           <Link to="/admin/maintenance" style={{ textDecoration: "none" }}>
             <Button className="add-field" variant="info" style={{ marginLeft: "10px" }}>
               Quản lý bảo trì
@@ -171,12 +171,12 @@ export default function FootballFieldPage() {
         <thead>
           <tr>
             <th>ID</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Price</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>Tên sân</th>
+            <th>Địa chỉ</th>
+            <th>Giá</th>
+            <th>Loại sân</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
 
@@ -203,8 +203,8 @@ export default function FootballFieldPage() {
                       handleStatusChange(f.id, e.target.value)
                     }
                   >
-                    <option value="AVAILABLE">Available</option>
-                    <option value="UNAVAILABLE">Unavailability</option>
+                    <option value="AVAILABLE">Khả dụng</option>
+                    <option value="UNAVAILABLE">Không khả dụng</option>
                   </Form.Select>
                 </td>
 
@@ -214,14 +214,14 @@ export default function FootballFieldPage() {
                     variant="warning"
                     onClick={() => handleShow(f)}
                   >
-                    Edit
+                    Sửa
                   </Button>{" "}
                   <Button
                     size="sm"
                     variant="danger"
                     onClick={() => setConfirmField(f)}
                   >
-                    Delete
+                    Xóa
                   </Button>
                 </td>
               </tr>
@@ -229,7 +229,7 @@ export default function FootballFieldPage() {
           ) : (
             <tr>
               <td colSpan="7" style={{ textAlign: "center" }}>
-                No fields found
+                Chưa có sân bóng nào
               </td>
             </tr>
           )}
@@ -239,18 +239,18 @@ export default function FootballFieldPage() {
       {pageData && (
         <div className="pagination">
           <Button disabled={pageNo === 0} onClick={() => setPageNo(pageNo - 1)}>
-            Prev
+            Trước
           </Button>
 
           <span>
-            Page {pageNo + 1} / {pageData.page.totalPages}
+            Trang {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
             disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
-            Next
+            Sau
           </Button>
         </div>
       )}
@@ -258,14 +258,14 @@ export default function FootballFieldPage() {
       <Modal show={show} onHide={() => setShow(false)}>
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingField ? "Edit Field" : "Create Field"}
+            {editingField ? "Sửa sân bóng" : "Thêm sân bóng"}
           </Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group>
-              <Form.Label>Name</Form.Label>
+              <Form.Label>Tên sân</Form.Label>
               <Form.Control
                 value={form.name}
                 onChange={(e) =>
@@ -275,7 +275,7 @@ export default function FootballFieldPage() {
             </Form.Group>
 
             <Form.Group>
-              <Form.Label>Address</Form.Label>
+              <Form.Label>Địa chỉ</Form.Label>
               <Form.Control
                 value={form.address}
                 onChange={(e) =>
@@ -286,7 +286,7 @@ export default function FootballFieldPage() {
             </Form.Group>
 
             <Form.Group>
-              <Form.Label>Price Per Hour</Form.Label>
+              <Form.Label>Giá theo giờ</Form.Label>
               <Form.Control
                 type="number"
                 min="0"
@@ -299,14 +299,14 @@ export default function FootballFieldPage() {
             </Form.Group>
 
             <Form.Group>
-              <Form.Label>Type</Form.Label>
+              <Form.Label>Loại sân</Form.Label>
               <Form.Select
                 value={form.type}
                 onChange={(e) =>
                   setForm({ ...form, type: e.target.value })
                 }
               >
-                <option value="">Select</option>
+                <option value="">Chọn loại sân</option>
                 <option value="FIVE_A_SIDE">5 vs 5</option>
                 <option value="SEVEN_A_SIDE">7 vs 7</option>
                 <option value="ELEVEN_A_SIDE">11 vs 11</option>
@@ -314,7 +314,7 @@ export default function FootballFieldPage() {
             </Form.Group>
 
             <Form.Group>
-              <Form.Label>Image URL</Form.Label>
+              <Form.Label>URL hình ảnh</Form.Label>
               <Form.Control
                 value={form.imageUrl}
                 onChange={(e) =>
@@ -324,7 +324,7 @@ export default function FootballFieldPage() {
             </Form.Group>
 
             <Form.Group>
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -336,7 +336,7 @@ export default function FootballFieldPage() {
             </Form.Group>
 
             <Button type="submit" variant="success" className="mt-3">
-              {editingField ? "Update" : "Create"}
+              {editingField ? "Cập nhật" : "Tạo mới"}
             </Button>
           </Form>
         </Modal.Body>
@@ -344,17 +344,17 @@ export default function FootballFieldPage() {
 
       <Modal show={!!confirmField} onHide={() => setConfirmField(null)}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
+          <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
-          Delete field <b>{confirmField?.name}</b> ?
+          Bạn có chắc muốn xóa sân <b>{confirmField?.name}</b> không?
         </Modal.Body>
 
         <Modal.Footer>
-          <Button onClick={() => setConfirmField(null)}>Cancel</Button>
+          <Button onClick={() => setConfirmField(null)}>Hủy</Button>
           <Button variant="danger" onClick={confirmDelete}>
-            Delete
+            Xóa
           </Button>
         </Modal.Footer>
       </Modal>

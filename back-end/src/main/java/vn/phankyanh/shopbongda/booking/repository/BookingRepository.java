@@ -27,6 +27,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     boolean existsByFieldId(Long fieldId);
 
+    long countByStartTimeGreaterThanEqualAndStartTimeLessThan(
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    );
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
     SELECT b FROM Booking b
@@ -71,6 +76,34 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             Long fieldId,
             LocalDateTime startTime,
             LocalDateTime endTime
+    );
+
+    @Query("""
+    SELECT COALESCE(SUM(b.totalPrice), 0)
+    FROM Booking b
+    WHERE b.startTime >= :startOfDay
+    AND b.startTime < :endOfDay
+    AND b.status IN ('CONFIRMED', 'COMPLETED')
+    """)
+    java.math.BigDecimal sumTodayBookingRevenue(
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
+
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.user u
+    JOIN FETCH b.field f
+    WHERE b.startTime >= :startOfDay
+    AND b.startTime < :endOfDay
+    AND (:status IS NULL OR b.status = :status)
+    ORDER BY b.startTime ASC
+    """)
+    List<Booking> findTodayDashboardBookings(
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay,
+            @Param("status") BookingStatus status,
+            Pageable pageable
     );
 
     @Query("""

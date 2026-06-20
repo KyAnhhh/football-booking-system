@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import Swal from "sweetalert2";
 
@@ -20,7 +20,7 @@ export default function PaymentPage() {
   const [sortDir, setSortDir] = useState("asc");
   const [search, setSearch] = useState("");
 
-  const loadPayments = async () => {
+  const loadPayments = useCallback(async () => {
     try {
       const data = await getPayment(
         pageNo,
@@ -41,11 +41,11 @@ export default function PaymentPage() {
       console.error("Fetch payments failed:", err);
       setPayments([]);
     }
-  };
+  }, [pageNo, pageSize, sortBy, sortDir, search]);
 
   useEffect(() => {
     loadPayments();
-  }, [pageNo, sortBy, sortDir, search]);
+  }, [loadPayments]);
 
   const toggleSort = (field) => {
     if (sortBy === field) {
@@ -99,12 +99,12 @@ export default function PaymentPage() {
     <div className="payment-page">
       {/* HEADER */}
       <div className="payment-header">
-        <h2>Payment Management</h2>
+        <h2>Quản lý thanh toán</h2>
 
         <div className="payment-actions">
           <Form.Control
             type="text"
-            placeholder="Search by payment status..."
+            placeholder="Tìm theo trạng thái thanh toán..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -118,14 +118,14 @@ export default function PaymentPage() {
       <table className="payment-table">
         <thead>
           <tr>
-            <th onClick={() => toggleSort("paymentId")}>Payment ID</th>
-            <th onClick={() => toggleSort("paymentMethod")}>Payment Method</th>
-            <th onClick={() => toggleSort("transactionCode")}>Transaction Code</th>
-            <th onClick={() => toggleSort("orderStatus")}>Order Status</th>
-            <th onClick={() => toggleSort("createdAt")}>Created At</th>
-            <th>Total Amount</th>
-            <th onClick={() => toggleSort("paymentStatus")}>Payment Status</th>
-            <th width="160">Actions</th>
+            <th onClick={() => toggleSort("paymentId")}>Mã thanh toán</th>
+            <th onClick={() => toggleSort("paymentMethod")}>Phương thức</th>
+            <th onClick={() => toggleSort("transactionCode")}>Mã giao dịch</th>
+            <th onClick={() => toggleSort("orderStatus")}>Trạng thái đơn</th>
+            <th onClick={() => toggleSort("createdAt")}>Ngày tạo</th>
+            <th>Tổng tiền</th>
+            <th onClick={() => toggleSort("paymentStatus")}>Trạng thái thanh toán</th>
+            <th width="160">Thao tác</th>
           </tr>
         </thead>
 
@@ -142,22 +142,22 @@ export default function PaymentPage() {
                 <td>{p.paymentStatus}</td>
                 <td>
                   <Button size="sm" variant="warning">
-                    Edit
+                    Sửa
                   </Button>{" "}
                   <Button
                     size="sm"
                     variant="danger"
                     onClick={() => handleDeletePayment(p)}
                   >
-                    Delete
+                    Xóa
                   </Button>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="4" className="text-center text-muted">
-                No payments found
+              <td colSpan="8" className="text-center text-muted">
+                Chưa có thanh toán nào
               </td>
             </tr>
           )}
@@ -172,11 +172,11 @@ export default function PaymentPage() {
             disabled={pageNo === 0}
             onClick={() => setPageNo(pageNo - 1)}
           >
-            Prev
+            Trước
           </Button>
 
           <span>
-            Page {pageNo + 1} / {pageData.page.totalPages}
+            Trang {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
@@ -184,7 +184,7 @@ export default function PaymentPage() {
             disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
-            Next
+            Sau
           </Button>
         </div>
       )}

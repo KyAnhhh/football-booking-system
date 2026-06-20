@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { BsSearch, BsPlus, BsPencil, BsTrash } from "react-icons/bs";
 import "../../assets/styles/MaintenanceManagementPage.css";
@@ -30,16 +30,16 @@ export default function MaintenanceManagementPage() {
     description: "",
   });
 
-  const loadFields = async () => {
+  const loadFields = useCallback(async () => {
     try {
       const data = await getFields({ page: 0, size: 1000 });
       setFields(data?.content || []);
     } catch (err) {
       console.error("Load fields failed:", err);
     }
-  };
+  }, []);
 
-  const loadMaintenances = async () => {
+  const loadMaintenances = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getMaintenances({
@@ -56,15 +56,15 @@ export default function MaintenanceManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageNo, pageSize, keyword]);
 
   useEffect(() => {
     loadFields();
-  }, []);
+  }, [loadFields]);
 
   useEffect(() => {
     loadMaintenances();
-  }, [pageNo, keyword]);
+  }, [loadMaintenances]);
 
   const displayedMaintenances = fieldFilter
     ? maintenances.filter((maintenance) => String(maintenance.fieldId) === String(fieldFilter))
@@ -154,14 +154,14 @@ export default function MaintenanceManagementPage() {
   return (
     <div className="maintenance-page">
       <div className="maintenance-header">
-        <h2>Maintenance Management</h2>
+        <h2>Quản lý bảo trì</h2>
 
         <div className="filters">
           <div className="search-box">
             <BsSearch className="search-icon" />
             <input
               type="text"
-              placeholder="Search reason..."
+              placeholder="Tìm lý do bảo trì..."
               value={keyword}
               onChange={(event) => {
                 setKeyword(event.target.value);
@@ -172,7 +172,7 @@ export default function MaintenanceManagementPage() {
 
           <div className="field-filter">
             <select value={fieldFilter} onChange={(event) => setFieldFilter(event.target.value)}>
-              <option value="">All fields</option>
+              <option value="">Tất cả sân</option>
               {fields.map((field) => (
                 <option key={field.id} value={field.id}>
                   {field.name}
@@ -182,26 +182,26 @@ export default function MaintenanceManagementPage() {
           </div>
 
           <Button className="add-btn" onClick={() => handleShow()}>
-            <BsPlus /> Add maintenance
+            <BsPlus /> Thêm lịch bảo trì
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="loading">Loading...</div>
+        <div className="loading">Đang tải...</div>
       ) : displayedMaintenances.length === 0 ? (
-        <div className="no-data">No maintenance schedules found</div>
+        <div className="no-data">Chưa có lịch bảo trì nào</div>
       ) : (
         <table className="maintenance-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Field</th>
-              <th>Start time</th>
-              <th>End time</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>Sân</th>
+              <th>Bắt đầu</th>
+              <th>Kết thúc</th>
+              <th>Lý do</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
 
@@ -216,10 +216,10 @@ export default function MaintenanceManagementPage() {
                 <td>{getStatusBadge(maintenance.startTime, maintenance.endTime)}</td>
                 <td>
                   <Button size="sm" variant="warning" onClick={() => handleShow(maintenance)}>
-                    <BsPencil /> Edit
+                    <BsPencil /> Sửa
                   </Button>
                   <Button size="sm" variant="danger" onClick={() => confirmDelete(maintenance.id)}>
-                    <BsTrash /> Delete
+                    <BsTrash /> Xóa
                   </Button>
                 </td>
               </tr>
@@ -231,34 +231,34 @@ export default function MaintenanceManagementPage() {
       {pageData?.page && (
         <div className="pagination">
           <Button disabled={pageNo === 0} onClick={() => setPageNo(pageNo - 1)}>
-            Prev
+            Trước
           </Button>
 
           <span>
-            Page {pageNo + 1} / {pageData.page.totalPages}
+            Trang {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button disabled={pageNo + 1 >= pageData.page.totalPages} onClick={() => setPageNo(pageNo + 1)}>
-            Next
+            Sau
           </Button>
         </div>
       )}
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editingMaintenance ? "Edit maintenance" : "Add maintenance"}</Modal.Title>
+          <Modal.Title>{editingMaintenance ? "Sửa lịch bảo trì" : "Thêm lịch bảo trì"}</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Field</Form.Label>
+              <Form.Label>Sân</Form.Label>
               <Form.Select
                 value={form.fieldId}
                 onChange={(event) => setForm({ ...form, fieldId: Number(event.target.value) })}
                 required
               >
-                <option value="">Select field</option>
+                <option value="">Chọn sân</option>
                 {fields.map((field) => (
                   <option key={field.id} value={field.id}>
                     {field.name} ({field.status})
@@ -268,7 +268,7 @@ export default function MaintenanceManagementPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Start time</Form.Label>
+              <Form.Label>Thời gian bắt đầu</Form.Label>
               <Form.Control
                 type="datetime-local"
                 value={form.startTime}
@@ -278,7 +278,7 @@ export default function MaintenanceManagementPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>End time</Form.Label>
+              <Form.Label>Thời gian kết thúc</Form.Label>
               <Form.Control
                 type="datetime-local"
                 value={form.endTime}
@@ -288,7 +288,7 @@ export default function MaintenanceManagementPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Reason</Form.Label>
+              <Form.Label>Lý do</Form.Label>
               <Form.Control
                 type="text"
                 value={form.reason}
@@ -298,7 +298,7 @@ export default function MaintenanceManagementPage() {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -308,7 +308,7 @@ export default function MaintenanceManagementPage() {
             </Form.Group>
 
             <Button type="submit" variant="success">
-              {editingMaintenance ? "Update" : "Create"}
+              {editingMaintenance ? "Cập nhật" : "Tạo mới"}
             </Button>
           </Form>
         </Modal.Body>

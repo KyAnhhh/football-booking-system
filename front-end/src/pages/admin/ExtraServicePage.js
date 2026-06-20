@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import {
   createExtraService,
@@ -21,14 +21,14 @@ export default function ExtraServicePage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     const data = await getAdminExtraServices();
     setItems(data || []);
-  };
+  }, []);
 
   useEffect(() => {
     loadItems().catch(console.error);
-  }, []);
+  }, [loadItems]);
 
   const openModal = (item = null) => {
     setEditing(item);
@@ -63,7 +63,7 @@ export default function ExtraServicePage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this extra service?")) return;
+    if (!window.confirm("Bạn có chắc muốn xóa dịch vụ thêm này?")) return;
     await deleteExtraService(id);
     await loadItems();
   };
@@ -71,22 +71,22 @@ export default function ExtraServicePage() {
   return (
     <div className="admin-crud-page">
       <div className="admin-crud-header">
-        <h2>Extra service management</h2>
-        <Button onClick={() => openModal()}>+ Add service</Button>
+        <h2>Quản lý dịch vụ thêm</h2>
+        <Button onClick={() => openModal()}>+ Thêm dịch vụ</Button>
       </div>
 
       {items.length === 0 ? (
-        <div className="admin-crud-empty">No extra services found</div>
+        <div className="admin-crud-empty">Chưa có dịch vụ thêm nào</div>
       ) : (
         <table className="admin-crud-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>Tên dịch vụ</th>
+              <th>Mô tả</th>
+              <th>Giá</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -98,16 +98,16 @@ export default function ExtraServicePage() {
                 <td>{Number(item.price || 0).toLocaleString("vi-VN")} VND</td>
                 <td>
                   <span className={`admin-crud-badge ${item.isActive ? "active" : "inactive"}`}>
-                    {item.isActive ? "Active" : "Inactive"}
+                    {item.isActive ? "Đang bật" : "Đã tắt"}
                   </span>
                 </td>
                 <td>
                   <div className="admin-crud-row-actions">
                     <Button size="sm" variant="warning" onClick={() => openModal(item)}>
-                      Edit
+                      Sửa
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => handleDelete(item.id)}>
-                      Delete
+                      Xóa
                     </Button>
                   </div>
                 </td>
@@ -119,30 +119,30 @@ export default function ExtraServicePage() {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editing ? "Edit extra service" : "Add extra service"}</Modal.Title>
+          <Modal.Title>{editing ? "Sửa dịch vụ thêm" : "Thêm dịch vụ thêm"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
+              <Form.Label>Tên dịch vụ</Form.Label>
               <Form.Control value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Price</Form.Label>
+              <Form.Label>Giá</Form.Label>
               <Form.Control type="number" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
             </Form.Group>
             <Form.Check
               type="checkbox"
-              label="Active"
+              label="Đang bật"
               checked={form.isActive}
               onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
             />
             <Button className="mt-3" type="submit" variant="success">
-              Save
+              Lưu
             </Button>
           </Form>
         </Modal.Body>

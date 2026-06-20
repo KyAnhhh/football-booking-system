@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { getFields } from "../../services/fieldService";
 import {
@@ -35,26 +35,26 @@ export default function PricingRulePage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
-  const loadFields = async () => {
+  const loadFields = useCallback(async () => {
     const data = await getFields({ page: 0, size: 1000 });
     const content = data?.content || [];
     setFields(content);
-  };
+  }, []);
 
-  const loadRules = async (fieldId = selectedFieldId) => {
+  const loadRules = useCallback(async (fieldId = selectedFieldId) => {
     const data = fieldId
       ? await getPricingRulesByField(fieldId)
       : await getPricingRules();
     setRules(data || []);
-  };
+  }, [selectedFieldId]);
 
   useEffect(() => {
     loadFields().catch(console.error);
-  }, []);
+  }, [loadFields]);
 
   useEffect(() => {
     loadRules().catch(console.error);
-  }, [selectedFieldId]);
+  }, [loadRules]);
 
   const openModal = (rule = null) => {
     setEditing(rule);
@@ -106,10 +106,10 @@ export default function PricingRulePage() {
   return (
     <div className="admin-crud-page">
       <div className="admin-crud-header">
-        <h2>Pricing rule management</h2>
+        <h2>Quản lý bảng giá</h2>
         <div className="admin-crud-actions">
           <Form.Select value={selectedFieldId} onChange={(e) => setSelectedFieldId(e.target.value)}>
-            <option value="">All fields</option>
+            <option value="">Tất cả sân</option>
             {fields.map((field) => (
               <option key={field.id} value={field.id}>
                 {field.name}
@@ -117,24 +117,24 @@ export default function PricingRulePage() {
             ))}
           </Form.Select>
           <Button onClick={() => openModal()}>
-            + Add rule
+            + Thêm bảng giá
           </Button>
         </div>
       </div>
 
       {rules.length === 0 ? (
-        <div className="admin-crud-empty">No pricing rules found</div>
+        <div className="admin-crud-empty">Chưa có bảng giá nào</div>
       ) : (
         <table className="admin-crud-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Field</th>
-              <th>Day</th>
-              <th>Time</th>
-              <th>Price / slot</th>
-              <th>Slot duration</th>
-              <th>Actions</th>
+              <th>Sân</th>
+              <th>Ngày</th>
+              <th>Khung giờ</th>
+              <th>Giá / slot</th>
+              <th>Thời lượng slot</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -145,14 +145,14 @@ export default function PricingRulePage() {
                 <td>{rule.dayOfWeek}</td>
                 <td>{rule.startTime} - {rule.endTime}</td>
                 <td>{formatMoney(rule.pricePerSlot)}</td>
-                <td>{rule.slotDuration} minutes</td>
+                <td>{rule.slotDuration} phút</td>
                 <td>
                   <div className="admin-crud-row-actions">
                     <Button size="sm" variant="warning" onClick={() => openModal(rule)}>
-                      Edit
+                      Sửa
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => handleDelete(rule.id)}>
-                      Delete
+                      Xóa
                     </Button>
                   </div>
                 </td>
@@ -164,14 +164,14 @@ export default function PricingRulePage() {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editing ? "Edit pricing rule" : "Add pricing rule"}</Modal.Title>
+          <Modal.Title>{editing ? "Sửa bảng giá" : "Thêm bảng giá"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Field</Form.Label>
+              <Form.Label>Sân</Form.Label>
               <Form.Select value={form.fieldId} onChange={(e) => setForm({ ...form, fieldId: e.target.value })} required>
-                <option value="">Select field</option>
+                <option value="">Chọn sân</option>
                 {fields.map((field) => (
                   <option key={field.id} value={field.id}>
                     {field.name}
@@ -180,7 +180,7 @@ export default function PricingRulePage() {
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Day of week</Form.Label>
+              <Form.Label>Thứ trong tuần</Form.Label>
               <Form.Select value={form.dayOfWeek} onChange={(e) => setForm({ ...form, dayOfWeek: e.target.value })}>
                 {days.map((day) => (
                   <option key={day} value={day}>
@@ -190,15 +190,15 @@ export default function PricingRulePage() {
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Start time</Form.Label>
+              <Form.Label>Giờ bắt đầu</Form.Label>
               <Form.Control type="time" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>End time</Form.Label>
+              <Form.Label>Giờ kết thúc</Form.Label>
               <Form.Control type="time" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Price per slot</Form.Label>
+              <Form.Label>Giá mỗi slot</Form.Label>
               <Form.Control
                 type="text"
                 inputMode="numeric"
@@ -209,11 +209,11 @@ export default function PricingRulePage() {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Slot duration</Form.Label>
+              <Form.Label>Thời lượng slot</Form.Label>
               <Form.Control type="number" min="1" value={form.slotDuration} onChange={(e) => setForm({ ...form, slotDuration: e.target.value })} required />
             </Form.Group>
             <Button type="submit" variant="success">
-              Save
+              Lưu
             </Button>
           </Form>
         </Modal.Body>

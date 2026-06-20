@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.repository.query.Param;
 import vn.phankyanh.shopbongda.order.domain.Order;
 import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 
@@ -18,6 +18,8 @@ import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     
        List<Order> findByUserId(Long userId);
+
+       long countByOrderStatus(OrderStatus orderStatus);
 
        @Query("SELECT DISTINCT o FROM Order o " +
               "LEFT JOIN FETCH o.orderItems oi " +
@@ -70,6 +72,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
        WHERE o.orderStatus = 'COMPLETED'
        """)
        BigDecimal sumRevenue();
+
+       @Query("""
+       SELECT o FROM Order o
+       JOIN FETCH o.shippingAddress s
+       WHERE (:orderStatus IS NULL OR o.orderStatus = :orderStatus)
+       ORDER BY o.orderDate DESC
+       """)
+       List<Order> findRecentDashboardOrders(
+              @Param("orderStatus") OrderStatus orderStatus,
+              Pageable pageable
+       );
 
        // @Query("""
        //        SELECT CASE WHEN COUNT(oi) > 0 THEN true ELSE false END

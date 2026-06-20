@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getOrders,
   updateOrderStatus,
@@ -14,7 +14,7 @@ export default function OrderPage() {
 
   // filter – paging – sort
   const [pageNo, setPageNo] = useState(0);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(10);
   const [sortBy, setSortBy] = useState("id");
   const [sortDir, setSortDir] = useState("asc");
   const [search, setSearch] = useState("");
@@ -26,8 +26,6 @@ export default function OrderPage() {
   const [status, setStatus] = useState("");
   const [confirmOrder, setConfirmOrder] = useState(null);
 
-  const [payingId, setPayingId] = useState(null);
-
   const orderStatusColor = {
     PENDING: "bg-secondary",
     CONFIRMED: "bg-primary",
@@ -37,6 +35,15 @@ export default function OrderPage() {
     COMPLETED: "bg-dark",
   };
 
+  const orderStatusLabels = {
+    PENDING: "Chờ xác nhận",
+    CONFIRMED: "Đã xác nhận",
+    SHIPPING: "Đang giao",
+    DELIVERED: "Đã giao",
+    CANCELLED: "Đã hủy",
+    COMPLETED: "Hoàn tất",
+  };
+
   const paymentMethodColor = {
     COD: "bg-secondary",
     VIETQR: "bg-success",
@@ -44,7 +51,7 @@ export default function OrderPage() {
     VNPAY: "bg-info",
   };
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     try {
       const data = await getOrders(
         pageNo,
@@ -63,11 +70,11 @@ export default function OrderPage() {
         text: err.response?.data?.message || "An error occurred while loading orders.",
       });
     }
-  };
+  }, [pageNo, pageSize, sortBy, sortDir, search, statusFilter]);
 
   useEffect(() => {
     loadOrders();
-  }, [pageNo, pageSize, sortBy, sortDir, search, statusFilter]);
+  }, [loadOrders]);
 
   const toggleSort = (field) => {
     setPageNo(0);
@@ -130,12 +137,12 @@ export default function OrderPage() {
   return (
     <div className="order-page">
       <div className="order-header">
-        <h2>Order Management</h2>
+        <h2>Quản lý đơn hàng</h2>
 
         <div className="order-tools">
           <Form.Control
             type="text"
-            placeholder="Search name / phone..."
+            placeholder="Tìm tên hoặc số điện thoại..."
             value={search}
             onChange={handleSearchChange}
             style={{ width: "220px" }}
@@ -146,7 +153,7 @@ export default function OrderPage() {
             onChange={handleStatusFilter}
             style={{ width: "200px" }}
           >
-            <option value="">All Status</option>
+            <option value="">Tất cả trạng thái</option>
             <option value="PENDING">Chờ xác nhận</option>
             <option value="CONFIRMED">Đã xác nhận</option>
             <option value="SHIPPING">Đang giao</option>
@@ -160,14 +167,14 @@ export default function OrderPage() {
         <thead>
           <tr>
             <th onClick={() => toggleSort("id")}>ID</th>
-            <th>Receiver</th>
-            <th>Phone</th>
-            <th>Address</th>
-            <th onClick={() => toggleSort("orderDate")}>Order Date</th>
-            <th onClick={() => toggleSort("totalAmount")}>Total</th>
-            <th onClick={() => toggleSort("orderStatus")}>Order Status</th>
-            <th>Payment Method</th>
-            <th>Actions</th>
+            <th>Người nhận</th>
+            <th>Số điện thoại</th>
+            <th>Địa chỉ</th>
+            <th onClick={() => toggleSort("orderDate")}>Ngày đặt</th>
+            <th onClick={() => toggleSort("totalAmount")}>Tổng tiền</th>
+            <th onClick={() => toggleSort("orderStatus")}>Trạng thái</th>
+            <th>Phương thức thanh toán</th>
+            <th>Thao tác</th>
 
           </tr>
         </thead>
@@ -183,7 +190,7 @@ export default function OrderPage() {
               <td>{o.totalAmount.toLocaleString()}</td>
               <td>
                 <span className={`badge ${orderStatusColor[o.orderStatus]}`}>
-                  {o.orderStatus}
+                  {orderStatusLabels[o.orderStatus] || o.orderStatus}
                 </span>
               </td>
               <td>
@@ -199,7 +206,7 @@ export default function OrderPage() {
                   }`}
                   onClick={() => openStatusModal(o)}
                 >
-                  Update
+                  Cập nhật
                 </span>
 
                 <span
@@ -208,7 +215,7 @@ export default function OrderPage() {
                   }`}
                   onClick={() => setConfirmOrder(o)}
                 >
-                  Delete
+                  Xóa
                 </span>
               </td>
 
@@ -223,29 +230,29 @@ export default function OrderPage() {
             disabled={pageNo === 0}
             onClick={() => setPageNo(pageNo - 1)}
           >
-            Prev
+            Trước
           </Button>
 
           <span>
-            Page {pageNo + 1} / {pageData.page.totalPages}
+            Trang {pageNo + 1} / {pageData.page.totalPages}
           </span>
 
           <Button
             disabled={pageNo + 1 >= pageData.page.totalPages}
             onClick={() => setPageNo(pageNo + 1)}
           >
-            Next
+            Sau
           </Button>
         </div>
       )}
 
       <Modal show={show} onHide={() => setShow(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Update Order Status</Modal.Title>
+          <Modal.Title>Cập nhật trạng thái đơn hàng</Modal.Title>
         </Modal.Header>
         <Modal.Body>
             <p>
-            Order ID: <b>#{selectedOrder?.id}</b>
+            Mã đơn hàng: <b>#{selectedOrder?.id}</b>
           </p>
           <Form onSubmit={handleUpdateStatus}>
             <Form.Select
@@ -259,7 +266,7 @@ export default function OrderPage() {
               <option value="CANCELLED">Đã huỷ</option>
             </Form.Select>
             <Button type="submit" className="mt-3" variant="success">
-              Update
+              Cập nhật
             </Button>
           </Form>
         </Modal.Body>
@@ -267,17 +274,17 @@ export default function OrderPage() {
 
       <Modal show={!!confirmOrder} onHide={() => setConfirmOrder(null)}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm delete</Modal.Title>
+          <Modal.Title>Xác nhận xóa</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Delete order <b>#{confirmOrder?.id}</b>?
+          Bạn có chắc muốn xóa đơn hàng <b>#{confirmOrder?.id}</b> không?
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmOrder(null)}>
-            Cancel
+            Hủy
           </Button>
           <Button variant="danger" onClick={confirmDelete}>
-            Delete
+            Xóa
           </Button>
         </Modal.Footer>
       </Modal>

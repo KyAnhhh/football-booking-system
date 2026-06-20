@@ -40,6 +40,16 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
             @Param("checkTime") LocalDateTime checkTime
     );
 
+    @Query("""
+        SELECT m FROM Maintenance m
+        WHERE m.startTime <= :checkTime
+        AND m.endTime > :checkTime
+        ORDER BY m.endTime ASC
+    """)
+    List<Maintenance> findActiveMaintenancesAt(
+            @Param("checkTime") LocalDateTime checkTime
+    );
+
     boolean existsByFieldIdAndStartTimeLessThanEqualAndEndTimeGreaterThanEqual(
             Long fieldId, LocalDateTime startTime, LocalDateTime endTime
     );

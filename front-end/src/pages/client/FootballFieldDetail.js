@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
 import { CalendarDays, Clock, MapPin, ShieldCheck, Ticket, Wrench } from "lucide-react";
@@ -30,7 +30,7 @@ export default function FootballFieldDetail() {
   const [voucherFinalAmount, setVoucherFinalAmount] = useState(null);
   const [voucherLoading, setVoucherLoading] = useState(false);
 
-  const loadSlots = async (selectedDate) => {
+  const loadSlots = useCallback(async (selectedDate) => {
     try {
       setLoading(true);
       const data = await getAvailableSlots(id, selectedDate);
@@ -42,16 +42,16 @@ export default function FootballFieldDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     try {
       const data = await getFieldReviews(id);
       setReviews(data || []);
     } catch (error) {
       console.error("Load reviews error:", error);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     const loadField = async () => {
@@ -85,7 +85,7 @@ export default function FootballFieldDetail() {
     loadField();
     loadReviews();
     loadExtras();
-  }, [id]);
+  }, [id, loadReviews]);
 
   const selectedServices = useMemo(
     () =>
@@ -118,12 +118,12 @@ export default function FootballFieldDetail() {
 
   const handleApplyVoucher = async () => {
     if (!voucherCode.trim()) {
-      swal("Nhap ma voucher truoc khi ap dung.", "", "warning");
+      swal("Nhập mã voucher trước khi áp dụng.", "", "warning");
       return;
     }
 
     if (!selectedSlot) {
-      swal("Chon khung gio truoc khi ap dung voucher.", "", "warning");
+      swal("Chọn khung giờ trước khi áp dụng voucher.", "", "warning");
       return;
     }
 
@@ -131,10 +131,10 @@ export default function FootballFieldDetail() {
       setVoucherLoading(true);
       const finalAmount = await previewVoucher(voucherCode.trim(), estimatedSubtotal);
       setVoucherFinalAmount(finalAmount);
-      swal("Voucher hop le", "Gia tam tinh da duoc cap nhat.", "success");
+      swal("Voucher hợp lệ", "Giá tạm tính đã được cập nhật.", "success");
     } catch (error) {
       setVoucherFinalAmount(null);
-      swal("Voucher khong hop le", error.message || "Vui long thu lai.", "error");
+      swal("Voucher không hợp lệ", error.message || "Vui lòng thử lại.", "error");
     } finally {
       setVoucherLoading(false);
     }
@@ -147,13 +147,13 @@ export default function FootballFieldDetail() {
     try {
       const token = sessionStorage.getItem("accessToken");
       if (!token) {
-        swal("Vui long dang nhap de dat san.", "", "warning");
+        swal("Vui lòng đăng nhập để đặt sân.", "", "warning");
         navigate("/login");
         return;
       }
 
       if (!paymentMethod) {
-        swal("Vui long chon phuong thuc thanh toan", "", "warning");
+        swal("Vui lòng chọn phương thức thanh toán", "", "warning");
         return;
       }
 
@@ -184,8 +184,8 @@ export default function FootballFieldDetail() {
           break;
         case "CASH":
           await swal(
-            "Dat san thanh cong!",
-            `Tong thanh toan: ${formatMoney(booking.finalPrice || booking.totalPrice)}`,
+            "Đặt sân thành công!",
+            `Tổng thanh toán: ${formatMoney(booking.finalPrice || booking.totalPrice)}`,
             "success"
           );
           navigate("/my-bookings");
@@ -195,7 +195,7 @@ export default function FootballFieldDetail() {
       }
     } catch (error) {
       console.error("Booking error:", error);
-      swal("Dat san that bai!", error.message || "Vui long thu lai sau.", "error");
+      swal("Đặt sân thất bại!", error.message || "Vui lòng thử lại sau.", "error");
     } finally {
       setBookingLoading(false);
     }
@@ -409,7 +409,7 @@ export default function FootballFieldDetail() {
 
               <Button
                 className="book-btn"
-                disabled={!selectedSlot || !date || !paymentMethod || maintenanceInfo?.isUnderMaintenance}
+                disabled={!selectedSlot || !date || !paymentMethod}
                 onClick={handleBooking}
               >
                 {bookingLoading ? "Đang xử lý..." : "Đặt sân"}

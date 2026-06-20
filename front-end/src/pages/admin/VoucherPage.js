@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import {
   createVoucher,
@@ -28,14 +28,14 @@ export default function VoucherPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
-  const loadVouchers = async () => {
+  const loadVouchers = useCallback(async () => {
     const data = await getVouchers();
     setVouchers(data || []);
-  };
+  }, []);
 
   useEffect(() => {
     loadVouchers().catch(console.error);
-  }, []);
+  }, [loadVouchers]);
 
   const openModal = (voucher = null) => {
     setEditing(voucher);
@@ -58,6 +58,11 @@ export default function VoucherPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (form.startDate && form.endDate && form.endDate <= form.startDate) {
+      window.alert("Ngày kết thúc phải sau ngày bắt đầu.");
+      return;
+    }
+
     const payload = {
       ...form,
       discountValue: Number(form.discountValue),
@@ -77,7 +82,7 @@ export default function VoucherPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this voucher?")) return;
+    if (!window.confirm("Bạn có chắc muốn xóa voucher này?")) return;
     await deleteVoucher(id);
     await loadVouchers();
   };
@@ -85,24 +90,24 @@ export default function VoucherPage() {
   return (
     <div className="admin-crud-page">
       <div className="admin-crud-header">
-        <h2>Voucher management</h2>
-        <Button onClick={() => openModal()}>+ Add voucher</Button>
+        <h2>Quản lý voucher</h2>
+        <Button onClick={() => openModal()}>+ Thêm voucher</Button>
       </div>
 
       {vouchers.length === 0 ? (
-        <div className="admin-crud-empty">No vouchers found</div>
+        <div className="admin-crud-empty">Chưa có voucher nào</div>
       ) : (
         <table className="admin-crud-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Code</th>
-              <th>Type</th>
-              <th>Value</th>
-              <th>Quantity</th>
-              <th>Active</th>
-              <th>Window</th>
-              <th>Actions</th>
+              <th>Mã</th>
+              <th>Loại</th>
+              <th>Giá trị</th>
+              <th>Số lượng</th>
+              <th>Trạng thái</th>
+              <th>Thời gian áp dụng</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -115,17 +120,17 @@ export default function VoucherPage() {
                 <td>{voucher.quantity}</td>
                 <td>
                   <span className={`admin-crud-badge ${voucher.isActive ? "active" : "inactive"}`}>
-                    {voucher.isActive ? "Active" : "Inactive"}
+                    {voucher.isActive ? "Đang bật" : "Đã tắt"}
                   </span>
                 </td>
                 <td>{voucher.startDate?.slice(0, 10) || "-"} - {voucher.endDate?.slice(0, 10) || "-"}</td>
                 <td>
                   <div className="admin-crud-row-actions">
                     <Button size="sm" variant="warning" onClick={() => openModal(voucher)}>
-                      Edit
+                      Sửa
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => handleDelete(voucher.id)}>
-                      Delete
+                      Xóa
                     </Button>
                   </div>
                 </td>
@@ -137,44 +142,44 @@ export default function VoucherPage() {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editing ? "Edit voucher" : "Add voucher"}</Modal.Title>
+          <Modal.Title>{editing ? "Sửa voucher" : "Thêm voucher"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Code</Form.Label>
+              <Form.Label>Mã voucher</Form.Label>
               <Form.Control value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Discount type</Form.Label>
+              <Form.Label>Loại giảm giá</Form.Label>
               <Form.Select value={form.discountType} onChange={(e) => setForm({ ...form, discountType: e.target.value })}>
-                <option value="PERCENT">PERCENT</option>
-                <option value="FIXED">FIXED</option>
+                <option value="PERCENT">Theo phần trăm</option>
+                <option value="FIXED_AMOUNT">Giảm tiền cố định</option>
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Discount value</Form.Label>
+              <Form.Label>Giá trị giảm</Form.Label>
               <Form.Control type="number" min="0" value={form.discountValue} onChange={(e) => setForm({ ...form, discountValue: e.target.value })} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Quantity</Form.Label>
+              <Form.Label>Số lượng</Form.Label>
               <Form.Control type="number" min="0" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Start date</Form.Label>
+              <Form.Label>Ngày bắt đầu</Form.Label>
               <Form.Control type="datetime-local" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>End date</Form.Label>
+              <Form.Label>Ngày kết thúc</Form.Label>
               <Form.Control type="datetime-local" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
             </Form.Group>
-            <Form.Check type="checkbox" label="Active" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+            <Form.Check type="checkbox" label="Đang bật" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
             <Button className="mt-3" type="submit" variant="success">
-              Save
+              Lưu
             </Button>
           </Form>
         </Modal.Body>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import {
   createHoliday,
@@ -20,14 +20,14 @@ export default function HolidayPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
-  const loadHolidays = async () => {
+  const loadHolidays = useCallback(async () => {
     const data = await getHolidays();
     setHolidays(data || []);
-  };
+  }, []);
 
   useEffect(() => {
     loadHolidays().catch(console.error);
-  }, []);
+  }, [loadHolidays]);
 
   const openModal = (holiday = null) => {
     setEditing(holiday);
@@ -57,7 +57,7 @@ export default function HolidayPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this holiday?")) return;
+    if (!window.confirm("Bạn có chắc muốn xóa ngày lễ này?")) return;
     await deleteHoliday(id);
     await loadHolidays();
   };
@@ -65,21 +65,21 @@ export default function HolidayPage() {
   return (
     <div className="admin-crud-page">
       <div className="admin-crud-header">
-        <h2>Holiday management</h2>
-        <Button onClick={() => openModal()}>+ Add holiday</Button>
+        <h2>Quản lý ngày lễ</h2>
+        <Button onClick={() => openModal()}>+ Thêm ngày lễ</Button>
       </div>
 
       {holidays.length === 0 ? (
-        <div className="admin-crud-empty">No holidays found</div>
+        <div className="admin-crud-empty">Chưa có ngày lễ nào</div>
       ) : (
         <table className="admin-crud-table">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Name</th>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Actions</th>
+              <th>Tên ngày lễ</th>
+              <th>Ngày</th>
+              <th>Mô tả</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -92,10 +92,10 @@ export default function HolidayPage() {
                 <td>
                   <div className="admin-crud-row-actions">
                     <Button size="sm" variant="warning" onClick={() => openModal(holiday)}>
-                      Edit
+                      Sửa
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => handleDelete(holiday.id)}>
-                      Delete
+                      Xóa
                     </Button>
                   </div>
                 </td>
@@ -107,24 +107,24 @@ export default function HolidayPage() {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editing ? "Edit holiday" : "Add holiday"}</Modal.Title>
+          <Modal.Title>{editing ? "Sửa ngày lễ" : "Thêm ngày lễ"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
+              <Form.Label>Tên ngày lễ</Form.Label>
               <Form.Control value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Date</Form.Label>
+              <Form.Label>Ngày</Form.Label>
               <Form.Control type="date" value={form.holidayDate} onChange={(e) => setForm({ ...form, holidayDate: e.target.value })} required />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Mô tả</Form.Label>
               <Form.Control value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </Form.Group>
             <Button type="submit" variant="success">
-              Save
+              Lưu
             </Button>
           </Form>
         </Modal.Body>

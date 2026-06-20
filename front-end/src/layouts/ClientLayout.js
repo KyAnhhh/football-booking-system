@@ -5,10 +5,10 @@ import Header from "../components/client/Header";
 
 export default function ClientLayout({ children }) {
   return (
-    <div >
-          <Header />
-          <main >{children}</main>
-          <Footer />
-        </div>  
+    <div className="client-shell">
+      <Header />
+      <main className="client-main">{children}</main>
+      <Footer />
+    </div>
   );
 }

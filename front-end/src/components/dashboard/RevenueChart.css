@@ -1,14 +1,13 @@
 .revenue-chart {
     background: white;
-    border-radius: 20px;
-    padding: 24px;
-
-    box-shadow:
-        0 4px 12px rgba(0,0,0,0.08);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: none;
 }
 
 .revenue-chart-title {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 24px;
+    color: #122033;
+    font-size: 20px;
+    font-weight: 950;
+    margin: 0 0 18px;
 }

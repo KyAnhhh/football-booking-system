@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, Modal, Form, Table } from "react-bootstrap";
 import swal from "sweetalert";
 
@@ -21,28 +21,28 @@ export default function ProductVariantPage({ product, onClose }) {
 
   const [errors, setErrors] = useState({});
 
-  const loadVariants = async () => {
+  const loadVariants = useCallback(async () => {
     const data = await getAllProductVariant();
     setVariants(data.filter(v => v.productId === product.id));
-  };
+  }, [product.id]);
 
   useEffect(() => {
     loadVariants();
-  }, [product.id]);
+  }, [loadVariants]);
 
   const validateVariant = () => {
     const newErrors = {};
 
     if (!form.sizeId) {
-      newErrors.sizeId = "Please select size";
+      newErrors.sizeId = "Vui lòng chọn kích cỡ";
     }
 
     if (!form.price || Number(form.price) <= 0) {
-      newErrors.price = "Price must be greater than 0";
+      newErrors.price = "Giá phải lớn hơn 0";
     }
 
     if (form.stock === "" || Number(form.stock) < 0) {
-      newErrors.stock = "Stock must be 0 or greater";
+      newErrors.stock = "Tồn kho phải lớn hơn hoặc bằng 0";
     }
 
     const duplicated = variants.find(
@@ -52,7 +52,7 @@ export default function ProductVariantPage({ product, onClose }) {
     );
 
     if (duplicated) {
-      newErrors.sizeId = "This size already exists";
+      newErrors.sizeId = "Kích cỡ này đã tồn tại";
     }
 
     setErrors(newErrors);
@@ -88,10 +88,10 @@ export default function ProductVariantPage({ product, onClose }) {
 
     if (editing) {
       await updateProductVariant(editing.id, payload);
-      swal("Updated", "Variant updated", "success");
+      swal("Đã cập nhật", "Biến thể đã được cập nhật", "success");
     } else {
       await createProductVariant(payload);
-      swal("Created", "Variant created", "success");
+      swal("Đã tạo", "Biến thể đã được tạo", "success");
     }
 
     loadVariants();
@@ -99,7 +99,7 @@ export default function ProductVariantPage({ product, onClose }) {
   };
 
   const handleDelete = async (id) => {
-    if (!(await swal({ text: "Delete this variant?", buttons: true }))) return;
+    if (!(await swal({ text: "Bạn có chắc muốn xóa biến thể này?", buttons: true }))) return;
     await deleteProductVariant(id);
     loadVariants();
   };
@@ -108,7 +108,7 @@ export default function ProductVariantPage({ product, onClose }) {
     <Modal show onHide={onClose} size="lg">
       <Modal.Header closeButton>
         <Modal.Title>
-          Variants of <b>{product.name}</b>
+          Biến thể của <b>{product.name}</b>
         </Modal.Title>
       </Modal.Header>
 
@@ -117,7 +117,7 @@ export default function ProductVariantPage({ product, onClose }) {
           <div className="d-flex gap-2 align-items-start">
             <Form.Group>
               <Form.Control
-                placeholder="Size ID"
+                placeholder="ID kích cỡ"
                 value={form.sizeId}
                 isInvalid={!!errors.sizeId}
                 onChange={(e) =>
@@ -132,7 +132,7 @@ export default function ProductVariantPage({ product, onClose }) {
             <Form.Group>
               <Form.Control
                 type="number"
-                placeholder="Price"
+                placeholder="Giá"
                 value={form.price}
                 isInvalid={!!errors.price}
                 onChange={(e) =>
@@ -147,7 +147,7 @@ export default function ProductVariantPage({ product, onClose }) {
             <Form.Group>
               <Form.Control
                 type="number"
-                placeholder="Stock"
+                placeholder="Tồn kho"
                 value={form.stock}
                 isInvalid={!!errors.stock}
                 onChange={(e) =>
@@ -160,7 +160,7 @@ export default function ProductVariantPage({ product, onClose }) {
             </Form.Group>
 
             <Button type="submit">
-              {editing ? "Update" : "Add"}
+              {editing ? "Cập nhật" : "Thêm"}
             </Button>
           </div>
         </Form>
@@ -168,11 +168,11 @@ export default function ProductVariantPage({ product, onClose }) {
         <Table bordered hover>
           <thead>
             <tr>
-              <th>Size</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Sold</th>
-              <th width="140">Action</th>
+              <th>Kích cỡ</th>
+              <th>Giá</th>
+              <th>Tồn kho</th>
+              <th>Đã bán</th>
+              <th width="140">Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -184,14 +184,14 @@ export default function ProductVariantPage({ product, onClose }) {
                 <td>{v.soldQuantity}</td>
                 <td>
                   <Button size="sm" onClick={() => openEdit(v)}>
-                    Edit
+                    Sửa
                   </Button>{" "}
                   <Button
                     size="sm"
                     variant="danger"
                     onClick={() => handleDelete(v.id)}
                   >
-                    Delete
+                    Xóa
                   </Button>
                 </td>
               </tr>
