@@ -107,6 +107,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     );
 
     @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.user u
+    JOIN FETCH b.field f
+    WHERE b.startTime < :endOfDay
+    AND b.endTime > :startOfDay
+    AND b.status <> 'CANCELLED'
+    AND b.status <> 'EXPIRED'
+    ORDER BY f.id ASC, b.startTime ASC
+    """)
+    List<Booking> findCalendarBookings(
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
+
+    @Query("""
     SELECT MONTH(b.createdAt),
     SUM(b.totalPrice)
     FROM Booking b

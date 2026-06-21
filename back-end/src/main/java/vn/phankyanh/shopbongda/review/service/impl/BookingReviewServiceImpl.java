@@ -13,6 +13,7 @@ import vn.phankyanh.shopbongda.booking.repository.BookingRepository;
 import vn.phankyanh.shopbongda.review.domain.BookingReview;
 import vn.phankyanh.shopbongda.review.dto.request.BookingReviewRequest;
 import vn.phankyanh.shopbongda.review.dto.response.BookingReviewResponse;
+import vn.phankyanh.shopbongda.review.dto.response.BookingReviewSummaryResponse;
 import vn.phankyanh.shopbongda.review.mapper.BookingReviewMapper;
 import vn.phankyanh.shopbongda.review.repository.BookingReviewRepository;
 import vn.phankyanh.shopbongda.review.service.BookingReviewService;
@@ -78,6 +79,27 @@ public class BookingReviewServiceImpl implements BookingReviewService {
                 .stream()
                 .map(bookingReviewMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    public BookingReviewSummaryResponse getFieldReviewSummary(Long fieldId) {
+        Long totalReviews = bookingReviewRepository.countByBooking_Field_Id(fieldId);
+        Double averageRating = totalReviews == 0 ? 0.0 : bookingReviewRepository.getAverageRating(fieldId);
+
+        return BookingReviewSummaryResponse.builder()
+                .fieldId(fieldId)
+                .averageRating(averageRating == null ? 0.0 : averageRating)
+                .totalReviews(totalReviews)
+                .fiveStarCount(countRating(fieldId, 5))
+                .fourStarCount(countRating(fieldId, 4))
+                .threeStarCount(countRating(fieldId, 3))
+                .twoStarCount(countRating(fieldId, 2))
+                .oneStarCount(countRating(fieldId, 1))
+                .build();
+    }
+
+    private Long countRating(Long fieldId, Integer rating) {
+        return bookingReviewRepository.countByBooking_Field_IdAndRating(fieldId, rating);
     }
 
     @Override

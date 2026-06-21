@@ -253,6 +253,66 @@
   padding: 24px;
 }
 
+.review-modal-body {
+  display: grid;
+  gap: 16px;
+}
+
+.review-modal-field {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 14px;
+}
+
+.review-modal-field span,
+.review-modal-field small,
+.review-modal-hint {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.review-modal-field strong {
+  display: block;
+  margin: 4px 0;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.review-rating-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.review-rating-picker button {
+  min-height: 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  color: #64748b;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.review-rating-picker button.active,
+.review-rating-picker button:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.review-modal-hint {
+  margin-top: 8px;
+}
+
 @media (max-width: 720px) {
   .my-bookings-page {
     padding: 18px 12px 36px;
@@ -267,5 +327,9 @@
   .my-bookings-grid,
   .my-booking-facts {
     grid-template-columns: 1fr;
+  }
+
+  .review-rating-picker {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

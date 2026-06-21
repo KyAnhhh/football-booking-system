@@ -11,7 +11,7 @@ const handleResponse = async (response) => {
       const errJson = JSON.parse(errText);
       throw new Error(errJson.message || errJson.error);
     } catch {
-      throw new Error(errText || "Lỗi không xác định từ server");
+      throw new Error(errText || "Server error");
     }
   }
 
@@ -19,37 +19,29 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-export const createBookingReview = async (
-    bookingId,
-    reviewData
-) => {
+export const createBookingReview = async (bookingId, reviewData) => {
+  const response = await fetchWithAuth(`${API_URL_USER}/${bookingId}`, {
+    method: "POST",
+    body: JSON.stringify(reviewData),
+  });
 
-    const response = await fetchWithAuth(
-        `${API_URL_USER}/${bookingId}`,
-        {
-            method: "POST",
-            body: JSON.stringify(reviewData),
-        }
-    );
-
-    return handleResponse(response);
+  return handleResponse(response);
 };
 
 export const getFieldReviews = async (fieldId) => {
+  const response = await fetch(`${API_URL_PUBLIC}/field/${fieldId}`);
 
-    const response = await fetch(
-        `${API_URL_PUBLIC}/field/${fieldId}`
-    );
-
-    return handleResponse(response);
+  return handleResponse(response);
 };
 
+export const getFieldReviewSummary = async (fieldId) => {
+  const response = await fetch(`${API_URL_PUBLIC}/field/${fieldId}/summary`);
+
+  return handleResponse(response);
+};
 
 export const getMyReviews = async () => {
+  const response = await fetchWithAuth(`${API_URL_USER}/my-reviews`);
 
-    const response = await fetchWithAuth(
-        `${API_URL_USER}/my-reviews`
-    );
-
-    return handleResponse(response);
+  return handleResponse(response);
 };

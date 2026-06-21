@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.review.dto.request.BookingReviewRequest;
 import vn.phankyanh.shopbongda.review.dto.response.BookingReviewResponse;
+import vn.phankyanh.shopbongda.review.dto.response.BookingReviewSummaryResponse;
 import vn.phankyanh.shopbongda.review.service.BookingReviewService;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
@@ -47,6 +48,17 @@ public class BookingReviewController {
         List<BookingReviewResponse> reviews = bookingReviewService.getFieldReviews(fieldId);
         response.setData(reviews);
         response.setMessage("Field reviews retrieved successfully");
+        return response;
+    }
+
+    @GetMapping("public/booking-reviews/field/{fieldId}/summary")
+    public ApiResponse<BookingReviewSummaryResponse> getFieldReviewSummary(
+            @PathVariable Long fieldId
+    ) {
+        ApiResponse<BookingReviewSummaryResponse> response = new ApiResponse<>();
+        BookingReviewSummaryResponse summary = bookingReviewService.getFieldReviewSummary(fieldId);
+        response.setData(summary);
+        response.setMessage("Field review summary retrieved successfully");
         return response;
     }
 

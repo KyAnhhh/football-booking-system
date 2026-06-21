@@ -23,6 +23,8 @@ const statusLabel = {
   EXPIRED: "Đã hết hạn",
 };
 
+const REVIEW_RATINGS = [5, 4, 3, 2, 1];
+
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
@@ -70,8 +72,13 @@ export default function MyBookings() {
   };
 
   const handleCreateReview = async () => {
+    if (comment.trim().length < 10) {
+      swal.fire("Thiếu nội dung", "Vui lòng nhập đánh giá tối thiểu 10 ký tự.", "warning");
+      return;
+    }
+
     try {
-      await createBookingReview(reviewModal.id, { rating, comment });
+      await createBookingReview(reviewModal.id, { rating, comment: comment.trim() });
       await load();
       await loadMyReviews();
       swal.fire("Thành công", "Đánh giá sân bóng thành công.", "success");
@@ -244,19 +251,34 @@ export default function MyBookings() {
         <Modal.Header closeButton>
           <Modal.Title>Đánh giá sân bóng</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="review-modal-body">
+          {reviewModal && (
+            <div className="review-modal-field">
+              <span>Sân đã đặt</span>
+              <strong>{reviewModal.fieldName || "Sân bóng"}</strong>
+              <small>
+                {formatDate(reviewModal.startTime)} · {formatTime(reviewModal.startTime)} -{" "}
+                {formatTime(reviewModal.endTime)}
+              </small>
+            </div>
+          )}
+
           <Form.Group className="mb-3">
             <Form.Label>Số sao</Form.Label>
-            <Form.Select
-              value={rating}
-              onChange={(event) => setRating(Number(event.target.value))}
-            >
-              <option value={5}>5 sao</option>
-              <option value={4}>4 sao</option>
-              <option value={3}>3 sao</option>
-              <option value={2}>2 sao</option>
-              <option value={1}>1 sao</option>
-            </Form.Select>
+            <div className="review-rating-picker" role="radiogroup" aria-label="Chọn số sao">
+              {REVIEW_RATINGS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={rating === value ? "active" : ""}
+                  onClick={() => setRating(value)}
+                  aria-pressed={rating === value}
+                >
+                  <Star size={17} fill="currentColor" />
+                  {value}
+                </button>
+              ))}
+            </div>
           </Form.Group>
 
           <Form.Group>
@@ -266,15 +288,16 @@ export default function MyBookings() {
               rows={4}
               value={comment}
               onChange={(event) => setComment(event.target.value)}
-              placeholder="Chia sẻ trải nghiệm của bạn..."
+              placeholder="Ví dụ: mặt sân, ánh sáng, thái độ phục vụ, dịch vụ thêm..."
             />
+            <small className="review-modal-hint">{comment.trim().length}/10 ký tự tối thiểu</small>
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeReviewModal}>
             Đóng
           </Button>
-          <Button variant="warning" onClick={handleCreateReview} disabled={!comment.trim()}>
+          <Button variant="warning" onClick={handleCreateReview} disabled={comment.trim().length < 10}>
             Gửi đánh giá
           </Button>
         </Modal.Footer>

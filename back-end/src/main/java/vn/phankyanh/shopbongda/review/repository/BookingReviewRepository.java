@@ -25,4 +25,6 @@ public interface BookingReviewRepository extends JpaRepository<BookingReview, Lo
     Double getAverageRating(Long fieldId);
 
     Long countByBooking_Field_Id(Long fieldId);
+
+    Long countByBooking_Field_IdAndRating(Long fieldId, Integer rating);
 }

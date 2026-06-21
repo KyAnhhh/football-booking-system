@@ -9,6 +9,7 @@ import OrderPage from "../pages/admin/OrderPage";
 import SizePage from "../pages/admin/SizePage";
 import PaymentPage from "../pages/admin/PaymentPage";
 import FootballFieldPage from "../pages/admin/FootballFieldPage";
+import AdminFieldCalendarPage from "../pages/admin/AdminFieldCalendarPage";
 import BookingPage from "../pages/admin/BookingPage";
 import MaintenanceManagementPage from "../pages/admin/MaintenanceManagementPage";
 import PricingRulePage from "../pages/admin/PricingRulePage";
@@ -37,6 +38,7 @@ const AdminRoutes = (
     <Route path="sizes" element={<SizePage />} />
     <Route path="payments" element={<PaymentPage />} />
     <Route path="football-fields" element={<FootballFieldPage />} />
+    <Route path="field-calendar" element={<AdminFieldCalendarPage />} />
     <Route path="bookings" element={<BookingPage />} />
     <Route path="maintenance" element={<MaintenanceManagementPage />} />
     <Route path="pricing-rules" element={<PricingRulePage />} />

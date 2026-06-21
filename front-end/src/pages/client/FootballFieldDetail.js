@@ -1,16 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
-import { CalendarDays, Clock, MapPin, ShieldCheck, Ticket, Wrench } from "lucide-react";
+import { CalendarDays, Clock, MapPin, MessageSquareText, ShieldCheck, Star, Ticket, Wrench } from "lucide-react";
 import swal from "sweetalert";
 import { getAvailableSlots, getFieldById } from "../../services/fieldService";
-import { getFieldReviews } from "../../services/bookingReviewService";
+import { getFieldReviewSummary, getFieldReviews } from "../../services/bookingReviewService";
 import { createBooking } from "../../services/bookingService";
 import { getExtraServices } from "../../services/extraService";
 import { previewVoucher } from "../../services/voucherService";
 import "../../assets/styles/FootballFieldDetail.css";
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString("vi-VN")} VND`;
+const REVIEW_RATINGS = [5, 4, 3, 2, 1];
+
+const renderStars = (rating) =>
+  REVIEW_RATINGS.map((star) => (
+    <Star
+      key={star}
+      size={16}
+      fill={star <= Number(rating || 0) ? "currentColor" : "none"}
+    />
+  ));
 
 export default function FootballFieldDetail() {
   const { id } = useParams();
@@ -23,6 +33,8 @@ export default function FootballFieldDetail() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const [reviewSummary, setReviewSummary] = useState(null);
+  const [reviewFilter, setReviewFilter] = useState(0);
   const [maintenanceInfo, setMaintenanceInfo] = useState(null);
   const [extras, setExtras] = useState([]);
   const [extraQuantities, setExtraQuantities] = useState({});
@@ -46,8 +58,12 @@ export default function FootballFieldDetail() {
 
   const loadReviews = useCallback(async () => {
     try {
-      const data = await getFieldReviews(id);
-      setReviews(data || []);
+      const [reviewData, summaryData] = await Promise.all([
+        getFieldReviews(id),
+        getFieldReviewSummary(id),
+      ]);
+      setReviews(reviewData || []);
+      setReviewSummary(summaryData || null);
     } catch (error) {
       console.error("Load reviews error:", error);
     }
@@ -106,6 +122,18 @@ export default function FootballFieldDetail() {
   const estimatedSubtotal = slotPrice + extraTotal;
   const estimatedFinal = voucherFinalAmount !== null ? Number(voucherFinalAmount) : estimatedSubtotal;
   const estimatedVoucherDiscount = Math.max(estimatedSubtotal - estimatedFinal, 0);
+  const totalReviews = Number(reviewSummary?.totalReviews || reviews.length || 0);
+  const averageRating = Number(reviewSummary?.averageRating || 0);
+  const filteredReviews = reviewFilter
+    ? reviews.filter((review) => Number(review.rating) === reviewFilter)
+    : reviews;
+  const ratingCounts = {
+    5: Number(reviewSummary?.fiveStarCount || 0),
+    4: Number(reviewSummary?.fourStarCount || 0),
+    3: Number(reviewSummary?.threeStarCount || 0),
+    2: Number(reviewSummary?.twoStarCount || 0),
+    1: Number(reviewSummary?.oneStarCount || 0),
+  };
 
   const updateExtraQuantity = (serviceId, quantity) => {
     const normalizedQuantity = Math.max(Number(quantity || 0), 0);
@@ -246,7 +274,7 @@ export default function FootballFieldDetail() {
               </div>
               <div>
                 <span>Đánh giá</span>
-                <strong>{reviews.length} đánh giá</strong>
+                <strong>{totalReviews ? `${averageRating.toFixed(1)}/5 từ ${totalReviews} lượt` : "Chưa có đánh giá"}</strong>
               </div>
             </div>
           </div>
@@ -419,20 +447,92 @@ export default function FootballFieldDetail() {
         </div>
 
         <section className="reviews-section">
-          <h2>Đánh giá ({reviews.length})</h2>
+          <div className="reviews-heading">
+            <div>
+              <span className="detail-eyebrow">Cảm nhận người chơi</span>
+              <h2>Đánh giá sân bóng</h2>
+            </div>
+            <p>{totalReviews} lượt đánh giá sau khi hoàn tất lịch đặt sân.</p>
+          </div>
+
+          <div className="reviews-overview">
+            <div className="review-score-card">
+              <strong>{averageRating.toFixed(1)}</strong>
+              <div className="review-stars">{renderStars(Math.round(averageRating))}</div>
+              <span>{totalReviews ? `${totalReviews} đánh giá đã xác thực` : "Chưa có đánh giá"}</span>
+            </div>
+
+            <div className="review-bars">
+              {REVIEW_RATINGS.map((rating) => {
+                const count = ratingCounts[rating];
+                const width = totalReviews ? Math.round((count / totalReviews) * 100) : 0;
+
+                return (
+                  <button
+                    type="button"
+                    key={rating}
+                    className={`review-bar-row ${reviewFilter === rating ? "active" : ""}`}
+                    onClick={() => setReviewFilter((current) => (current === rating ? 0 : rating))}
+                  >
+                    <span>{rating} sao</span>
+                    <div className="review-bar-track">
+                      <i style={{ width: `${width}%` }} />
+                    </div>
+                    <strong>{count}</strong>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="review-filter-row">
+            <button
+              type="button"
+              className={reviewFilter === 0 ? "active" : ""}
+              onClick={() => setReviewFilter(0)}
+            >
+              Tất cả
+            </button>
+            {REVIEW_RATINGS.map((rating) => (
+              <button
+                type="button"
+                key={rating}
+                className={reviewFilter === rating ? "active" : ""}
+                onClick={() => setReviewFilter(rating)}
+              >
+                {rating} sao
+              </button>
+            ))}
+          </div>
+
           {reviews.length === 0 ? (
-            <p className="no-review">Chưa có đánh giá nào</p>
+            <div className="review-empty-card">
+              <MessageSquareText size={28} />
+              <strong>Chưa có đánh giá nào</strong>
+              <p>Những khách đã hoàn tất lịch đặt sân sẽ có thể để lại đánh giá tại đây.</p>
+            </div>
+          ) : filteredReviews.length === 0 ? (
+            <div className="review-empty-card">
+              <MessageSquareText size={28} />
+              <strong>Không có đánh giá phù hợp</strong>
+              <p>Thử chọn lại bộ lọc khác để xem thêm nhận xét.</p>
+            </div>
           ) : (
-            reviews.map((review) => (
-              <div key={review.id} className="review-card">
-                <div className="review-top">
-                  <strong>{review.user?.username}</strong>
-                  <span className="review-rating">{"*".repeat(review.rating)}</span>
-                </div>
-                <p className="review-comment">{review.comment}</p>
-                <small className="review-date">{new Date(review.createdAt).toLocaleDateString("vi-VN")}</small>
-              </div>
-            ))
+            <div className="review-grid">
+              {filteredReviews.map((review) => (
+                <article key={review.id} className="review-card">
+                  <div className="review-top">
+                    <div>
+                      <strong>{review.userName || review.user?.username || "Người dùng"}</strong>
+                      <small>{new Date(review.createdAt).toLocaleDateString("vi-VN")}</small>
+                    </div>
+                    <span className="review-rating">{renderStars(review.rating)}</span>
+                  </div>
+                  <p className="review-comment">{review.comment}</p>
+                  {review.fieldName && <span className="review-field-name">{review.fieldName}</span>}
+                </article>
+              ))}
+            </div>
           )}
         </section>
       </div>

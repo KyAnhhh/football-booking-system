@@ -13,6 +13,7 @@ import {
   BsBoxArrowRight,
   BsTools,
   BsCalendarEvent,
+  BsCalendarWeek,
   BsTicketPerforated,
   BsCashCoin,
   BsPlusSquare,
@@ -25,6 +26,7 @@ import "../assets/styles/AdminManager.css";
 const navItems = [
   { to: "/admin", label: "Tổng quan", icon: BsSpeedometer2, end: true },
   { to: "/admin/bookings", label: "Đặt sân", icon: BsReceipt },
+  { to: "/admin/field-calendar", label: "Lịch sân", icon: BsCalendarWeek },
   { to: "/admin/football-fields", label: "Sân bóng", icon: BsHouseDoor },
   { to: "/admin/pricing-rules", label: "Bảng giá", icon: BsCashCoin },
   { to: "/admin/maintenance", label: "Bảo trì", icon: BsTools },
