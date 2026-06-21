@@ -46,6 +46,17 @@ public class AdminBookingController {
         return response;
     }
 
+    @GetMapping("/{bookingId}")
+    public ApiResponse<BookingResponse> getBookingDetail(
+            @PathVariable("bookingId") Long bookingId
+    ) {
+        ApiResponse<BookingResponse> response = new ApiResponse<>();
+        response.setData(
+                bookingService.getBookingDetailForAdmin(bookingId)
+        );
+        return response;
+    }
+
     @PatchMapping("/{bookingId}/confirm")
     public ApiResponse<Void> confirmBooking(@PathVariable("bookingId") Long bookingId) {
         ApiResponse<Void> response = new ApiResponse<>();

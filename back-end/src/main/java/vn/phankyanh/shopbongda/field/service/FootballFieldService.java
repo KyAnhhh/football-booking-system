@@ -1,6 +1,8 @@
 package vn.phankyanh.shopbongda.field.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -10,6 +12,7 @@ import vn.phankyanh.shopbongda.field.domain.FieldStatus;
 import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.dto.request.FieldStatusUpdateRequest;
 import vn.phankyanh.shopbongda.field.dto.request.FootballFieldRequest;
+import vn.phankyanh.shopbongda.field.dto.response.AvailableFootballFieldResponse;
 import vn.phankyanh.shopbongda.field.dto.response.FootballFieldResponse;
 
 public interface FootballFieldService {
@@ -23,6 +26,17 @@ public interface FootballFieldService {
             Pageable pageable,
             BigDecimal minPrice,
             BigDecimal maxPrice
+    );
+
+    Page<AvailableFootballFieldResponse> getAvailableFootballFields(
+            String keyword,
+            FieldType type,
+            Pageable pageable,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime
     );
 
     FootballFieldResponse getFootballFieldById(Long id);

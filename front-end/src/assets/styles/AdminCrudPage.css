@@ -87,6 +87,12 @@
   background: #fee2e2;
 }
 
+.admin-crud-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 @media (max-width: 900px) {
   .admin-crud-header {
     align-items: stretch;
@@ -97,5 +103,9 @@
     display: block;
     overflow-x: auto;
     white-space: nowrap;
+  }
+
+  .admin-crud-form-grid {
+    grid-template-columns: 1fr;
   }
 }

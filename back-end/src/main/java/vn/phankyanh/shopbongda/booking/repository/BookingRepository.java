@@ -25,6 +25,34 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByUserId(Long userId);
 
+    @Query("""
+    SELECT DISTINCT b FROM Booking b
+    JOIN FETCH b.user u
+    JOIN FETCH b.field f
+    LEFT JOIN FETCH b.payment p
+    LEFT JOIN FETCH b.extraServices bes
+    LEFT JOIN FETCH bes.extraService es
+    WHERE b.id = :bookingId
+    AND u.id = :userId
+    """)
+    Optional<Booking> findUserBookingDetail(
+            @Param("bookingId") Long bookingId,
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+    SELECT DISTINCT b FROM Booking b
+    JOIN FETCH b.user u
+    JOIN FETCH b.field f
+    LEFT JOIN FETCH b.payment p
+    LEFT JOIN FETCH b.extraServices bes
+    LEFT JOIN FETCH bes.extraService es
+    WHERE b.id = :bookingId
+    """)
+    Optional<Booking> findAdminBookingDetail(
+            @Param("bookingId") Long bookingId
+    );
+
     boolean existsByFieldId(Long fieldId);
 
     long countByStartTimeGreaterThanEqualAndStartTimeLessThan(

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Modal, Button, Form } from "react-bootstrap";
 import swal from "sweetalert2";
 import { cancelBooking, getMyBookings } from "../../services/bookingService";
@@ -26,6 +27,7 @@ const statusLabel = {
 const REVIEW_RATINGS = [5, 4, 3, 2, 1];
 
 export default function MyBookings() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
   const [reviewModal, setReviewModal] = useState(null);
@@ -212,6 +214,10 @@ export default function MyBookings() {
                 )}
 
                 <div className="my-booking-actions">
+                  <button type="button" className="detail" onClick={() => navigate(`/my-bookings/${booking.id}`)}>
+                    Chi tiết
+                  </button>
+
                   {canCancelBooking(booking) ? (
                     <button type="button" className="danger" onClick={() => handleCancel(booking.id)}>
                       Hủy lịch

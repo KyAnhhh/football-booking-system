@@ -53,6 +53,35 @@ export const getFields = async ({
     return await handleResponse(response);
 }
 
+export const getAvailableFields = async ({
+    page = 0,
+    size = 10,
+    keyword,
+    type,
+    minPrice,
+    maxPrice,
+    date,
+    startTime,
+    endTime
+}) => {
+    const params = new URLSearchParams({
+        page,
+        size,
+        date,
+        startTime,
+        endTime,
+    });
+
+    if(keyword) params.append("keyword", keyword);
+    if(type) params.append("type", type);
+    if(minPrice) params.append("minPrice", minPrice);
+    if(maxPrice) params.append("maxPrice", maxPrice);
+
+    const response = await fetch(`${API_URL_PUBLIC}/available?${params.toString()}`);
+
+    return await handleResponse(response);
+}
+
 export const getFieldById = async (id) => {
     const response = await fetch(`${API_URL_PUBLIC}/${id}`);
     return await handleResponse(response);

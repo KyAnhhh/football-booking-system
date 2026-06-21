@@ -41,6 +41,22 @@ public class UserBookingController {
         return response;
     }
 
+    @GetMapping("/{bookingId}")
+    public ApiResponse<BookingResponse> getMyBookingDetail(
+            @PathVariable("bookingId") Long bookingId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        Long userId = jwt.getClaim("id");
+        ApiResponse<BookingResponse> response = new ApiResponse<>();
+        response.setData(
+                bookingService.getBookingByIdForUser(
+                        bookingId,
+                        userId
+                )
+        );
+        return response;
+    }
+
     @PatchMapping("/{bookingId}/cancel")
     public ApiResponse<Void> cancelBooking(@PathVariable("bookingId") Long bookingId, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");

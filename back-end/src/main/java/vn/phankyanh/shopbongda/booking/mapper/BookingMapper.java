@@ -18,6 +18,10 @@ public interface BookingMapper {
     @Mapping(source = "field.imageUrl", target = "fieldImage")
     @Mapping(source = "field.address", target = "fieldAddress")
     @Mapping(source = "payment.id", target = "paymentId")
+    @Mapping(source = "payment.paymentStatus", target = "paymentStatus")
+    @Mapping(source = "payment.paymentMethod", target = "paymentMethod")
+    @Mapping(source = "payment.transactionCode", target = "transactionCode")
+    @Mapping(source = "payment.paymentDate", target = "paymentDate")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "totalPrice", target = "finalPrice")
     BookingResponse toResponse(Booking booking);

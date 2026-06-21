@@ -31,6 +31,7 @@ import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.dto.response.SlotResponse;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
 import vn.phankyanh.shopbongda.maintenance.service.MaintenanceService;
+import vn.phankyanh.shopbongda.notification.service.NotificationService;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
@@ -57,6 +58,7 @@ public class BookingServiceImpl implements BookingService {
     private final VoucherService voucherService;
     private final ExtraServiceRepository extraServiceRepository;
     private final BookingExtraServiceRepository bookingExtraServiceRepository;
+    private final NotificationService notificationService;
     
 
     private static final int SLOT_DURATION = 90;
@@ -146,9 +148,14 @@ public class BookingServiceImpl implements BookingService {
                                 request.getEndTime()
                         );
 
+                List<SelectedExtraService> selectedExtraServices =
+                        prepareExtraServices(
+                                request.getServices()
+                        );
+
                 BigDecimal extraServicePrice =
                         calculateExtraServicePrice(
-                                request.getServices()
+                                selectedExtraServices
                         );
 
                 BigDecimal originalPrice =
@@ -234,12 +241,14 @@ public class BookingServiceImpl implements BookingService {
                 List<BookingExtraService> bookingExtraServices =
                         saveBookingExtraServices(
                         savedBooking,
-                        request.getServices()
+                        selectedExtraServices
                 );
 
                 savedBooking.setExtraServices(
                         bookingExtraServices
                 );
+
+                notificationService.notifyAdminsBookingCreated(savedBooking);
 
                 return bookingMapper.toResponse(savedBooking);
                 }
@@ -293,6 +302,40 @@ public class BookingServiceImpl implements BookingService {
                         .stream()
                         .map(bookingMapper::toResponse)
                         .toList();
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public BookingResponse getBookingByIdForUser(
+                Long bookingId,
+                Long userId
+        ) {
+
+                Booking booking =
+                        bookingRepository.findUserBookingDetail(
+                                bookingId,
+                                userId
+                        ).orElseThrow(() ->
+                                new RuntimeException(
+                                        "Booking not found"));
+
+                return bookingMapper.toResponse(booking);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public BookingResponse getBookingDetailForAdmin(
+                Long bookingId
+        ) {
+
+                Booking booking =
+                        bookingRepository.findAdminBookingDetail(
+                                bookingId
+                        ).orElseThrow(() ->
+                                new RuntimeException(
+                                        "Booking not found"));
+
+                return bookingMapper.toResponse(booking);
         }
 
         @Override
@@ -410,9 +453,16 @@ public class BookingServiceImpl implements BookingService {
                                 .orElseThrow(() ->
                                         new RuntimeException("Booking not found"));
 
+                BookingStatus previousStatus = booking.getStatus();
+
                 confirmPendingBooking(booking);
 
-                bookingRepository.save(booking);
+                Booking updatedBooking = bookingRepository.save(booking);
+
+                notificationService.notifyUserBookingStatusChanged(
+                        updatedBooking,
+                        previousStatus
+                );
         }
 
         @Transactional
@@ -512,6 +562,11 @@ public class BookingServiceImpl implements BookingService {
                 || newStatus == BookingStatus.COMPLETED
                 || newStatus == BookingStatus.EXPIRED
         ) {
+                notificationService.notifyUserBookingStatusChanged(
+                        updatedBooking,
+                        currentStatus
+                );
+
                 emailService.sendEmailWhenBookingStatusChange(
                         updatedBooking.getUser().getEmail(),
                         updatedBooking.getId(),
@@ -567,6 +622,7 @@ public class BookingServiceImpl implements BookingService {
         ) {
 
                 if (booking.getStatus() != BookingStatus.PENDING) {
+                        restoreExtraStockForBooking(booking);
                         booking.setStatus(targetStatus);
                         return;
                 }
@@ -589,6 +645,8 @@ public class BookingServiceImpl implements BookingService {
                 voucherService.refundVoucherForBooking(
                         booking.getId()
                 );
+
+                restoreExtraStockForBooking(booking);
 
                 booking.setStatus(targetStatus);
         }
@@ -655,93 +713,195 @@ public class BookingServiceImpl implements BookingService {
         }
 
 
-        private BigDecimal calculateExtraServicePrice(List<BookingExtraServiceRequest> services) {
+        private List<SelectedExtraService> prepareExtraServices(
+                List<BookingExtraServiceRequest> services
+        ) {
 
                 if (services == null || services.isEmpty()) {
-                        return BigDecimal.ZERO;
+                        return List.of();
                 }
 
-                BigDecimal total = BigDecimal.ZERO;
+                List<SelectedExtraService> selectedServices =
+                        new ArrayList<>();
 
-        for (BookingExtraServiceRequest item : services) {
+                for (BookingExtraServiceRequest item : services) {
+                        validateExtraServiceRequest(item);
 
-                validateExtraServiceRequest(item);
-
-                ExtraService service =
-                        extraServiceRepository
-                                .findById(item.getServiceId())
+                        ExtraService service =
+                                extraServiceRepository
+                                        .findByIdForUpdate(
+                                                item.getServiceId()
+                                        )
                                         .orElseThrow(() ->
                                                 new RuntimeException(
                                                         "Extra service not found"));
 
-                        if (!Boolean.TRUE.equals(
-                                service.getIsActive())) {
+                        validateExtraServiceAvailability(
+                                service,
+                                item.getQuantity()
+                        );
 
-                        throw new RuntimeException(
-                                "Extra service inactive");
-                        }
+                        deductExtraStock(
+                                service,
+                                item.getQuantity()
+                        );
 
-                        BigDecimal itemPrice =
-                                service.getPrice()
-                                        .multiply(
-                                                BigDecimal.valueOf(
-                                                        item.getQuantity()));
+                        selectedServices.add(
+                                new SelectedExtraService(
+                                        service,
+                                        item.getQuantity()
+                                )
+                        );
+                }
 
-                        total = total.add(itemPrice);
+                return selectedServices;
+        }
+
+        private BigDecimal calculateExtraServicePrice(
+                List<SelectedExtraService> selectedServices
+        ) {
+
+                if (selectedServices == null
+                        || selectedServices.isEmpty()) {
+
+                        return BigDecimal.ZERO;
+                }
+
+                BigDecimal total =
+                        BigDecimal.ZERO;
+
+                for (SelectedExtraService item : selectedServices) {
+                        total = total.add(
+                                item.totalPrice()
+                        );
                 }
 
                 return total;
         }
 
-        private List<BookingExtraService> saveBookingExtraServices(
-                Booking booking,
-                List<BookingExtraServiceRequest> services
+        private void deductExtraStock(
+                ExtraService service,
+                Integer quantity
         ) {
 
-        if (services == null || services.isEmpty()) {
-                return List.of();
+                if (!Boolean.TRUE.equals(
+                        service.getTrackStock())) {
+
+                        return;
+                }
+
+                service.setRemainingQuantity(
+                        service.getRemainingQuantity() - quantity
+                );
         }
 
-        List<BookingExtraService> savedServices =
-                new ArrayList<>();
+        private List<BookingExtraService> saveBookingExtraServices(
+                Booking booking,
+                List<SelectedExtraService> selectedServices
+        ) {
 
-        for (BookingExtraServiceRequest item : services) {
+                if (selectedServices == null
+                        || selectedServices.isEmpty()) {
 
-                validateExtraServiceRequest(item);
+                        return List.of();
+                }
 
-                ExtraService service =
-                        extraServiceRepository.findById(
-                                item.getServiceId()
-                        ).orElseThrow(
-                                () -> new RuntimeException(
-                                        "Extra service not found"
-                                )
-                        );
+                List<BookingExtraService> savedServices =
+                        new ArrayList<>();
 
-                BookingExtraService bookingService =
-                        BookingExtraService.builder()
-                                .booking(booking)
-                                .extraService(service)
-                                .quantity(item.getQuantity())
-                                .unitPrice(service.getPrice())
-                                .totalPrice(
-                                        service.getPrice().multiply(
-                                                BigDecimal.valueOf(
-                                                        item.getQuantity()
+                for (SelectedExtraService item : selectedServices) {
+                        ExtraService service =
+                                item.service();
+
+                        BookingExtraService bookingService =
+                                BookingExtraService.builder()
+                                        .booking(booking)
+                                        .extraService(service)
+                                        .quantity(item.quantity())
+                                        .unitPrice(service.getPrice())
+                                        .totalPrice(item.totalPrice())
+                                        .stockDeducted(
+                                                Boolean.TRUE.equals(
+                                                        service.getTrackStock()
                                                 )
                                         )
-                                )
-                                .build();
+                                        .stockReturned(false)
+                                        .build();
 
-                BookingExtraService savedService =
-                        bookingExtraServiceRepository.save(
-                        bookingService
-                );
+                        BookingExtraService savedService =
+                                bookingExtraServiceRepository.save(
+                                        bookingService
+                                );
 
-                savedServices.add(savedService);
+                        savedServices.add(savedService);
+                }
+
+                return savedServices;
         }
 
-        return savedServices;
+        private void restoreExtraStockForBooking(
+                Booking booking
+        ) {
+
+                List<BookingExtraService> extraServices =
+                        bookingExtraServiceRepository.findByBookingId(
+                                booking.getId()
+                        );
+
+                for (BookingExtraService bookingExtra : extraServices) {
+                        if (!Boolean.TRUE.equals(
+                                bookingExtra.getStockDeducted())
+                                || Boolean.TRUE.equals(
+                                        bookingExtra.getStockReturned())) {
+
+                                continue;
+                        }
+
+                        ExtraService service =
+                                extraServiceRepository
+                                        .findByIdForUpdate(
+                                                bookingExtra
+                                                        .getExtraService()
+                                                        .getId()
+                                        )
+                                        .orElseThrow(() ->
+                                                new RuntimeException(
+                                                        "Extra service not found"));
+
+                        service.setRemainingQuantity(
+                                service.getRemainingQuantity()
+                                        + bookingExtra.getQuantity()
+                        );
+
+                        bookingExtra.setStockReturned(true);
+                        bookingExtraServiceRepository.save(bookingExtra);
+                }
+        }
+
+        private void validateExtraServiceAvailability(
+                ExtraService service,
+                Integer quantity
+        ) {
+
+                if (!Boolean.TRUE.equals(
+                        service.getIsActive())) {
+
+                        throw new RuntimeException(
+                                "Extra service inactive");
+                }
+
+                if (!Boolean.TRUE.equals(
+                        service.getTrackStock())) {
+
+                        return;
+                }
+
+                if (service.getRemainingQuantity() == null
+                        || service.getRemainingQuantity() < quantity) {
+
+                        throw new RuntimeException(
+                                "Extra service stock is not enough");
+                }
         }
 
         private void validateExtraServiceRequest(
@@ -767,5 +927,17 @@ public class BookingServiceImpl implements BookingService {
                         "Extra service quantity must be greater than 0"
                 );
         }
+        }
+
+        private record SelectedExtraService(
+                ExtraService service,
+                Integer quantity
+        ) {
+
+                private BigDecimal totalPrice() {
+                        return service.getPrice().multiply(
+                                BigDecimal.valueOf(quantity)
+                        );
+                }
         }
 }

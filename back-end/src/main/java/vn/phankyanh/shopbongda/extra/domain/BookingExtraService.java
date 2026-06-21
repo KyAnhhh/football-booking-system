@@ -39,4 +39,8 @@ public class BookingExtraService {
     private BigDecimal unitPrice;
 
     private BigDecimal totalPrice;
+
+    private Boolean stockDeducted;
+
+    private Boolean stockReturned;
 }

@@ -22,6 +22,9 @@ public class BookingResponse {
     private String fieldImage;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private String contactPhone;
+    private String note;
+    private LocalDateTime createdAt;
     private BigDecimal totalPrice;
     private BigDecimal finalPrice;
     private BigDecimal originalPrice;
@@ -31,4 +34,8 @@ public class BookingResponse {
     private String voucherCode;
     private List<BookingExtraServiceResponse> extraServices;
     private String status;
+    private String paymentStatus;
+    private String paymentMethod;
+    private String transactionCode;
+    private LocalDateTime paymentDate;
 }

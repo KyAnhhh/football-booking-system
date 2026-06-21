@@ -1,7 +1,10 @@
 package vn.phankyanh.shopbongda.field.service.impl;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -15,21 +18,28 @@ import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.dto.request.FieldStatusUpdateRequest;
 import vn.phankyanh.shopbongda.field.dto.request.FootballFieldRequest;
+import vn.phankyanh.shopbongda.field.dto.response.AvailableFootballFieldResponse;
 import vn.phankyanh.shopbongda.field.dto.response.FootballFieldResponse;
 import vn.phankyanh.shopbongda.field.mapper.FootballFieldMapper;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
 import vn.phankyanh.shopbongda.field.service.FootballFieldService;
 import vn.phankyanh.shopbongda.maintenance.dto.response.MaintenanceScheduleResponse;
 import vn.phankyanh.shopbongda.maintenance.service.MaintenanceService;
+import vn.phankyanh.shopbongda.pricing.service.PricingService;
 
 @Service
 @RequiredArgsConstructor
 public class FootballFieldServiceImpl implements FootballFieldService {
 
+    private static final int SLOT_DURATION_MINUTES = 90;
+    private static final LocalTime OPEN_TIME = LocalTime.of(7, 0);
+    private static final LocalTime CLOSE_TIME = LocalTime.of(23, 45);
+
     private final BookingRepository bookingRepository;
     private final FootballFieldRepository footballFieldRepository;
     private final FootballFieldMapper footballFieldMapper;
     private final MaintenanceService maintenanceService;
+    private final PricingService pricingService;
 
     @Override
     public FootballFieldResponse createFootballField(FootballFieldRequest request) {
@@ -70,6 +80,109 @@ public class FootballFieldServiceImpl implements FootballFieldService {
         return footballFieldRepository
                 .searchFootballFields(keyword, status, type, minPrice, maxPrice, pageable)
                 .map(footballFieldMapper::toResponse);
+    }
+
+    @Override
+    public Page<AvailableFootballFieldResponse> getAvailableFootballFields(
+            String keyword,
+            FieldType type,
+            Pageable pageable,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime
+    ) {
+
+        validateAvailableSearchTime(date, startTime, endTime);
+
+        LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
+        LocalDateTime endDateTime = LocalDateTime.of(date, endTime);
+
+        return footballFieldRepository
+                .searchAvailableFootballFields(
+                        keyword,
+                        FieldStatus.AVAILABLE,
+                        type,
+                        minPrice,
+                        maxPrice,
+                        startDateTime,
+                        endDateTime,
+                        pageable
+                )
+                .map(field -> toAvailableResponse(
+                        field,
+                        date,
+                        startTime,
+                        endTime,
+                        startDateTime,
+                        endDateTime
+                ));
+    }
+
+    private void validateAvailableSearchTime(
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime
+    ) {
+
+        if (date == null || startTime == null || endTime == null) {
+            throw new IllegalArgumentException("Date and time are required");
+        }
+
+        if (!endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException("Invalid time range");
+        }
+
+        if (startTime.isBefore(OPEN_TIME) || endTime.isAfter(CLOSE_TIME)) {
+            throw new IllegalArgumentException("Time must be between 07:00 and 23:45");
+        }
+
+        if (Duration.between(startTime, endTime).toMinutes() != SLOT_DURATION_MINUTES) {
+            throw new IllegalArgumentException("Time slot must be 90 minutes");
+        }
+
+        if (LocalDateTime.of(date, startTime).isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Cannot search past time slot");
+        }
+    }
+
+    private AvailableFootballFieldResponse toAvailableResponse(
+            FootballField field,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
+
+        BigDecimal slotPrice;
+
+        try {
+            slotPrice = pricingService.calculatePrice(
+                    field.getId(),
+                    startDateTime,
+                    endDateTime
+            );
+        } catch (RuntimeException exception) {
+            slotPrice = BigDecimal.ZERO;
+        }
+
+        return AvailableFootballFieldResponse.builder()
+                .id(field.getId())
+                .name(field.getName())
+                .type(field.getType().name())
+                .imageUrl(field.getImageUrl())
+                .pricePerHour(field.getPricePerHour())
+                .status(field.getStatus().name())
+                .address(field.getAddress())
+                .description(field.getDescription())
+                .date(date)
+                .startTime(startTime)
+                .endTime(endTime)
+                .slotPrice(slotPrice)
+                .available(true)
+                .build();
     }
 
     @Override

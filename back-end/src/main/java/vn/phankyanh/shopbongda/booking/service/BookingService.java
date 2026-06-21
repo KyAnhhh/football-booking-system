@@ -29,6 +29,15 @@ public interface BookingService {
                 Long userId
         );
 
+        BookingResponse getBookingByIdForUser(
+                Long bookingId,
+                Long userId
+        );
+
+        BookingResponse getBookingDetailForAdmin(
+                Long bookingId
+        );
+
         List<SlotResponse> getAvailableSlots(
                 Long fieldId,
                 LocalDate date

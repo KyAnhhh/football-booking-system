@@ -43,8 +43,18 @@ export const getBookings = async ({
     return handleResponse(response);
 }
 
+export const getBookingDetailForAdmin = async (bookingId) => {
+    const response = await fetchWithAuth(`${API_URL_ADMIN}/${bookingId}`);
+    return handleResponse(response);
+}
+
 export const getMyBookings = async () => {
     const response = await fetchWithAuth(`${API_URL_USER}`);
+    return handleResponse(response);
+}
+
+export const getMyBookingDetail = async (bookingId) => {
+    const response = await fetchWithAuth(`${API_URL_USER}/${bookingId}`);
     return handleResponse(response);
 }
 

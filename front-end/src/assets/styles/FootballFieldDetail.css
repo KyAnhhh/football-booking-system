@@ -272,7 +272,8 @@
 }
 
 .extra-item strong,
-.extra-item span {
+.extra-item span,
+.extra-item small {
   display: block;
 }
 
@@ -282,11 +283,37 @@
   font-size: 13px;
 }
 
+.extra-item small {
+  margin-top: 4px;
+  color: #167458;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .voucher-row {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
   margin-top: 14px;
+}
+
+.booking-contact-box {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.booking-contact-box label {
+  margin: 0;
+  color: #344256;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.booking-contact-box small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .voucher-row .btn {

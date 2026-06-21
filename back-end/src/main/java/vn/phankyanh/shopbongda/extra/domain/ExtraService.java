@@ -28,4 +28,12 @@ public class ExtraService {
     private BigDecimal price;
 
     private Boolean isActive;
+
+    private Boolean trackStock;
+
+    private Integer stockQuantity;
+
+    private Integer remainingQuantity;
+
+    private String unit;
 }

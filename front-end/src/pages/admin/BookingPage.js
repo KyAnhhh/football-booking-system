@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getBookings,
   deleteBooking,
@@ -9,6 +10,7 @@ import { Button, Form, Modal } from "react-bootstrap";
 import "../../assets/styles/BookingPage.css";
 
 export default function BookingPage() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [pageData, setPageData] = useState(null);
 
@@ -166,6 +168,14 @@ export default function BookingPage() {
                 </td>
 
                 <td className="booking-actions">
+
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={() => navigate(`/admin/bookings/${b.id}`)}
+                >
+                  Chi tiết
+                </Button>
 
                 {/* PENDING */}
                 {b.status === "PENDING" && (

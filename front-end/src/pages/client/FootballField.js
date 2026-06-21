@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
-import { MapPin, Search, ShieldCheck, SlidersHorizontal, Wrench } from "lucide-react";
-import { getFields, getMaintenanceStatus } from "../../services/fieldService";
+import {
+  CalendarDays,
+  Clock,
+  MapPin,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  Wrench,
+} from "lucide-react";
+import { getAvailableFields, getFields, getMaintenanceStatus } from "../../services/fieldService";
 import "../../assets/styles/FootballField.css";
 
 const fieldTypes = [
@@ -20,8 +28,33 @@ const priceRanges = [
 ];
 
 const PAGE_SIZE = 9;
+const OPEN_MINUTE = 7 * 60;
+const CLOSE_MINUTE = 23 * 60 + 45;
+const SLOT_MINUTES = 90;
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString("vi-VN")} VND`;
+const todayValue = () => new Date().toISOString().split("T")[0];
+
+const toTimeLabel = (minute) => {
+  const hour = String(Math.floor(minute / 60)).padStart(2, "0");
+  const minutes = String(minute % 60).padStart(2, "0");
+  return `${hour}:${minutes}`;
+};
+
+const slotOptions = Array.from(
+  { length: Math.floor((CLOSE_MINUTE - OPEN_MINUTE) / SLOT_MINUTES) },
+  (_, index) => {
+    const startMinute = OPEN_MINUTE + index * SLOT_MINUTES;
+    const endMinute = startMinute + SLOT_MINUTES;
+
+    return {
+      label: `${toTimeLabel(startMinute)} - ${toTimeLabel(endMinute)}`,
+      startTime: toTimeLabel(startMinute),
+      endTime: toTimeLabel(endMinute),
+      value: `${toTimeLabel(startMinute)}|${toTimeLabel(endMinute)}`,
+    };
+  }
+);
 
 const getPageMetadata = (data, fallbackCount) => {
   const page = data?.page || data || {};
@@ -38,6 +71,8 @@ export default function FootballField() {
   const [maintenanceMap, setMaintenanceMap] = useState({});
   const [keyword, setKeyword] = useState("");
   const [priceRange, setPriceRange] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedSlotValue, setSelectedSlotValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [pageNo, setPageNo] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -48,11 +83,24 @@ export default function FootballField() {
     maxPrice: "",
   });
 
-  const activeFilterCount = useMemo(() => {
-    return [keyword.trim(), filters.type, priceRange].filter(Boolean).length;
-  }, [keyword, filters.type, priceRange]);
+  const selectedSlot = useMemo(
+    () => slotOptions.find((slot) => slot.value === selectedSlotValue),
+    [selectedSlotValue]
+  );
 
-  const loadFields = useCallback(async (customKeyword, customFilters, customPageNo) => {
+  const isAvailabilitySearch = Boolean(selectedDate && selectedSlot);
+
+  const activeFilterCount = useMemo(() => {
+    return [
+      keyword.trim(),
+      filters.type,
+      priceRange,
+      selectedDate,
+      selectedSlotValue,
+    ].filter(Boolean).length;
+  }, [keyword, filters.type, priceRange, selectedDate, selectedSlotValue]);
+
+  const loadFields = useCallback(async (customKeyword, customFilters, customPageNo, date, slot) => {
     try {
       setLoading(true);
 
@@ -66,13 +114,26 @@ export default function FootballField() {
       if (customFilters.minPrice) params.minPrice = customFilters.minPrice;
       if (customFilters.maxPrice) params.maxPrice = customFilters.maxPrice;
 
-      const data = await getFields(params);
+      const data = date && slot
+        ? await getAvailableFields({
+            ...params,
+            date,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+          })
+        : await getFields(params);
+
       const content = data?.content || [];
       const pageMetadata = getPageMetadata(data, content.length);
 
       setFields(content);
       setTotalPages(pageMetadata.totalPages);
       setTotalElements(pageMetadata.totalElements);
+
+      if (date && slot) {
+        setMaintenanceMap({});
+        return;
+      }
 
       if (content.length === 0) {
         setMaintenanceMap({});
@@ -111,11 +172,11 @@ export default function FootballField() {
 
   useEffect(() => {
     const debounce = setTimeout(() => {
-      loadFields(keyword, filters, pageNo);
+      loadFields(keyword, filters, pageNo, selectedDate, selectedSlot);
     }, 350);
 
     return () => clearTimeout(debounce);
-  }, [keyword, filters, pageNo, loadFields]);
+  }, [keyword, filters, pageNo, selectedDate, selectedSlot, loadFields]);
 
   const handlePriceFilter = (value) => {
     const nextFilters = {
@@ -147,6 +208,8 @@ export default function FootballField() {
   const resetFilters = () => {
     setKeyword("");
     setPriceRange("");
+    setSelectedDate("");
+    setSelectedSlotValue("");
     setFilters({
       type: "",
       minPrice: "",
@@ -155,17 +218,27 @@ export default function FootballField() {
     setPageNo(0);
   };
 
+  const goToFieldDetail = (field) => {
+    const query = isAvailabilitySearch
+      ? `?date=${selectedDate}&startTime=${selectedSlot.startTime}&endTime=${selectedSlot.endTime}`
+      : "";
+
+    navigate(`/football-fields/${field.id}/detail${query}`);
+  };
+
   return (
     <div className="football-page">
       <section className="football-hero">
         <div>
           <span className="football-eyebrow">Đặt sân nhanh</span>
           <h1>Chọn sân bóng phù hợp cho trận đấu tiếp theo</h1>
-          <p>Lọc theo loại sân, mức giá và trạng thái bảo trì để đặt lịch nhanh hơn.</p>
+          <p>
+            Lọc theo ngày, khung giờ, loại sân và mức giá để chỉ thấy những sân còn trống có thể đặt ngay.
+          </p>
         </div>
         <div className="football-hero-stat">
           <strong>{totalElements}</strong>
-          <span>sân phù hợp</span>
+          <span>{isAvailabilitySearch ? "sân còn trống" : "sân phù hợp"}</span>
         </div>
       </section>
 
@@ -174,6 +247,46 @@ export default function FootballField() {
           <div className="football-filter-heading">
             <SlidersHorizontal size={20} />
             <h2>Bộ lọc</h2>
+          </div>
+
+          <div className="football-filter-block availability-picker">
+            <h3>Tìm sân trống</h3>
+            <Form.Group>
+              <Form.Label>Ngày đá</Form.Label>
+              <div className="football-search-control">
+                <CalendarDays size={18} />
+                <Form.Control
+                  type="date"
+                  min={todayValue()}
+                  value={selectedDate}
+                  onChange={(event) => {
+                    setSelectedDate(event.target.value);
+                    setPageNo(0);
+                  }}
+                />
+              </div>
+            </Form.Group>
+
+            <Form.Group>
+              <Form.Label>Khung giờ</Form.Label>
+              <div className="football-search-control">
+                <Clock size={18} />
+                <Form.Select
+                  value={selectedSlotValue}
+                  onChange={(event) => {
+                    setSelectedSlotValue(event.target.value);
+                    setPageNo(0);
+                  }}
+                >
+                  <option value="">Chọn khung giờ</option>
+                  {slotOptions.map((slot) => (
+                    <option key={slot.value} value={slot.value}>
+                      {slot.label}
+                    </option>
+                  ))}
+                </Form.Select>
+              </div>
+            </Form.Group>
           </div>
 
           <Form.Group className="football-search">
@@ -232,10 +345,22 @@ export default function FootballField() {
         </aside>
 
         <main className="football-results">
+          {isAvailabilitySearch && (
+            <div className="availability-summary">
+              <CalendarDays size={18} />
+              <span>
+                Đang tìm sân trống ngày {new Date(selectedDate).toLocaleDateString("vi-VN")} lúc{" "}
+                {selectedSlot.label}
+              </span>
+            </div>
+          )}
+
           <div className="football-results-header">
             <div>
-              <span>Danh sách sân</span>
-              <strong>{totalElements} sân phù hợp</strong>
+              <span>{isAvailabilitySearch ? "Sân còn trống" : "Danh sách sân"}</span>
+              <strong>
+                {totalElements} {isAvailabilitySearch ? "sân còn trống" : "sân phù hợp"}
+              </strong>
             </div>
             <p>Trang {pageNo + 1} / {Math.max(totalPages, 1)}</p>
           </div>
@@ -243,12 +368,18 @@ export default function FootballField() {
           {loading ? (
             <div className="football-empty">Đang tải danh sách sân...</div>
           ) : fields.length === 0 ? (
-            <div className="football-empty">Không tìm thấy sân phù hợp</div>
+            <div className="football-empty">
+              {isAvailabilitySearch
+                ? "Không có sân trống trong khung giờ đã chọn."
+                : "Không tìm thấy sân phù hợp."}
+            </div>
           ) : (
             <div className="football-grid">
               {fields.map((field) => {
                 const maintenance = field.underMaintenance ? field : maintenanceMap[field.id];
-                const isUnderMaintenance = maintenance?.underMaintenance || false;
+                const isUnderMaintenance = isAvailabilitySearch
+                  ? false
+                  : maintenance?.underMaintenance || false;
                 const maintenanceStartTime = maintenance?.maintenanceStartTime;
                 const maintenanceEndTime = maintenance?.maintenanceEndTime;
                 const maintenanceReason = maintenance?.maintenanceReason;
@@ -264,7 +395,7 @@ export default function FootballField() {
                           </>
                         ) : (
                           <>
-                            <ShieldCheck size={14} /> Sẵn sàng
+                            <ShieldCheck size={14} /> {isAvailabilitySearch ? "Còn trống" : "Sẵn sàng"}
                           </>
                         )}
                       </span>
@@ -282,9 +413,18 @@ export default function FootballField() {
                       </p>
 
                       <div className="football-price-row">
-                        <span>Giá tham khảo</span>
-                        <strong>{formatMoney(field.pricePerHour)}</strong>
+                        <span>{isAvailabilitySearch ? "Giá khung giờ" : "Giá tham khảo"}</span>
+                        <strong>
+                          {formatMoney(isAvailabilitySearch ? field.slotPrice : field.pricePerHour)}
+                        </strong>
                       </div>
+
+                      {isAvailabilitySearch && (
+                        <div className="football-slot-note">
+                          <Clock size={15} />
+                          <span>{selectedSlot.label}</span>
+                        </div>
+                      )}
 
                       {isUnderMaintenance && maintenanceStartTime && maintenanceEndTime && (
                         <div className="football-maintenance-note">
@@ -298,9 +438,13 @@ export default function FootballField() {
                       <Button
                         className="football-card-action"
                         disabled={isUnderMaintenance}
-                        onClick={() => navigate(`/football-fields/${field.id}/detail`)}
+                        onClick={() => goToFieldDetail(field)}
                       >
-                        {isUnderMaintenance ? "Đang bảo trì" : "Xem lịch sân"}
+                        {isUnderMaintenance
+                          ? "Đang bảo trì"
+                          : isAvailabilitySearch
+                            ? "Đặt khung giờ này"
+                            : "Xem lịch sân"}
                       </Button>
                     </div>
                   </article>

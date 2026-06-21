@@ -42,12 +42,16 @@ public class ExtraServiceServiceImpl
                     "Price must be greater than 0");
         }
 
+        validateStockRequest(request);
+
         ExtraService service =
                 extraServiceMapper.toEntity(request);
 
         if (service.getIsActive() == null) {
             service.setIsActive(true);
         }
+
+        normalizeStockFields(service);
 
         ExtraService saved =
                 extraServiceRepository.save(service);
@@ -98,10 +102,14 @@ public class ExtraServiceServiceImpl
                     "Price must be greater than 0");
         }
 
+        validateStockRequest(request);
+
         extraServiceMapper.updateEntity(
                 request,
                 service
         );
+
+        normalizeStockFields(service);
 
         ExtraService updated =
                 extraServiceRepository.save(service);
@@ -121,5 +129,68 @@ public class ExtraServiceServiceImpl
                                         "Extra service not found"));
 
         extraServiceRepository.delete(service);
+    }
+
+    private void validateStockRequest(
+            ExtraServiceRequest request
+    ) {
+
+        boolean trackStock =
+                Boolean.TRUE.equals(request.getTrackStock());
+
+        if (!trackStock) {
+            return;
+        }
+
+        if (request.getStockQuantity() == null
+                || request.getStockQuantity() < 0) {
+
+            throw new RuntimeException(
+                    "Stock quantity must be greater than or equal to 0");
+        }
+
+        if (request.getRemainingQuantity() != null
+                && request.getRemainingQuantity() < 0) {
+
+            throw new RuntimeException(
+                    "Remaining quantity must be greater than or equal to 0");
+        }
+
+        if (request.getRemainingQuantity() != null
+                && request.getRemainingQuantity()
+                > request.getStockQuantity()) {
+
+            throw new RuntimeException(
+                    "Remaining quantity cannot exceed stock quantity");
+        }
+    }
+
+    private void normalizeStockFields(
+            ExtraService service
+    ) {
+
+        if (service.getTrackStock() == null) {
+            service.setTrackStock(false);
+        }
+
+        if (!Boolean.TRUE.equals(service.getTrackStock())) {
+            if (service.getStockQuantity() == null) {
+                service.setStockQuantity(0);
+            }
+            if (service.getRemainingQuantity() == null) {
+                service.setRemainingQuantity(0);
+            }
+            return;
+        }
+
+        if (service.getStockQuantity() == null) {
+            service.setStockQuantity(0);
+        }
+
+        if (service.getRemainingQuantity() == null) {
+            service.setRemainingQuantity(
+                    service.getStockQuantity()
+            );
+        }
     }
 }

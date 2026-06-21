@@ -16,6 +16,7 @@ import { jwtDecode } from "jwt-decode";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import "../../assets/styles/Header.css";
 import { logout } from "../../services/authService";
+import NotificationBell from "../notification/NotificationBell";
 
 const NAV_ITEMS = [
   { label: "Trang chủ", to: "/" },
@@ -141,6 +142,8 @@ export default function Header() {
           </Link>
 
           {user ? (
+            <>
+            <NotificationBell context={user?.role === "ADMIN" ? "admin" : "client"} />
             <div className="fs-user-menu" ref={userMenuRef}>
               <button
                 className="fs-user-trigger"
@@ -183,6 +186,7 @@ export default function Header() {
                 </button>
               </div>
             </div>
+            </>
           ) : (
             <Link className="fs-login-btn" to="/login">
               <LogIn size={18} />

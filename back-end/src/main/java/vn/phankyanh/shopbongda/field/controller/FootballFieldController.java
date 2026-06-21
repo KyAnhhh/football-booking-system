@@ -2,6 +2,7 @@ package vn.phankyanh.shopbongda.field.controller;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ import vn.phankyanh.shopbongda.field.domain.FieldStatus;
 import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.dto.request.FieldStatusUpdateRequest;
 import vn.phankyanh.shopbongda.field.dto.request.FootballFieldRequest;
+import vn.phankyanh.shopbongda.field.dto.response.AvailableFootballFieldResponse;
 import vn.phankyanh.shopbongda.field.dto.response.FootballFieldResponse;
 import vn.phankyanh.shopbongda.field.dto.response.SlotResponse;
 import vn.phankyanh.shopbongda.field.service.FootballFieldService;
@@ -52,6 +54,41 @@ public class FootballFieldController {
         Page<FootballFieldResponse> result = footballFieldService.getAllFootballFields(keyword, FieldStatus.AVAILABLE, type, pageable, minPrice, maxPrice);
 
         ApiResponse<Page<FootballFieldResponse>> response = new ApiResponse<>();
+        response.setData(result);
+        return response;
+    }
+
+    @GetMapping("/public/fields/available")
+    public ApiResponse<Page<AvailableFootballFieldResponse>> getAvailableFootballFields(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) FieldType type,
+        @RequestParam(required = false) BigDecimal minPrice,
+        @RequestParam(required = false) BigDecimal maxPrice,
+        @RequestParam
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        LocalDate date,
+        @RequestParam
+        @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+        LocalTime startTime,
+        @RequestParam
+        @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+        LocalTime endTime
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<AvailableFootballFieldResponse> result = footballFieldService.getAvailableFootballFields(
+                keyword,
+                type,
+                pageable,
+                minPrice,
+                maxPrice,
+                date,
+                startTime,
+                endTime
+        );
+
+        ApiResponse<Page<AvailableFootballFieldResponse>> response = new ApiResponse<>();
         response.setData(result);
         return response;
     }

@@ -228,6 +228,11 @@
   color: #fff;
 }
 
+.my-booking-actions button.detail {
+  background: #0f766e;
+  color: #fff;
+}
+
 .my-booking-actions button.success {
   background: #16a34a;
   color: #fff;

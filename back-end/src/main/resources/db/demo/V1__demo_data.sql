@@ -153,17 +153,24 @@ ON DUPLICATE KEY UPDATE
     is_active = VALUES(is_active),
     updated_at = VALUES(updated_at);
 
-INSERT INTO extra_services (id, name, description, price, is_active)
+INSERT INTO extra_services (
+    id, name, description, price, is_active,
+    track_stock, stock_quantity, remaining_quantity, unit
+)
 VALUES
-    (9001, 'Thuê bóng thi đấu', 'Một quả bóng tiêu chuẩn cho ca đặt sân.', 50000, 1),
-    (9002, 'Nước suối thùng', 'Thùng 24 chai nước suối.', 90000, 1),
-    (9003, 'Áo bib đội', 'Bộ 10 áo bib phân đội.', 70000, 1),
-    (9004, 'Trọng tài', 'Trọng tài điều hành trận giao hữu.', 250000, 1)
+    (9001, 'Thuê bóng thi đấu', 'Một quả bóng tiêu chuẩn cho ca đặt sân.', 50000, 1, 1, 20, 20, 'quả'),
+    (9002, 'Nước suối thùng', 'Thùng 24 chai nước suối.', 90000, 1, 1, 50, 50, 'thùng'),
+    (9003, 'Áo bib đội', 'Bộ 10 áo bib phân đội.', 70000, 1, 1, 30, 30, 'bộ'),
+    (9004, 'Trọng tài', 'Trọng tài điều hành trận giao hữu.', 250000, 1, 0, 0, 0, 'lượt')
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     description = VALUES(description),
     price = VALUES(price),
-    is_active = VALUES(is_active);
+    is_active = VALUES(is_active),
+    track_stock = VALUES(track_stock),
+    stock_quantity = VALUES(stock_quantity),
+    remaining_quantity = VALUES(remaining_quantity),
+    unit = VALUES(unit);
 
 INSERT INTO vouchers (
     id,

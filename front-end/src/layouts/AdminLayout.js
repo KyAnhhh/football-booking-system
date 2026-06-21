@@ -22,6 +22,7 @@ import {
 
 import "../assets/styles/AdminLayout.css";
 import "../assets/styles/AdminManager.css";
+import NotificationBell from "../components/notification/NotificationBell";
 
 const navItems = [
   { to: "/admin", label: "Tổng quan", icon: BsSpeedometer2, end: true },
@@ -108,6 +109,9 @@ export default function AdminLayout() {
             <h3>Bảng điều khiển</h3>
           </div>
 
+          <div className="admin-navbar-actions">
+          <NotificationBell context="admin" />
+
           <div className={`admin-user-menu ${userMenuOpen ? "show" : ""}`}>
             <button
               className="admin-user-trigger"
@@ -130,6 +134,7 @@ export default function AdminLayout() {
                 <span>Đăng xuất</span>
               </button>
             </div>
+          </div>
           </div>
         </header>
 

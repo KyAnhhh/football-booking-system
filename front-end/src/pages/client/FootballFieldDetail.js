@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
 import { CalendarDays, Clock, MapPin, MessageSquareText, ShieldCheck, Star, Ticket, Wrench } from "lucide-react";
 import swal from "sweetalert";
@@ -12,6 +12,8 @@ import "../../assets/styles/FootballFieldDetail.css";
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString("vi-VN")} VND`;
 const REVIEW_RATINGS = [5, 4, 3, 2, 1];
+const normalizeTime = (value) => String(value || "").slice(0, 5);
+const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
 
 const renderStars = (rating) =>
   REVIEW_RATINGS.map((star) => (
@@ -25,6 +27,10 @@ const renderStars = (rating) =>
 export default function FootballFieldDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryDate = searchParams.get("date");
+  const queryStartTime = searchParams.get("startTime");
+  const queryEndTime = searchParams.get("endTime");
   const [field, setField] = useState(null);
   const [date, setDate] = useState("");
   const [slots, setSlots] = useState([]);
@@ -41,13 +47,24 @@ export default function FootballFieldDetail() {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherFinalAmount, setVoucherFinalAmount] = useState(null);
   const [voucherLoading, setVoucherLoading] = useState(false);
+  const [contactPhone, setContactPhone] = useState("");
 
-  const loadSlots = useCallback(async (selectedDate) => {
+  const loadSlots = useCallback(async (selectedDate, preferredSlot = null) => {
     try {
       setLoading(true);
       const data = await getAvailableSlots(id, selectedDate);
-      setSlots(data || []);
-      setSelectedSlot(null);
+      const nextSlots = data || [];
+      const preselectedSlot = preferredSlot
+        ? nextSlots.find(
+            (slot) =>
+              slot.available &&
+              normalizeTime(slot.startTime) === normalizeTime(preferredSlot.startTime) &&
+              normalizeTime(slot.endTime) === normalizeTime(preferredSlot.endTime)
+          )
+        : null;
+
+      setSlots(nextSlots);
+      setSelectedSlot(preselectedSlot || null);
       setVoucherFinalAmount(null);
     } catch (error) {
       console.error("Load slots error:", error);
@@ -103,6 +120,16 @@ export default function FootballFieldDetail() {
     loadExtras();
   }, [id, loadReviews]);
 
+  useEffect(() => {
+    if (!queryDate || !queryStartTime || !queryEndTime) return;
+
+    setDate(queryDate);
+    loadSlots(queryDate, {
+      startTime: queryStartTime,
+      endTime: queryEndTime,
+    });
+  }, [queryDate, queryStartTime, queryEndTime, loadSlots]);
+
   const selectedServices = useMemo(
     () =>
       extras
@@ -136,7 +163,10 @@ export default function FootballFieldDetail() {
   };
 
   const updateExtraQuantity = (serviceId, quantity) => {
-    const normalizedQuantity = Math.max(Number(quantity || 0), 0);
+    const service = extras.find((item) => item.id === serviceId);
+    const maxQuantity = service?.trackStock ? Number(service.remainingQuantity || 0) : Infinity;
+    const normalizedQuantity = Math.min(Math.max(Number(quantity || 0), 0), maxQuantity);
+
     setExtraQuantities((current) => ({
       ...current,
       [serviceId]: normalizedQuantity,
@@ -185,10 +215,22 @@ export default function FootballFieldDetail() {
         return;
       }
 
+      const normalizedPhone = contactPhone.trim();
+      if (!normalizedPhone) {
+        swal("Vui lòng nhập số điện thoại liên hệ.", "", "warning");
+        return;
+      }
+
+      if (!phoneRegex.test(normalizedPhone)) {
+        swal("Số điện thoại không hợp lệ.", "Vui lòng nhập số điện thoại Việt Nam hợp lệ.", "warning");
+        return;
+      }
+
       const bookingData = {
         fieldId: Number(id),
         startTime: `${date}T${selectedSlot.startTime}`,
         endTime: `${date}T${selectedSlot.endTime}`,
+        contactPhone: normalizedPhone,
         paymentMethod,
         voucherCode: voucherCode.trim() || null,
         services: selectedServices.map((service) => ({
@@ -368,10 +410,17 @@ export default function FootballFieldDetail() {
                       <div>
                         <strong>{service.name}</strong>
                         <span>{formatMoney(service.price)}</span>
+                        {service.trackStock && (
+                          <small>
+                            Còn {service.remainingQuantity || 0} {service.unit || ""}
+                          </small>
+                        )}
                       </div>
                       <Form.Control
                         type="number"
                         min="0"
+                        max={service.trackStock ? service.remainingQuantity || 0 : undefined}
+                        disabled={service.trackStock && Number(service.remainingQuantity || 0) <= 0}
                         value={extraQuantities[service.id] || 0}
                         onChange={(event) => updateExtraQuantity(service.id, event.target.value)}
                       />
@@ -385,6 +434,18 @@ export default function FootballFieldDetail() {
           <aside className="detail-summary">
             <section className="detail-panel sticky">
               <h2>Tóm tắt đặt sân</h2>
+
+              <div className="booking-contact-box">
+                <Form.Label>Số điện thoại liên hệ</Form.Label>
+                <Form.Control
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="Ví dụ: 0912345678"
+                  value={contactPhone}
+                  onChange={(event) => setContactPhone(event.target.value)}
+                />
+                <small>Admin sẽ dùng số này để liên hệ khi cần xác nhận lịch.</small>
+              </div>
 
               <div className="voucher-row">
                 <Form.Control
@@ -437,7 +498,7 @@ export default function FootballFieldDetail() {
 
               <Button
                 className="book-btn"
-                disabled={!selectedSlot || !date || !paymentMethod}
+                disabled={!selectedSlot || !date || !paymentMethod || !contactPhone.trim()}
                 onClick={handleBooking}
               >
                 {bookingLoading ? "Đang xử lý..." : "Đặt sân"}

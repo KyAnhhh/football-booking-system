@@ -14,6 +14,7 @@ import Collection from "../pages/client/Collection";
 import Service from "../pages/client/Service";
 import MyOrders from "../pages/client/MyOrders";
 import MyBookings from "../pages/client/MyBookings";
+import BookingDetailPage from "../pages/client/BookingDetailPage";
 import Review from "../pages/client/Review";
 import FootballField from "../pages/client/FootballField";
 import FootballFieldDetail from "../pages/client/FootballFieldDetail";
@@ -118,6 +119,15 @@ const ClientRoutes = (
       element={
         <ClientLayout>
           <MyBookings />
+        </ClientLayout>
+      }
+    />
+
+    <Route
+      path="/my-bookings/:bookingId"
+      element={
+        <ClientLayout>
+          <BookingDetailPage />
         </ClientLayout>
       }
     />

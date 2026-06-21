@@ -142,6 +142,12 @@
   gap: 16px;
 }
 
+.admin-navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .navbar h3 {
   font-size: 22px;
   font-weight: 700;
