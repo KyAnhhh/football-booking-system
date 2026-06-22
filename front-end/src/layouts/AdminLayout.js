@@ -19,6 +19,7 @@ import {
   BsPlusSquare,
   BsList,
   BsCalendar2Plus,
+  BsUpload,
 } from "react-icons/bs";
 
 import "../assets/styles/AdminLayout.css";
@@ -26,6 +27,7 @@ import "../assets/styles/AdminManager.css";
 import NotificationBell from "../components/notification/NotificationBell";
 
 const navItems = [
+  { to: "/admin/imports", label: "Import dữ liệu", icon: BsUpload },
   { to: "/admin", label: "Tổng quan", icon: BsSpeedometer2, end: true },
   { to: "/admin/bookings", label: "Đặt sân", icon: BsReceipt },
   { to: "/admin/field-calendar", label: "Lịch sân", icon: BsCalendarWeek },

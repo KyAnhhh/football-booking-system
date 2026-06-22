@@ -22,6 +22,8 @@ import vn.phankyanh.shopbongda.field.domain.FootballField;
 public interface FootballFieldRepository extends JpaRepository<FootballField, Long> {
     List<FootballField> findByStatus(FieldStatus status);
 
+    boolean existsByName(String name);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
         SELECT f FROM FootballField f

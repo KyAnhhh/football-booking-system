@@ -18,6 +18,7 @@ import HolidayPricingRulePage from "../pages/admin/HolidayPricingRulePage";
 import VoucherPage from "../pages/admin/VoucherPage";
 import ExtraServicePage from "../pages/admin/ExtraServicePage";
 import HolidayPage from "../pages/admin/HolidayPage";
+import ImportPage from "../pages/admin/ImportPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
@@ -49,6 +50,7 @@ const AdminRoutes = (
     <Route path="vouchers" element={<VoucherPage />} />
     <Route path="extra-services" element={<ExtraServicePage />} />
     <Route path="holidays" element={<HolidayPage />} />
+    <Route path="imports" element={<ImportPage />} />
   </Route>
 );
 

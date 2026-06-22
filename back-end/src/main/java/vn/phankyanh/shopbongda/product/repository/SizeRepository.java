@@ -7,5 +7,5 @@ import vn.phankyanh.shopbongda.product.domain.Size;
 
 @Repository
 public interface SizeRepository extends JpaRepository<Size, Long> {
-    
+    boolean existsByCode(String code);
 }

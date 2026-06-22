@@ -33,6 +33,10 @@ public class ProductImage {
     @Builder.Default
     private Boolean isPrimary = false;
 
+    @Column(name = "sort_order", nullable = false)
+    @Builder.Default
+    private Integer sortOrder = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;

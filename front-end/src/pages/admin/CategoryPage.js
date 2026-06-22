@@ -16,7 +16,7 @@ export default function CategoryPage() {
 
     // Paging + Sorting + Search
   const [pageNo, setPageNo] = useState(0);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(10);
   const [sortBy, setSortBy] = useState("id");
   const [sortDir, setSortDir] = useState("asc");
   const [search, setSearch] = useState("");

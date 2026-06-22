@@ -15,4 +15,5 @@ public class ProductImageResponse {
     private Long id;
     private String imageUrl;
     private boolean isPrimary;
+    private Integer sortOrder;
 }

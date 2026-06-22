@@ -11,6 +11,8 @@ import vn.phankyanh.shopbongda.product.domain.ProductImage;
 public interface ProductImageRepository extends JpaRepository<ProductImage, Long> {
     List<ProductImage> findByProductId(Long productId);
 
+    boolean existsByProductIdAndImageUrl(Long productId, String imageUrl);
+
     @Modifying
     @Query("UPDATE ProductImage i SET i.isPrimary = false WHERE i.product.id = :productId")
     void resetPrimary(Long productId);
