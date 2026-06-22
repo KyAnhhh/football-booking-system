@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  checkInBooking,
+  checkOutBooking,
+  createBookingForAdmin,
   getBookings,
   deleteBooking,
   updateBookingStatus
 } from "../../services/bookingService";
+import { getFields } from "../../services/fieldService";
+import { getUsers } from "../../services/userService";
 
 import { Button, Form, Modal } from "react-bootstrap";
 import "../../assets/styles/BookingPage.css";
@@ -12,6 +17,8 @@ import "../../assets/styles/BookingPage.css";
 export default function BookingPage() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const [fields, setFields] = useState([]);
+  const [users, setUsers] = useState([]);
   const [pageData, setPageData] = useState(null);
 
   const [pageNo, setPageNo] = useState(0);
@@ -21,6 +28,18 @@ export default function BookingPage() {
   const [status, setStatus] = useState("");
 
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    userId: "",
+    fieldId: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+    contactPhone: "",
+    paymentMethod: "CASH",
+    confirmImmediately: true,
+    note: "Admin tạo booking hộ khách",
+  });
 
   const loadBookings = useCallback(async () => {
     try {
@@ -47,12 +66,47 @@ export default function BookingPage() {
     loadBookings();
   }, [loadBookings]);
 
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        const [fieldData, userData] = await Promise.all([
+          getFields({ page: 0, size: 1000 }),
+          getUsers(0, 1000, "id", "asc", ""),
+        ]);
+        setFields(fieldData?.content || []);
+        setUsers(userData?.content || []);
+      } catch (err) {
+        console.error("Load booking form options failed:", err);
+      }
+    };
+
+    loadOptions();
+  }, []);
+
   const handleUpdateStatus = async (id, status) => {
     try {
       await updateBookingStatus(id, status);
       await loadBookings();
     } catch (err) {
       console.error("Update status failed:", err);
+    }
+  };
+
+  const handleCheckIn = async (id) => {
+    try {
+      await checkInBooking(id);
+      await loadBookings();
+    } catch (err) {
+      console.error("Check-in failed:", err);
+    }
+  };
+
+  const handleCheckOut = async (id) => {
+    try {
+      await checkOutBooking(id);
+      await loadBookings();
+    } catch (err) {
+      console.error("Check-out failed:", err);
     }
   };
 
@@ -65,6 +119,30 @@ export default function BookingPage() {
       setConfirmDeleteModal(null);
     } catch (err) {
       console.error("Delete failed:", err);
+    }
+  };
+
+  const handleCreateBooking = async (event) => {
+    event.preventDefault();
+
+    try {
+      await createBookingForAdmin({
+        userId: Number(createForm.userId),
+        fieldId: Number(createForm.fieldId),
+        startTime: `${createForm.date}T${createForm.startTime}`,
+        endTime: `${createForm.date}T${createForm.endTime}`,
+        contactPhone: createForm.contactPhone,
+        paymentMethod: createForm.paymentMethod,
+        confirmImmediately: createForm.confirmImmediately,
+        note: createForm.note,
+        services: [],
+      });
+
+      setShowCreateModal(false);
+      await loadBookings();
+    } catch (err) {
+      console.error("Create booking failed:", err);
+      window.alert(err.message || "Không thể tạo booking hộ khách.");
     }
   };
 
@@ -88,6 +166,7 @@ export default function BookingPage() {
   const statusLabels = {
     PENDING: "Chờ xác nhận",
     CONFIRMED: "Đã xác nhận",
+    IN_PROGRESS: "Đang đá",
     CANCELLED: "Đã hủy",
     COMPLETED: "Hoàn tất",
     EXPIRED: "Hết hạn",
@@ -123,6 +202,10 @@ export default function BookingPage() {
             <option value="COMPLETED">Hoàn tất</option>
             <option value="EXPIRED">Hết hạn</option>
           </Form.Select>
+
+          <Button onClick={() => setShowCreateModal(true)}>
+            + Tạo booking hộ khách
+          </Button>
         </div>
       </div>
 
@@ -218,11 +301,31 @@ export default function BookingPage() {
                     <Button
                       size="sm"
                       variant="primary"
+                      onClick={() => handleCheckIn(b.id)}
+                    >
+                      Check-in
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="warning"
                       onClick={() =>
-                        handleUpdateStatus(b.id, "COMPLETED")
+                        handleUpdateStatus(b.id, "CANCELLED")
                       }
                     >
-                      Hoàn tất
+                      Hủy
+                    </Button>
+                  </>
+                )}
+
+                {b.status === "IN_PROGRESS" && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="success"
+                      onClick={() => handleCheckOut(b.id)}
+                    >
+                      Check-out
                     </Button>
 
                     <Button
@@ -298,6 +401,128 @@ export default function BookingPage() {
             Xóa
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Tạo booking hộ khách</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleCreateBooking}>
+            <Form.Group className="mb-3">
+              <Form.Label>Khách hàng</Form.Label>
+              <Form.Select
+                value={createForm.userId}
+                onChange={(event) => {
+                  const selectedUser = users.find((user) => String(user.id) === event.target.value);
+                  setCreateForm({
+                    ...createForm,
+                    userId: event.target.value,
+                    contactPhone: selectedUser?.phone || createForm.contactPhone,
+                  });
+                }}
+                required
+              >
+                <option value="">Chọn khách hàng</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.username} - {user.phone}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Sân</Form.Label>
+              <Form.Select
+                value={createForm.fieldId}
+                onChange={(event) => setCreateForm({ ...createForm, fieldId: event.target.value })}
+                required
+              >
+                <option value="">Chọn sân</option>
+                {fields.map((field) => (
+                  <option key={field.id} value={field.id}>
+                    {field.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Ngày đá</Form.Label>
+              <Form.Control
+                type="date"
+                value={createForm.date}
+                onChange={(event) => setCreateForm({ ...createForm, date: event.target.value })}
+                required
+              />
+            </Form.Group>
+
+            <div className="admin-booking-form-grid">
+              <Form.Group className="mb-3">
+                <Form.Label>Giờ bắt đầu</Form.Label>
+                <Form.Control
+                  type="time"
+                  value={createForm.startTime}
+                  onChange={(event) => setCreateForm({ ...createForm, startTime: event.target.value })}
+                  required
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Giờ kết thúc</Form.Label>
+                <Form.Control
+                  type="time"
+                  value={createForm.endTime}
+                  onChange={(event) => setCreateForm({ ...createForm, endTime: event.target.value })}
+                  required
+                />
+              </Form.Group>
+            </div>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Số điện thoại liên hệ</Form.Label>
+              <Form.Control
+                value={createForm.contactPhone}
+                onChange={(event) => setCreateForm({ ...createForm, contactPhone: event.target.value })}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Thanh toán</Form.Label>
+              <Form.Select
+                value={createForm.paymentMethod}
+                onChange={(event) => setCreateForm({ ...createForm, paymentMethod: event.target.value })}
+              >
+                <option value="CASH">Tiền mặt</option>
+                <option value="VIETQR">VIETQR</option>
+                <option value="VNPAY">VNPAY</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Check
+                type="checkbox"
+                label="Tạo xong xác nhận luôn"
+                checked={createForm.confirmImmediately}
+                onChange={(event) => setCreateForm({ ...createForm, confirmImmediately: event.target.checked })}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Ghi chú</Form.Label>
+              <Form.Control
+                value={createForm.note}
+                onChange={(event) => setCreateForm({ ...createForm, note: event.target.value })}
+              />
+            </Form.Group>
+
+            <Button type="submit" variant="success">
+              Tạo booking
+            </Button>
+          </Form>
+        </Modal.Body>
       </Modal>
     </div>
   );

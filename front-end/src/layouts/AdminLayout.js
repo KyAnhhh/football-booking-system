@@ -18,6 +18,7 @@ import {
   BsCashCoin,
   BsPlusSquare,
   BsList,
+  BsCalendar2Plus,
 } from "react-icons/bs";
 
 import "../assets/styles/AdminLayout.css";
@@ -30,6 +31,7 @@ const navItems = [
   { to: "/admin/field-calendar", label: "Lịch sân", icon: BsCalendarWeek },
   { to: "/admin/football-fields", label: "Sân bóng", icon: BsHouseDoor },
   { to: "/admin/pricing-rules", label: "Bảng giá", icon: BsCashCoin },
+  { to: "/admin/holiday-pricing-rules", label: "Giá ngày lễ", icon: BsCalendar2Plus },
   { to: "/admin/maintenance", label: "Bảo trì", icon: BsTools },
   { to: "/admin/vouchers", label: "Voucher", icon: BsTicketPerforated },
   { to: "/admin/extra-services", label: "Dịch vụ thêm", icon: BsPlusSquare },

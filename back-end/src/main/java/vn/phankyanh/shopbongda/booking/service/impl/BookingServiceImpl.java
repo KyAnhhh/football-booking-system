@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.booking.domain.Booking;
 import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
+import vn.phankyanh.shopbongda.booking.dto.request.AdminBookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.request.BookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.request.UpdateBookingStatusRequest;
 import vn.phankyanh.shopbongda.booking.dto.response.BookingResponse;
@@ -22,6 +23,7 @@ import vn.phankyanh.shopbongda.booking.mapper.BookingMapper;
 import vn.phankyanh.shopbongda.booking.projection.BookingTimeView;
 import vn.phankyanh.shopbongda.booking.repository.BookingRepository;
 import vn.phankyanh.shopbongda.booking.service.BookingService;
+import vn.phankyanh.shopbongda.booking.service.BookingStatusHistoryService;
 import vn.phankyanh.shopbongda.extra.domain.BookingExtraService;
 import vn.phankyanh.shopbongda.extra.domain.ExtraService;
 import vn.phankyanh.shopbongda.extra.dto.request.BookingExtraServiceRequest;
@@ -59,6 +61,7 @@ public class BookingServiceImpl implements BookingService {
     private final ExtraServiceRepository extraServiceRepository;
     private final BookingExtraServiceRepository bookingExtraServiceRepository;
     private final NotificationService notificationService;
+    private final BookingStatusHistoryService bookingStatusHistoryService;
     
 
     private static final int SLOT_DURATION = 90;
@@ -250,8 +253,67 @@ public class BookingServiceImpl implements BookingService {
 
                 notificationService.notifyAdminsBookingCreated(savedBooking);
 
+                bookingStatusHistoryService.record(
+                        savedBooking,
+                        null,
+                        BookingStatus.PENDING,
+                        user,
+                        "Khách hàng tạo lịch đặt sân"
+                );
+
                 return bookingMapper.toResponse(savedBooking);
                 }
+
+        @Override
+        @Transactional
+        public BookingResponse createBookingForAdmin(
+                AdminBookingRequest request,
+                Long adminId
+        ) {
+
+                if (request.getUserId() == null) {
+                        throw new IllegalArgumentException("User is required");
+                }
+
+                BookingResponse createdBooking =
+                        createBooking(
+                                request,
+                                request.getUserId()
+                        );
+
+                User admin =
+                        userRepository.findById(adminId)
+                                .orElseThrow(() ->
+                                        new RuntimeException("Admin not found"));
+
+                Booking booking =
+                        bookingRepository.findByIdForUpdate(
+                                createdBooking.getId()
+                        ).orElseThrow(() ->
+                                new RuntimeException("Booking not found"));
+
+                bookingStatusHistoryService.record(
+                        booking,
+                        BookingStatus.PENDING,
+                        BookingStatus.PENDING,
+                        admin,
+                        "Admin tạo booking hộ khách"
+                );
+
+                if (Boolean.TRUE.equals(request.getConfirmImmediately())) {
+                        UpdateBookingStatusRequest statusRequest =
+                                new UpdateBookingStatusRequest();
+                        statusRequest.setBookingStatus(BookingStatus.CONFIRMED);
+                        statusRequest.setNote("Admin tạo và xác nhận booking hộ khách");
+                        return updateBookingStatus(
+                                booking.getId(),
+                                statusRequest,
+                                adminId
+                        );
+                }
+
+                return bookingMapper.toResponse(booking);
+        }
 
         private BigDecimal calculateDiscountAmount(
                 BigDecimal priceBeforeDiscount,
@@ -463,12 +525,21 @@ public class BookingServiceImpl implements BookingService {
                         updatedBooking,
                         previousStatus
                 );
+
+                bookingStatusHistoryService.record(
+                        updatedBooking,
+                        previousStatus,
+                        BookingStatus.CONFIRMED,
+                        null,
+                        "Admin xác nhận booking"
+                );
         }
 
         @Transactional
         public BookingResponse updateBookingStatus(
                 Long bookingId,
-                UpdateBookingStatusRequest request
+                UpdateBookingStatusRequest request,
+                Long actorId
         ) {
 
         Booking booking = bookingRepository
@@ -478,6 +549,9 @@ public class BookingServiceImpl implements BookingService {
 
         BookingStatus currentStatus = booking.getStatus();
         BookingStatus newStatus = request.getBookingStatus();
+        User actor = actorId == null
+                ? null
+                : userRepository.findById(actorId).orElse(null);
 
         // check null
         if (newStatus == null) {
@@ -529,10 +603,22 @@ public class BookingServiceImpl implements BookingService {
                 // CONFIRMED -> COMPLETED
                 // CONFIRMED -> CANCELLED
                 if (newStatus != BookingStatus.COMPLETED
-                        && newStatus != BookingStatus.CANCELLED) {
+                        && newStatus != BookingStatus.CANCELLED
+                        && newStatus != BookingStatus.IN_PROGRESS) {
 
                         throw new RuntimeException(
                                 "Invalid status transition from CONFIRMED"
+                        );
+                }
+                }
+
+                case IN_PROGRESS -> {
+
+                if (newStatus != BookingStatus.COMPLETED
+                        && newStatus != BookingStatus.CANCELLED) {
+
+                        throw new RuntimeException(
+                                "Invalid status transition from IN_PROGRESS"
                         );
                 }
                 }
@@ -557,10 +643,19 @@ public class BookingServiceImpl implements BookingService {
         Booking updatedBooking =
                 bookingRepository.save(booking);
 
+        bookingStatusHistoryService.record(
+                updatedBooking,
+                currentStatus,
+                newStatus,
+                actor,
+                request.getNote()
+        );
+
         if(newStatus == BookingStatus.CONFIRMED
                 || newStatus == BookingStatus.CANCELLED
                 || newStatus == BookingStatus.COMPLETED
                 || newStatus == BookingStatus.EXPIRED
+                || newStatus == BookingStatus.IN_PROGRESS
         ) {
                 notificationService.notifyUserBookingStatusChanged(
                         updatedBooking,
@@ -575,6 +670,40 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return bookingMapper.toResponse(updatedBooking);
+        }
+
+        @Override
+        @Transactional
+        public BookingResponse checkInBooking(
+                Long bookingId,
+                Long actorId
+        ) {
+                UpdateBookingStatusRequest request =
+                        new UpdateBookingStatusRequest();
+                request.setBookingStatus(BookingStatus.IN_PROGRESS);
+                request.setNote("Khách đã check-in tại sân");
+                return updateBookingStatus(
+                        bookingId,
+                        request,
+                        actorId
+                );
+        }
+
+        @Override
+        @Transactional
+        public BookingResponse checkOutBooking(
+                Long bookingId,
+                Long actorId
+        ) {
+                UpdateBookingStatusRequest request =
+                        new UpdateBookingStatusRequest();
+                request.setBookingStatus(BookingStatus.COMPLETED);
+                request.setNote("Khách đã check-out và hoàn tất lịch đá");
+                return updateBookingStatus(
+                        bookingId,
+                        request,
+                        actorId
+                );
         }
 
         private void confirmPendingBooking(
@@ -698,7 +827,15 @@ public class BookingServiceImpl implements BookingService {
                         BookingStatus.CANCELLED
                 );
 
-                bookingRepository.save(booking);
+                Booking updatedBooking = bookingRepository.save(booking);
+
+                bookingStatusHistoryService.record(
+                        updatedBooking,
+                        BookingStatus.PENDING,
+                        BookingStatus.CANCELLED,
+                        updatedBooking.getUser(),
+                        "Khách hàng hủy booking"
+                );
         }
 
         @Override

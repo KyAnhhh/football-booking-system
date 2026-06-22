@@ -69,6 +69,13 @@
   border-radius: 20px;
 }
 
+.status-in_progress {
+  background: #ede9fe;
+  color: #6d28d9;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
 .status-expired {
   background: #e2e8f0;
   color: #334155;
@@ -89,4 +96,16 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.admin-booking-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .admin-booking-form-grid {
+    grid-template-columns: 1fr;
+  }
 }

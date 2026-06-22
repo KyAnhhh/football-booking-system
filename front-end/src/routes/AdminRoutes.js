@@ -14,6 +14,7 @@ import BookingPage from "../pages/admin/BookingPage";
 import AdminBookingDetailPage from "../pages/admin/AdminBookingDetailPage";
 import MaintenanceManagementPage from "../pages/admin/MaintenanceManagementPage";
 import PricingRulePage from "../pages/admin/PricingRulePage";
+import HolidayPricingRulePage from "../pages/admin/HolidayPricingRulePage";
 import VoucherPage from "../pages/admin/VoucherPage";
 import ExtraServicePage from "../pages/admin/ExtraServicePage";
 import HolidayPage from "../pages/admin/HolidayPage";
@@ -44,6 +45,7 @@ const AdminRoutes = (
     <Route path="bookings/:bookingId" element={<AdminBookingDetailPage />} />
     <Route path="maintenance" element={<MaintenanceManagementPage />} />
     <Route path="pricing-rules" element={<PricingRulePage />} />
+    <Route path="holiday-pricing-rules" element={<HolidayPricingRulePage />} />
     <Route path="vouchers" element={<VoucherPage />} />
     <Route path="extra-services" element={<ExtraServicePage />} />
     <Route path="holidays" element={<HolidayPage />} />

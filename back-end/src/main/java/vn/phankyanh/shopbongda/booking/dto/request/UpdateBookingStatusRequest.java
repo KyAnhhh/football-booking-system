@@ -8,4 +8,5 @@ import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
 @Setter
 public class UpdateBookingStatusRequest {
     private BookingStatus bookingStatus;
+    private String note;
 }

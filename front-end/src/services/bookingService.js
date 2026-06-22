@@ -27,6 +27,14 @@ export const createBooking = async (bookingData) => {
     return handleResponse(response);
 }
 
+export const createBookingForAdmin = async (bookingData) => {
+    const response = await fetchWithAuth(API_URL_ADMIN, {
+        method: "POST",
+        body: JSON.stringify(bookingData),
+    });
+    return handleResponse(response);
+}
+
 export const getBookings = async ({
     page = 0,
     size = 10,
@@ -45,6 +53,11 @@ export const getBookings = async ({
 
 export const getBookingDetailForAdmin = async (bookingId) => {
     const response = await fetchWithAuth(`${API_URL_ADMIN}/${bookingId}`);
+    return handleResponse(response);
+}
+
+export const getBookingStatusHistories = async (bookingId) => {
+    const response = await fetchWithAuth(`${API_URL_ADMIN}/${bookingId}/histories`);
     return handleResponse(response);
 }
 
@@ -69,6 +82,20 @@ export const updateBookingStatus = async (bookingId, status) => {
     const response = await fetchWithAuth(`${API_URL_ADMIN}/${bookingId}/status`, {
         method: "PATCH",
         body: JSON.stringify({ bookingStatus: status }),
+    });
+    return handleResponse(response);
+}
+
+export const checkInBooking = async (bookingId) => {
+    const response = await fetchWithAuth(`${API_URL_ADMIN}/${bookingId}/check-in`, {
+        method: "PATCH",
+    });
+    return handleResponse(response);
+}
+
+export const checkOutBooking = async (bookingId) => {
+    const response = await fetchWithAuth(`${API_URL_ADMIN}/${bookingId}/check-out`, {
+        method: "PATCH",
     });
     return handleResponse(response);
 }

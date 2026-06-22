@@ -13,7 +13,10 @@ import {
 } from "lucide-react";
 import swal from "sweetalert2";
 import {
+  checkInBooking,
+  checkOutBooking,
   getBookingDetailForAdmin,
+  getBookingStatusHistories,
   updateBookingStatus,
 } from "../../services/bookingService";
 import "../../assets/styles/AdminBookingDetailPage.css";
@@ -22,6 +25,7 @@ const statusLabels = {
   PENDING: "Chờ xác nhận",
   CONFIRMED: "Đã xác nhận",
   CANCELLED: "Đã hủy",
+  IN_PROGRESS: "Đang đá",
   COMPLETED: "Hoàn tất",
   EXPIRED: "Hết hạn",
 };
@@ -40,12 +44,16 @@ const statusActions = {
     { status: "EXPIRED", label: "Đánh dấu hết hạn", variant: "secondary" },
   ],
   CONFIRMED: [
-    { status: "COMPLETED", label: "Hoàn tất", variant: "primary" },
+    { status: "IN_PROGRESS", label: "Check-in", variant: "primary", mode: "check-in" },
+    { status: "CANCELLED", label: "Hủy lịch", variant: "warning" },
+  ],
+  IN_PROGRESS: [
+    { status: "COMPLETED", label: "Check-out", variant: "success", mode: "check-out" },
     { status: "CANCELLED", label: "Hủy lịch", variant: "warning" },
   ],
 };
 
-const timelineSteps = ["PENDING", "CONFIRMED", "COMPLETED"];
+const timelineSteps = ["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED"];
 const fallbackFieldImage =
   "https://placehold.co/1000x620/f1f5f9/0f172a?text=Football+Field";
 
@@ -73,6 +81,7 @@ export default function AdminBookingDetailPage() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
+  const [histories, setHistories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pendingAction, setPendingAction] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -80,8 +89,12 @@ export default function AdminBookingDetailPage() {
   const loadBooking = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getBookingDetailForAdmin(bookingId);
-      setBooking(data);
+      const [bookingData, historyData] = await Promise.all([
+        getBookingDetailForAdmin(bookingId),
+        getBookingStatusHistories(bookingId),
+      ]);
+      setBooking(bookingData);
+      setHistories(historyData || []);
     } catch (error) {
       console.error(error);
       swal.fire("Lỗi", error.message || "Không thể tải chi tiết đặt sân.", "error");
@@ -107,7 +120,13 @@ export default function AdminBookingDetailPage() {
 
     try {
       setSaving(true);
-      await updateBookingStatus(booking.id, pendingAction.status);
+      if (pendingAction.mode === "check-in") {
+        await checkInBooking(booking.id);
+      } else if (pendingAction.mode === "check-out") {
+        await checkOutBooking(booking.id);
+      } else {
+        await updateBookingStatus(booking.id, pendingAction.status);
+      }
       setPendingAction(null);
       await loadBooking();
       swal.fire("Đã cập nhật", "Trạng thái đặt sân đã được cập nhật.", "success");
@@ -218,6 +237,28 @@ export default function AdminBookingDetailPage() {
                     </div>
                   );
                 })
+              )}
+            </div>
+
+            <div className="admin-booking-history-list">
+              {histories.length === 0 ? (
+                <p className="admin-booking-muted">Chưa có lịch sử trạng thái.</p>
+              ) : (
+                histories.map((history) => (
+                  <div key={history.id} className="admin-booking-history-item">
+                    <i />
+                    <div>
+                      <strong>
+                        {history.oldStatus ? `${statusLabels[history.oldStatus] || history.oldStatus} → ` : ""}
+                        {statusLabels[history.newStatus] || history.newStatus}
+                      </strong>
+                      <span>
+                        {formatDateTime(history.createdAt)} · {history.changedByName || "Hệ thống"}
+                      </span>
+                      {history.note && <small>{history.note}</small>}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           </section>

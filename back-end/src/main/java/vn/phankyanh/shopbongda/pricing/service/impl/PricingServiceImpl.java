@@ -10,11 +10,13 @@ import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import vn.phankyanh.shopbongda.pricing.domain.FieldPricingRule;
+import vn.phankyanh.shopbongda.pricing.domain.HolidayPricingRule;
 import vn.phankyanh.shopbongda.pricing.repository.FieldPricingRuleRepository;
+import vn.phankyanh.shopbongda.pricing.repository.HolidayPricingRuleRepository;
 import vn.phankyanh.shopbongda.pricing.service.PricingService;
-import vn.phankyanh.shopbongda.holiday.service.HolidayService;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +25,7 @@ public class PricingServiceImpl implements PricingService {
     private static final int DEFAULT_SLOT_DURATION = 90;
 
     private final FieldPricingRuleRepository fieldPricingRuleRepository;
-    private final HolidayService holidayService;
+    private final HolidayPricingRuleRepository holidayPricingRuleRepository;
 
     @Override
     public BigDecimal calculatePrice(
@@ -40,18 +42,18 @@ public class PricingServiceImpl implements PricingService {
 
         while (current.isBefore(endTime)) {
 
-            FieldPricingRule matchedRule =
-                    findRuleForTime(
+            SlotPricing matchedRule =
+                    findSlotPricingForTime(
                             fieldId,
                             current
                     );
 
             totalPrice = totalPrice.add(
-                    matchedRule.getPricePerSlot()
+                    matchedRule.pricePerSlot()
             );
 
             current = current.plusMinutes(
-                    getSlotDuration(matchedRule)
+                    matchedRule.slotDuration()
             );
         }
 
@@ -66,10 +68,10 @@ public class PricingServiceImpl implements PricingService {
 
         validateSlotTime(slotStartTime);
 
-        return findRuleForTime(
+        return findSlotPricingForTime(
                 fieldId,
                 slotStartTime
-        ).getPricePerSlot();
+        ).pricePerSlot();
     }
 
     @Override
@@ -124,16 +126,31 @@ public class PricingServiceImpl implements PricingService {
         return slotStartTimes;
     }
 
-    private FieldPricingRule findRuleForTime(
+    private SlotPricing findSlotPricingForTime(
             Long fieldId,
             LocalDateTime dateTime
     ) {
 
-        DayOfWeek dayOfWeek =
-                resolvePricingDay(dateTime);
-
         LocalTime bookingTime =
                 dateTime.toLocalTime();
+
+        Optional<HolidayPricingRule> holidayRule =
+                holidayPricingRuleRepository.findFirstApplicableRule(
+                        fieldId,
+                        dateTime.toLocalDate(),
+                        bookingTime
+                );
+
+        if (holidayRule.isPresent()) {
+            HolidayPricingRule rule = holidayRule.get();
+            return new SlotPricing(
+                    rule.getPricePerSlot(),
+                    getSlotDuration(rule.getSlotDuration())
+            );
+        }
+
+        DayOfWeek dayOfWeek =
+                dateTime.getDayOfWeek();
 
         List<FieldPricingRule> rules =
                 fieldPricingRuleRepository
@@ -152,30 +169,19 @@ public class PricingServiceImpl implements PricingService {
                                 FieldPricingRule::getStartTime
                         )
                 )
+                .map(rule ->
+                        new SlotPricing(
+                                rule.getPricePerSlot(),
+                                getSlotDuration(rule.getSlotDuration())
+                        )
+                )
                 .orElseThrow(() ->
                         new IllegalArgumentException(
                                 "Pricing rule not found for booking time"
                         ));
     }
 
-    private DayOfWeek resolvePricingDay(
-            LocalDateTime dateTime
-    ) {
-
-        if (holidayService.isHoliday(dateTime.toLocalDate())) {
-            return DayOfWeek.SUNDAY;
-        }
-
-        return dateTime.getDayOfWeek();
-    }
-
-    private int getSlotDuration(
-            FieldPricingRule rule
-    ) {
-
-        Integer slotDuration =
-                rule.getSlotDuration();
-
+    private int getSlotDuration(Integer slotDuration) {
         if (slotDuration == null) {
             return DEFAULT_SLOT_DURATION;
         }
@@ -205,6 +211,12 @@ public class PricingServiceImpl implements PricingService {
                     "End time must be after start time"
             );
         }
+    }
+
+    private record SlotPricing(
+            BigDecimal pricePerSlot,
+            int slotDuration
+    ) {
     }
 
     private void validateSlotTime(

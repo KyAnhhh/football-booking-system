@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
+import vn.phankyanh.shopbongda.booking.dto.request.AdminBookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.request.BookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.request.UpdateBookingStatusRequest;
 import vn.phankyanh.shopbongda.booking.dto.response.BookingResponse;
@@ -17,6 +18,11 @@ public interface BookingService {
         BookingResponse createBooking(
                 BookingRequest request,
                 Long userId
+        );
+
+        BookingResponse createBookingForAdmin(
+                AdminBookingRequest request,
+                Long adminId
         );
 
         Page<BookingResponse> getAllBooking(
@@ -53,7 +59,18 @@ public interface BookingService {
 
         BookingResponse updateBookingStatus(
                 Long bookingId,
-                UpdateBookingStatusRequest request
+                UpdateBookingStatusRequest request,
+                Long actorId
+        );
+
+        BookingResponse checkInBooking(
+                Long bookingId,
+                Long actorId
+        );
+
+        BookingResponse checkOutBooking(
+                Long bookingId,
+                Long actorId
         );
 
         void cancelBooking(
