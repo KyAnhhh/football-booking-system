@@ -13,6 +13,7 @@ import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.dto.request.FieldStatusUpdateRequest;
 import vn.phankyanh.shopbongda.field.dto.request.FootballFieldRequest;
 import vn.phankyanh.shopbongda.field.dto.response.AvailableFootballFieldResponse;
+import vn.phankyanh.shopbongda.field.dto.response.FieldSuggestionResponse;
 import vn.phankyanh.shopbongda.field.dto.response.FootballFieldResponse;
 
 public interface FootballFieldService {
@@ -37,6 +38,14 @@ public interface FootballFieldService {
             LocalDate date,
             LocalTime startTime,
             LocalTime endTime
+    );
+
+    FieldSuggestionResponse suggestFields(
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            FieldType fieldType,
+            Long fieldId
     );
 
     FootballFieldResponse getFootballFieldById(Long id);

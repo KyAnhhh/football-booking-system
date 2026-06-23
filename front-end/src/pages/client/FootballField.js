@@ -5,12 +5,13 @@ import {
   CalendarDays,
   Clock,
   MapPin,
+  Sparkles,
   Search,
   ShieldCheck,
   SlidersHorizontal,
   Wrench,
 } from "lucide-react";
-import { getAvailableFields, getFields, getMaintenanceStatus } from "../../services/fieldService";
+import { getAvailableFields, getFieldSuggestions, getFields, getMaintenanceStatus } from "../../services/fieldService";
 import "../../assets/styles/FootballField.css";
 
 const fieldTypes = [
@@ -77,6 +78,7 @@ export default function FootballField() {
   const [pageNo, setPageNo] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [suggestions, setSuggestions] = useState([]);
   const [filters, setFilters] = useState({
     type: "",
     minPrice: "",
@@ -131,14 +133,33 @@ export default function FootballField() {
       setTotalElements(pageMetadata.totalElements);
 
       if (date && slot) {
+        if (content.length === 0) {
+          try {
+            const suggestionData = await getFieldSuggestions({
+              date,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              fieldType: customFilters.type,
+            });
+            setSuggestions(suggestionData?.suggestions || []);
+          } catch (error) {
+            console.error("Load field suggestions failed:", error);
+            setSuggestions([]);
+          }
+        } else {
+          setSuggestions([]);
+        }
         setMaintenanceMap({});
         return;
       }
 
       if (content.length === 0) {
         setMaintenanceMap({});
+        setSuggestions([]);
         return;
       }
+
+      setSuggestions([]);
 
       const maintenanceResults = await Promise.all(
         content.map(async (field) => {
@@ -163,6 +184,7 @@ export default function FootballField() {
       console.error(error);
       setFields([]);
       setMaintenanceMap({});
+      setSuggestions([]);
       setTotalPages(0);
       setTotalElements(0);
     } finally {
@@ -224,6 +246,12 @@ export default function FootballField() {
       : "";
 
     navigate(`/football-fields/${field.id}/detail${query}`);
+  };
+
+  const goToSuggestion = (suggestion) => {
+    navigate(
+      `/football-fields/${suggestion.fieldId}/detail?date=${suggestion.date}&startTime=${suggestion.startTime}&endTime=${suggestion.endTime}`
+    );
   };
 
   return (
@@ -451,6 +479,47 @@ export default function FootballField() {
                 );
               })}
             </div>
+          )}
+
+          {isAvailabilitySearch && !loading && fields.length === 0 && suggestions.length > 0 && (
+            <section className="field-suggestion-section">
+              <div className="field-suggestion-heading">
+                <Sparkles size={20} />
+                <div>
+                  <span>Gợi ý thay thế</span>
+                  <strong>Những sân và khung giờ gần nhất bạn có thể đặt</strong>
+                </div>
+              </div>
+
+              <div className="field-suggestion-grid">
+                {suggestions.map((suggestion) => (
+                  <article
+                    className="field-suggestion-card"
+                    key={`${suggestion.fieldId}-${suggestion.date}-${suggestion.startTime}-${suggestion.endTime}`}
+                  >
+                    <img src={suggestion.imageUrl || "/no-image.png"} alt={suggestion.fieldName} />
+                    <div>
+                      <span className="field-suggestion-type">{suggestion.fieldType}</span>
+                      <h3>{suggestion.fieldName}</h3>
+                      <p>{suggestion.reason}</p>
+                      <div className="field-suggestion-meta">
+                        <span>
+                          {suggestion.startTime} - {suggestion.endTime}
+                        </span>
+                        <strong>{formatMoney(suggestion.price)}</strong>
+                      </div>
+                      <Button
+                        className="football-card-action"
+                        type="button"
+                        onClick={() => goToSuggestion(suggestion)}
+                      >
+                        Chọn gợi ý này
+                      </Button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           )}
 
           {totalPages > 1 && (

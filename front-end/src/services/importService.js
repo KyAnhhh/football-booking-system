@@ -48,6 +48,11 @@ export const IMPORT_TYPES = [
     label: "Giá ngày lễ",
     description: "Import giá riêng cho từng sân trong ngày lễ.",
   },
+  {
+    value: "extra-services",
+    label: "Dịch vụ thêm",
+    description: "Import nước uống, thuê bóng, áo bib và tồn kho dịch vụ.",
+  },
 ];
 
 const handleResponse = async (response) => {

@@ -9,7 +9,8 @@ public enum ImportType {
     FOOTBALL_FIELD_IMAGES("football-field-images"),
     FIELD_PRICING_RULES("field-pricing-rules"),
     HOLIDAYS("holidays"),
-    HOLIDAY_PRICING_RULES("holiday-pricing-rules");
+    HOLIDAY_PRICING_RULES("holiday-pricing-rules"),
+    EXTRA_SERVICES("extra-services");
 
     private final String path;
 

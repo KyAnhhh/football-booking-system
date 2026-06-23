@@ -82,6 +82,26 @@ export const getAvailableFields = async ({
     return await handleResponse(response);
 }
 
+export const getFieldSuggestions = async ({
+    date,
+    startTime,
+    endTime,
+    fieldType,
+    fieldId,
+}) => {
+    const params = new URLSearchParams({
+        date,
+        startTime,
+        endTime,
+    });
+
+    if (fieldType) params.append("fieldType", fieldType);
+    if (fieldId) params.append("fieldId", fieldId);
+
+    const response = await fetch(`${API_URL_PUBLIC}/suggestions?${params.toString()}`);
+    return await handleResponse(response);
+}
+
 export const getFieldById = async (id) => {
     const response = await fetch(`${API_URL_PUBLIC}/${id}`);
     return await handleResponse(response);

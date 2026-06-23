@@ -18,6 +18,8 @@ public interface ExtraServiceRepository
 
     List<ExtraService> findByIsActiveTrue();
 
+    boolean existsByName(String name);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
         SELECT e FROM ExtraService e

@@ -5,10 +5,17 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -16,10 +23,13 @@ import vn.phankyanh.shopbongda.booking.repository.BookingRepository;
 import vn.phankyanh.shopbongda.field.domain.FieldStatus;
 import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
+import vn.phankyanh.shopbongda.field.domain.SuggestionType;
 import vn.phankyanh.shopbongda.field.dto.request.FieldStatusUpdateRequest;
 import vn.phankyanh.shopbongda.field.dto.request.FootballFieldRequest;
 import vn.phankyanh.shopbongda.field.dto.response.AvailableFootballFieldResponse;
+import vn.phankyanh.shopbongda.field.dto.response.FieldSuggestionResponse;
 import vn.phankyanh.shopbongda.field.dto.response.FootballFieldResponse;
+import vn.phankyanh.shopbongda.field.dto.response.SuggestedFieldSlotResponse;
 import vn.phankyanh.shopbongda.field.mapper.FootballFieldMapper;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
 import vn.phankyanh.shopbongda.field.service.FootballFieldService;
@@ -120,6 +130,144 @@ public class FootballFieldServiceImpl implements FootballFieldService {
                 ));
     }
 
+    @Override
+    public FieldSuggestionResponse suggestFields(
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            FieldType fieldType,
+            Long fieldId
+    ) {
+        validateAvailableSearchTime(date, startTime, endTime);
+
+        List<SuggestedFieldSlotResponse> candidates = new ArrayList<>();
+
+        List<FootballField> exactFields = findAvailableFields(
+                date,
+                startTime,
+                endTime,
+                fieldType,
+                20
+        );
+
+        exactFields.forEach(field -> addSuggestion(
+                candidates,
+                field,
+                date,
+                startTime,
+                endTime,
+                SuggestionType.EXACT_MATCH,
+                fieldId,
+                fieldType,
+                startTime,
+                "Sân còn trống đúng khung giờ bạn chọn"
+        ));
+
+        findAvailableFields(date, startTime, endTime, fieldType, 20)
+                .stream()
+                .filter(field -> fieldId == null || !field.getId().equals(fieldId))
+                .forEach(field -> addSuggestion(
+                        candidates,
+                        field,
+                        date,
+                        startTime,
+                        endTime,
+                        SuggestionType.SAME_TIME_ALTERNATIVE_FIELD,
+                        fieldId,
+                        fieldType,
+                        startTime,
+                        "Sân cùng loại còn trống đúng giờ bạn chọn"
+                ));
+
+        if (fieldType != null) {
+            findAvailableFields(date, startTime, endTime, null, 30)
+                    .stream()
+                    .filter(field -> !field.getType().equals(fieldType))
+                    .forEach(field -> addSuggestion(
+                            candidates,
+                            field,
+                            date,
+                            startTime,
+                            endTime,
+                            SuggestionType.DIFFERENT_TYPE_SAME_TIME,
+                            fieldId,
+                            fieldType,
+                            startTime,
+                            "Sân khác loại còn trống đúng giờ bạn chọn"
+                    ));
+        }
+
+        for (LocalTime nearbyStart : buildNearbyStartTimes(date, startTime)) {
+            LocalTime nearbyEnd = nearbyStart.plusMinutes(SLOT_DURATION_MINUTES);
+
+            if (fieldId != null) {
+                findAvailableFields(date, nearbyStart, nearbyEnd, null, 30)
+                        .stream()
+                        .filter(field -> field.getId().equals(fieldId))
+                        .findFirst()
+                        .ifPresent(field -> addSuggestion(
+                                candidates,
+                                field,
+                                date,
+                                nearbyStart,
+                                nearbyEnd,
+                                SuggestionType.SAME_FIELD_NEARBY_TIME,
+                                fieldId,
+                                fieldType,
+                                startTime,
+                                "Chính sân này còn trống ở khung giờ gần nhất"
+                        ));
+            }
+
+            findAvailableFields(date, nearbyStart, nearbyEnd, fieldType, 20)
+                    .forEach(field -> addSuggestion(
+                            candidates,
+                            field,
+                            date,
+                            nearbyStart,
+                            nearbyEnd,
+                            SuggestionType.SAME_TYPE_NEARBY_TIME,
+                            fieldId,
+                            fieldType,
+                            startTime,
+                            "Sân cùng loại còn trống ở khung giờ gần nhất"
+                    ));
+
+            if (fieldType != null) {
+                findAvailableFields(date, nearbyStart, nearbyEnd, null, 30)
+                        .stream()
+                        .filter(field -> !field.getType().equals(fieldType))
+                        .forEach(field -> addSuggestion(
+                                candidates,
+                                field,
+                                date,
+                                nearbyStart,
+                                nearbyEnd,
+                                SuggestionType.DIFFERENT_TYPE_NEARBY_TIME,
+                                fieldId,
+                                fieldType,
+                                startTime,
+                                "Sân khác loại còn trống ở khung giờ gần nhất"
+                        ));
+            }
+        }
+
+        List<SuggestedFieldSlotResponse> suggestions = deduplicateAndRank(candidates)
+                .stream()
+                .limit(10)
+                .toList();
+
+        return FieldSuggestionResponse.builder()
+                .requestedDate(date)
+                .requestedStartTime(startTime)
+                .requestedEndTime(endTime)
+                .requestedFieldId(fieldId)
+                .requestedFieldType(fieldType == null ? null : fieldType.name())
+                .hasExactAvailable(!exactFields.isEmpty())
+                .suggestions(suggestions)
+                .build();
+    }
+
     private void validateAvailableSearchTime(
             LocalDate date,
             LocalTime startTime,
@@ -183,6 +331,177 @@ public class FootballFieldServiceImpl implements FootballFieldService {
                 .slotPrice(slotPrice)
                 .available(true)
                 .build();
+    }
+
+    private List<FootballField> findAvailableFields(
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            FieldType fieldType,
+            int limit
+    ) {
+        LocalDateTime startDateTime = LocalDateTime.of(date, startTime);
+        LocalDateTime endDateTime = LocalDateTime.of(date, endTime);
+        Pageable pageable = PageRequest.of(
+                0,
+                limit,
+                Sort.by("id").ascending()
+        );
+
+        return footballFieldRepository
+                .searchAvailableFootballFields(
+                        null,
+                        FieldStatus.AVAILABLE,
+                        fieldType,
+                        null,
+                        null,
+                        startDateTime,
+                        endDateTime,
+                        pageable
+                )
+                .getContent();
+    }
+
+    private List<LocalTime> buildNearbyStartTimes(
+            LocalDate date,
+            LocalTime requestedStartTime
+    ) {
+        return List.of(-180, -90, 90, 180)
+                .stream()
+                .map(requestedStartTime::plusMinutes)
+                .filter(candidateStart -> !candidateStart.isBefore(OPEN_TIME))
+                .filter(candidateStart -> !candidateStart.plusMinutes(SLOT_DURATION_MINUTES).isAfter(CLOSE_TIME))
+                .filter(candidateStart -> !LocalDateTime.of(date, candidateStart).isBefore(LocalDateTime.now()))
+                .toList();
+    }
+
+    private void addSuggestion(
+            List<SuggestedFieldSlotResponse> candidates,
+            FootballField field,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            SuggestionType type,
+            Long requestedFieldId,
+            FieldType requestedFieldType,
+            LocalTime requestedStartTime,
+            String reason
+    ) {
+        buildSuggestion(
+                field,
+                date,
+                startTime,
+                endTime,
+                type,
+                requestedFieldId,
+                requestedFieldType,
+                requestedStartTime,
+                reason
+        ).ifPresent(candidates::add);
+    }
+
+    private Optional<SuggestedFieldSlotResponse> buildSuggestion(
+            FootballField field,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime,
+            SuggestionType type,
+            Long requestedFieldId,
+            FieldType requestedFieldType,
+            LocalTime requestedStartTime,
+            String reason
+    ) {
+        BigDecimal price;
+        try {
+            price = pricingService.calculatePrice(
+                    field.getId(),
+                    LocalDateTime.of(date, startTime),
+                    LocalDateTime.of(date, endTime)
+            );
+        } catch (RuntimeException exception) {
+            return Optional.empty();
+        }
+
+        return Optional.of(SuggestedFieldSlotResponse.builder()
+                .type(type)
+                .fieldId(field.getId())
+                .fieldName(field.getName())
+                .fieldType(field.getType().name())
+                .imageUrl(field.getImageUrl())
+                .date(date)
+                .startTime(startTime)
+                .endTime(endTime)
+                .price(price)
+                .score(calculateSuggestionScore(
+                        field,
+                        type,
+                        requestedFieldId,
+                        requestedFieldType,
+                        requestedStartTime,
+                        startTime
+                ))
+                .reason(reason)
+                .build());
+    }
+
+    private Integer calculateSuggestionScore(
+            FootballField field,
+            SuggestionType type,
+            Long requestedFieldId,
+            FieldType requestedFieldType,
+            LocalTime requestedStartTime,
+            LocalTime candidateStartTime
+    ) {
+        int score = switch (type) {
+            case EXACT_MATCH -> 100;
+            case SAME_TIME_ALTERNATIVE_FIELD -> 90;
+            case SAME_FIELD_NEARBY_TIME -> 80;
+            case SAME_TYPE_NEARBY_TIME -> 70;
+            case DIFFERENT_TYPE_SAME_TIME -> 50;
+            case DIFFERENT_TYPE_NEARBY_TIME -> 40;
+        };
+
+        if (requestedFieldType != null && field.getType().equals(requestedFieldType)) {
+            score += 10;
+        }
+        if (requestedFieldId != null && field.getId().equals(requestedFieldId)) {
+            score += 10;
+        }
+
+        long timeDistance = Math.abs(Duration.between(requestedStartTime, candidateStartTime).toMinutes());
+        score -= (int) (timeDistance / SLOT_DURATION_MINUTES) * 5;
+
+        return score;
+    }
+
+    private List<SuggestedFieldSlotResponse> deduplicateAndRank(
+            List<SuggestedFieldSlotResponse> candidates
+    ) {
+        Map<String, SuggestedFieldSlotResponse> deduped = new LinkedHashMap<>();
+
+        for (SuggestedFieldSlotResponse candidate : candidates) {
+            String key = candidate.getFieldId()
+                    + "|"
+                    + candidate.getDate()
+                    + "|"
+                    + candidate.getStartTime()
+                    + "|"
+                    + candidate.getEndTime();
+
+            SuggestedFieldSlotResponse existing = deduped.get(key);
+            if (existing == null || candidate.getScore() > existing.getScore()) {
+                deduped.put(key, candidate);
+            }
+        }
+
+        return deduped.values()
+                .stream()
+                .sorted(Comparator
+                        .comparing(SuggestedFieldSlotResponse::getScore).reversed()
+                        .thenComparing(SuggestedFieldSlotResponse::getPrice)
+                        .thenComparing(SuggestedFieldSlotResponse::getStartTime)
+                        .thenComparing(SuggestedFieldSlotResponse::getFieldId))
+                .toList();
     }
 
     @Override

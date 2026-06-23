@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
+import vn.phankyanh.shopbongda.extra.domain.ExtraService;
+import vn.phankyanh.shopbongda.extra.repository.ExtraServiceRepository;
 import vn.phankyanh.shopbongda.field.domain.FieldStatus;
 import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
@@ -60,6 +62,7 @@ public class ImportServiceImpl implements ImportService {
     private final FieldPricingRuleRepository fieldPricingRuleRepository;
     private final HolidayRepository holidayRepository;
     private final HolidayPricingRuleRepository holidayPricingRuleRepository;
+    private final ExtraServiceRepository extraServiceRepository;
 
     @Override
     public String getTemplate(ImportType type) {
@@ -91,6 +94,9 @@ public class ImportServiceImpl implements ImportService {
             case HOLIDAY_PRICING_RULES -> "fieldId,holidayId,startTime,endTime,pricePerSlot,slotDuration,isActive\n"
                     + "1,1,07:00,17:00,400000,90,true\n"
                     + "1,1,17:00,23:45,600000,90,true\n";
+            case EXTRA_SERVICES -> "name,description,price,isActive,trackStock,stockQuantity,remainingQuantity,unit\n"
+                    + "Nuoc suoi Lavie,Chai nuoc 500ml,10000,true,true,100,100,chai\n"
+                    + "Thue bong da,Bong da tieu chuan thi dau,50000,true,true,20,20,qua\n";
         };
     }
 
@@ -151,6 +157,7 @@ public class ImportServiceImpl implements ImportService {
             case FIELD_PRICING_RULES -> importFieldPricingRule(record, rowNumber, result);
             case HOLIDAYS -> importHoliday(record, rowNumber, result);
             case HOLIDAY_PRICING_RULES -> importHolidayPricingRule(record, rowNumber, result);
+            case EXTRA_SERVICES -> importExtraService(record, rowNumber, result);
         };
     }
 
@@ -514,6 +521,67 @@ public class ImportServiceImpl implements ImportService {
                 .build();
 
         return holidayPricingRuleRepository.save(rule).getId();
+    }
+
+    private Long importExtraService(CSVRecord record, int rowNumber, ImportResultResponse result) {
+        String name = value(record, "name");
+        String description = value(record, "description");
+        String priceValue = value(record, "price");
+        String isActiveValue = value(record, "isActive");
+        String trackStockValue = value(record, "trackStock");
+        String stockQuantityValue = value(record, "stockQuantity");
+        String remainingQuantityValue = value(record, "remainingQuantity");
+        String unit = value(record, "unit");
+
+        if (isBlank(name)) {
+            result.getErrors().add(issue(rowNumber, "name", name, "Extra service name is required"));
+            return null;
+        }
+        if (extraServiceRepository.existsByName(name)) {
+            result.getErrors().add(issue(rowNumber, "name", name, "Extra service name already exists"));
+            return null;
+        }
+
+        BigDecimal price = parseDecimal(priceValue, "price");
+        boolean isActive = parseBoolean(isActiveValue, "isActive");
+        boolean trackStock = parseBoolean(trackStockValue, "trackStock");
+        Integer stockQuantity = parseInteger(stockQuantityValue, "stockQuantity");
+        Integer remainingQuantity = parseInteger(remainingQuantityValue, "remainingQuantity");
+
+        if (price.compareTo(BigDecimal.ZERO) <= 0) {
+            result.getErrors().add(issue(rowNumber, "price", priceValue, "Price must be greater than 0"));
+            return null;
+        }
+        if (stockQuantity < 0) {
+            result.getErrors().add(issue(rowNumber, "stockQuantity", stockQuantityValue, "Stock quantity must not be negative"));
+            return null;
+        }
+        if (remainingQuantity < 0) {
+            result.getErrors().add(issue(rowNumber, "remainingQuantity", remainingQuantityValue, "Remaining quantity must not be negative"));
+            return null;
+        }
+        if (trackStock && remainingQuantity > stockQuantity) {
+            result.getErrors().add(issue(rowNumber, "remainingQuantity", remainingQuantityValue, "Remaining quantity cannot exceed stock quantity"));
+            return null;
+        }
+
+        if (!trackStock) {
+            stockQuantity = 0;
+            remainingQuantity = 0;
+        }
+
+        ExtraService extraService = ExtraService.builder()
+                .name(name)
+                .description(description)
+                .price(price)
+                .isActive(isActive)
+                .trackStock(trackStock)
+                .stockQuantity(stockQuantity)
+                .remainingQuantity(remainingQuantity)
+                .unit(unit)
+                .build();
+
+        return extraServiceRepository.save(extraService).getId();
     }
 
     private String value(CSVRecord record, String field) {

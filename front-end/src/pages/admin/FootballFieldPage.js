@@ -16,7 +16,7 @@ export default function FootballFieldPage() {
   const [pageData, setPageData] = useState(null);
 
   const [pageNo, setPageNo] = useState(0);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(10);
 
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState("");

@@ -397,6 +397,111 @@
   font-weight: 800;
 }
 
+.field-suggestion-section {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #dbe4ef;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.field-suggestion-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: #167458;
+}
+
+.field-suggestion-heading span,
+.field-suggestion-heading strong {
+  display: block;
+}
+
+.field-suggestion-heading span {
+  color: #526173;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.field-suggestion-heading strong {
+  color: #122033;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.field-suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.field-suggestion-card {
+  overflow: hidden;
+  border: 1px solid #dbe4ef;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.field-suggestion-card img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  background: #e2e8f0;
+}
+
+.field-suggestion-card > div {
+  padding: 14px;
+}
+
+.field-suggestion-type {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #e8f7f1;
+  color: #115b45;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.field-suggestion-card h3 {
+  margin: 0;
+  color: #122033;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.field-suggestion-card p {
+  min-height: 42px;
+  margin: 8px 0 12px;
+  color: #526173;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.field-suggestion-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #dbe4ef;
+}
+
+.field-suggestion-meta span {
+  color: #25364d;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.field-suggestion-meta strong {
+  color: #167458;
+  font-size: 14px;
+}
+
 .football-pagination {
   display: flex;
   justify-content: center;

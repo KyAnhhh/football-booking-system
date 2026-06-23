@@ -27,6 +27,7 @@ import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.dto.request.FieldStatusUpdateRequest;
 import vn.phankyanh.shopbongda.field.dto.request.FootballFieldRequest;
 import vn.phankyanh.shopbongda.field.dto.response.AvailableFootballFieldResponse;
+import vn.phankyanh.shopbongda.field.dto.response.FieldSuggestionResponse;
 import vn.phankyanh.shopbongda.field.dto.response.FootballFieldResponse;
 import vn.phankyanh.shopbongda.field.dto.response.SlotResponse;
 import vn.phankyanh.shopbongda.field.service.FootballFieldService;
@@ -90,6 +91,31 @@ public class FootballFieldController {
 
         ApiResponse<Page<AvailableFootballFieldResponse>> response = new ApiResponse<>();
         response.setData(result);
+        return response;
+    }
+
+    @GetMapping("/public/fields/suggestions")
+    public ApiResponse<FieldSuggestionResponse> suggestFields(
+        @RequestParam
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        LocalDate date,
+        @RequestParam
+        @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+        LocalTime startTime,
+        @RequestParam
+        @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+        LocalTime endTime,
+        @RequestParam(required = false) FieldType fieldType,
+        @RequestParam(required = false) Long fieldId
+    ) {
+        ApiResponse<FieldSuggestionResponse> response = new ApiResponse<>();
+        response.setData(footballFieldService.suggestFields(
+                date,
+                startTime,
+                endTime,
+                fieldType,
+                fieldId
+        ));
         return response;
     }
     
