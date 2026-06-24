@@ -1,0 +1,136 @@
+@startuml
+title Class Diagram - Ecommerce Domain
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide methods
+
+class User {
+  Long id
+  String username
+  String email
+  String phone
+  Role role
+}
+
+class Product {
+  Long id
+  String name
+  String description
+  Integer discount
+  LocalDateTime createdAt
+  LocalDateTime updatedAt
+}
+
+class Brand {
+  Long id
+  String name
+}
+
+class Category {
+  Long id
+  String name
+}
+
+class Size {
+  Long id
+  String code
+}
+
+class ProductVariant {
+  Long id
+  BigDecimal price
+  Integer stock
+  Integer soldQuantity
+}
+
+class ProductImage {
+  Long id
+  String imageUrl
+  Boolean isPrimary
+}
+
+class Cart {
+  Long id
+}
+
+class CartItem {
+  Long id
+  Integer quantity
+}
+
+class ShippingAddress {
+  Long id
+  String fullName
+  String phone
+  String address
+}
+
+class Order {
+  Long id
+  BigDecimal totalAmount
+  OrderStatus orderStatus
+  PaymentMethod paymentMethod
+  BigDecimal shippingCost
+  LocalDateTime orderDate
+  LocalDateTime deliveryDate
+}
+
+class OrderItem {
+  Long id
+  Long productId
+  String productName
+  String sizeName
+  String imageUrl
+  BigDecimal unitPrice
+  BigDecimal discountAmount
+  BigDecimal finalPrice
+  BigDecimal total
+  Integer quantity
+}
+
+class Payment {
+  Long id
+  PaymentType paymentType
+  PaymentStatus paymentStatus
+  BigDecimal totalAmount
+  PaymentMethod paymentMethod
+  String transactionCode
+}
+
+class Review {
+  Long id
+}
+
+Product "0..*" -- "1" Category : thuộc danh mục
+Product "0..*" -- "0..1" Brand : thuộc thương hiệu
+Product "1" -- "0..*" ProductVariant : biến thể
+Product "1" -- "0..*" ProductImage : hình ảnh
+ProductVariant "0..*" -- "1" Size : kích cỡ
+
+User "1" -- "0..1" Cart : giỏ hàng
+Cart "1" -- "0..*" CartItem : dòng giỏ hàng
+ProductVariant "1" -- "0..*" CartItem : sản phẩm chọn
+
+User "1" -- "0..*" ShippingAddress : địa chỉ giao hàng
+User "1" -- "0..*" Order : đơn hàng
+Order "1" -- "1" ShippingAddress : địa chỉ
+Order "1" -- "0..*" OrderItem : dòng đơn hàng
+ProductVariant "1" -- "0..*" OrderItem : biến thể đã mua
+Order "1" -- "0..1" Payment : thanh toán
+OrderItem "1" -- "0..*" Review : đánh giá sản phẩm
+Product "1" -- "0..*" Review : review
+
+note right of OrderItem
+  OrderItem lưu snapshot:
+  productId, productName, sizeName,
+  imageUrl, unitPrice, discountAmount,
+  finalPrice, total.
+end note
+
+note bottom
+  Diagram chỉ thể hiện các entity ecommerce có trong source.
+  Wishlist có tồn tại nhưng không phải flow checkout chính.
+end note
+
+@enduml

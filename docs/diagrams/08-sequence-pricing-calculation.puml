@@ -1,0 +1,68 @@
+@startuml
+title Sequence Diagram - Tính giá booking
+
+skinparam shadowing false
+autonumber
+
+control "BookingServiceImpl" as BookingService
+control "PricingServiceImpl" as PricingService
+database "HolidayPricingRuleRepository" as HolidayRuleRepo
+database "FieldPricingRuleRepository" as FieldRuleRepo
+control "MembershipService" as MembershipService
+control "VoucherService" as VoucherService
+database "ExtraServiceRepository" as ExtraRepo
+
+BookingService -> PricingService : calculatePrice(fieldId, startTime, endTime)
+PricingService -> PricingService : validateBookingTime(startTime, endTime)
+
+loop current slot từ startTime đến endTime
+  PricingService -> HolidayRuleRepo : findFirstApplicableRule(fieldId, date, slotTime)
+  HolidayRuleRepo --> PricingService : Optional<HolidayPricingRule>
+
+  alt có HolidayPricingRule active
+    PricingService -> PricingService : lấy pricePerSlot + slotDuration từ holiday rule
+  else không có holiday rule
+    PricingService -> FieldRuleRepo : findByFieldIdAndDayOfWeekAndIsActiveTrue(fieldId, dayOfWeek)
+    FieldRuleRepo --> PricingService : List<FieldPricingRule>
+    PricingService -> PricingService : lọc rule chứa slotTime\nstartTime <= slotTime < endTime
+    PricingService -> PricingService : chọn rule có startTime lớn nhất
+  end
+
+  PricingService -> PricingService : total += pricePerSlot
+  PricingService -> PricingService : current += slotDuration
+end
+
+PricingService --> BookingService : fieldPrice
+
+opt có dịch vụ thêm
+  loop từng service trong request
+    BookingService -> ExtraRepo : findByIdForUpdate(serviceId)
+    ExtraRepo --> BookingService : ExtraService
+    BookingService -> BookingService : totalExtra += price * quantity
+  end
+end
+
+BookingService -> BookingService : originalPrice = fieldPrice + extraServicePrice
+BookingService -> MembershipService : applyMembershipDiscount(userId, originalPrice)
+MembershipService --> BookingService : priceAfterMembership
+BookingService -> BookingService : membershipDiscount = originalPrice - priceAfterMembership
+
+opt có voucherCode
+  BookingService -> VoucherService : consumeVoucher(code, priceAfterMembership)
+  VoucherService --> BookingService : finalAmount + discountAmount
+end
+
+BookingService -> BookingService : voucherDiscount = priceAfterMembership - finalPrice
+BookingService -> BookingService : totalPrice = finalPrice
+
+note right of PricingService
+  HolidayPricingRule được ưu tiên trước FieldPricingRule.
+  Nếu không tìm thấy rule nào cho slot, source throw IllegalArgumentException.
+end note
+
+note bottom
+  FootballField.pricePerHour vẫn có trong entity,
+  nhưng flow booking hiện dùng PricingService để tính giá.
+end note
+
+@enduml

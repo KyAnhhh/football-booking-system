@@ -1,0 +1,68 @@
+@startuml
+title Use Case Diagram - Quản trị viên
+
+left to right direction
+skinparam shadowing false
+
+actor "Quản trị viên\nROLE_ADMIN" as ADMIN
+
+rectangle "System Administration" {
+  usecase "Đăng nhập admin" as UC_LOGIN
+  usecase "Xem dashboard" as UC_DASHBOARD
+  usecase "Quản lý người dùng" as UC_USER
+  usecase "Cập nhật role người dùng" as UC_ROLE
+  usecase "Quản lý membership tier" as UC_MEMBERSHIP
+
+  usecase "Quản lý booking" as UC_BOOKING
+  usecase "Xác nhận booking" as UC_CONFIRM
+  usecase "Check-in / Check-out" as UC_CHECK
+  usecase "Quản lý sân bóng" as UC_FIELD
+  usecase "Quản lý bảng giá" as UC_PRICING
+  usecase "Quản lý giá ngày lễ" as UC_HOLIDAY_PRICING
+  usecase "Quản lý bảo trì" as UC_MAINTENANCE
+  usecase "Quản lý voucher" as UC_VOUCHER
+  usecase "Quản lý dịch vụ thêm" as UC_EXTRA
+  usecase "Quản lý ngày lễ" as UC_HOLIDAY
+
+  usecase "Quản lý sản phẩm" as UC_PRODUCT
+  usecase "Quản lý đơn hàng" as UC_ORDER
+  usecase "Quản lý thanh toán" as UC_PAYMENT
+  usecase "Import dữ liệu" as UC_IMPORT
+  usecase "Xem thông báo" as UC_NOTIFICATION
+}
+
+ADMIN --> UC_LOGIN
+ADMIN --> UC_DASHBOARD
+ADMIN --> UC_USER
+ADMIN --> UC_ROLE
+ADMIN --> UC_MEMBERSHIP
+
+ADMIN --> UC_BOOKING
+ADMIN --> UC_CONFIRM
+ADMIN --> UC_CHECK
+ADMIN --> UC_FIELD
+ADMIN --> UC_PRICING
+ADMIN --> UC_HOLIDAY_PRICING
+ADMIN --> UC_MAINTENANCE
+ADMIN --> UC_VOUCHER
+ADMIN --> UC_EXTRA
+ADMIN --> UC_HOLIDAY
+
+ADMIN --> UC_PRODUCT
+ADMIN --> UC_ORDER
+ADMIN --> UC_PAYMENT
+ADMIN --> UC_IMPORT
+ADMIN --> UC_NOTIFICATION
+
+UC_ROLE .> UC_USER : <<extend>>
+UC_CONFIRM .> UC_BOOKING : <<extend>>
+UC_CHECK .> UC_BOOKING : <<extend>>
+UC_HOLIDAY_PRICING .> UC_HOLIDAY : <<include>>
+UC_HOLIDAY_PRICING .> UC_FIELD : <<include>>
+
+legend bottom
+  Admin có quyền cao nhất trong hệ thống.
+  Theo SecurityConfiguration, Admin là actor duy nhất quản lý users và membership tiers.
+endlegend
+
+@enduml

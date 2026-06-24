@@ -51,6 +51,15 @@ export const updateUser = async (id, user) => {
   return await handleResponse(response);
 };
 
+export const updateUserRole = async (id, role) => {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}/role`, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+
+  return await handleResponse(response);
+};
+
 export const deleteUser = async (id) => {
   const headers = {
     "Content-Type": "application/json",

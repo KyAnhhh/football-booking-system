@@ -1,0 +1,71 @@
+@startuml
+title Use Case Diagram - Khách hàng
+
+left to right direction
+skinparam shadowing false
+
+actor "Khách hàng\nROLE_CLIENT" as CLIENT
+
+rectangle "Football Booking System" {
+  usecase "Đăng ký" as UC_REGISTER
+  usecase "Đăng nhập" as UC_LOGIN
+  usecase "Quên / reset mật khẩu" as UC_RESET
+  usecase "Quản lý hồ sơ cá nhân" as UC_PROFILE
+  usecase "Xem thông báo" as UC_NOTIFICATION
+
+  usecase "Xem danh sách sản phẩm" as UC_VIEW_PRODUCT
+  usecase "Xem chi tiết sản phẩm" as UC_PRODUCT_DETAIL
+  usecase "Thêm sản phẩm vào giỏ" as UC_CART
+  usecase "Checkout đơn hàng" as UC_CHECKOUT
+  usecase "Xem đơn hàng của tôi" as UC_MY_ORDERS
+  usecase "Đánh giá sản phẩm" as UC_PRODUCT_REVIEW
+
+  usecase "Xem danh sách sân" as UC_VIEW_FIELD
+  usecase "Tìm sân trống theo ngày giờ" as UC_FIND_FIELD
+  usecase "Xem chi tiết sân" as UC_FIELD_DETAIL
+  usecase "Xem slot sân" as UC_VIEW_SLOT
+  usecase "Chọn dịch vụ thêm" as UC_EXTRA
+  usecase "Nhập voucher" as UC_VOUCHER
+  usecase "Tạo booking" as UC_CREATE_BOOKING
+  usecase "Thanh toán booking" as UC_BOOKING_PAYMENT
+  usecase "Xem booking của tôi" as UC_MY_BOOKINGS
+  usecase "Xem chi tiết booking" as UC_BOOKING_DETAIL
+  usecase "Hủy booking PENDING" as UC_CANCEL_BOOKING
+  usecase "Đánh giá sân" as UC_FIELD_REVIEW
+}
+
+CLIENT --> UC_REGISTER
+CLIENT --> UC_LOGIN
+CLIENT --> UC_RESET
+CLIENT --> UC_PROFILE
+CLIENT --> UC_NOTIFICATION
+
+CLIENT --> UC_VIEW_PRODUCT
+CLIENT --> UC_PRODUCT_DETAIL
+CLIENT --> UC_CART
+CLIENT --> UC_CHECKOUT
+CLIENT --> UC_MY_ORDERS
+CLIENT --> UC_PRODUCT_REVIEW
+
+CLIENT --> UC_VIEW_FIELD
+CLIENT --> UC_FIND_FIELD
+CLIENT --> UC_FIELD_DETAIL
+CLIENT --> UC_VIEW_SLOT
+CLIENT --> UC_CREATE_BOOKING
+CLIENT --> UC_BOOKING_PAYMENT
+CLIENT --> UC_MY_BOOKINGS
+CLIENT --> UC_BOOKING_DETAIL
+CLIENT --> UC_CANCEL_BOOKING
+CLIENT --> UC_FIELD_REVIEW
+
+UC_CREATE_BOOKING .> UC_VIEW_SLOT : <<include>>
+UC_CREATE_BOOKING .> UC_EXTRA : <<extend>>
+UC_CREATE_BOOKING .> UC_VOUCHER : <<extend>>
+UC_FIELD_DETAIL .> UC_FIELD_REVIEW : <<include>>
+
+legend bottom
+  Dựa trên ClientRoutes và các API /api/public, /api/user.
+  Khách hàng chỉ được hủy booking khi booking còn PENDING theo BookingServiceImpl.
+endlegend
+
+@enduml

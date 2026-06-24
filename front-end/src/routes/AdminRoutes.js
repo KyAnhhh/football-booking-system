@@ -23,34 +23,44 @@ import ImportPage from "../pages/admin/ImportPage";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
 
+const ADMIN = ["ADMIN"];
+const ADMIN_MANAGER = ["ADMIN", "MANAGER"];
+const ADMIN_MANAGER_STAFF = ["ADMIN", "MANAGER", "STAFF"];
+
+const allow = (element, roles) => (
+  <ProtectedRoute roles={roles}>
+    {element}
+  </ProtectedRoute>
+);
+
 const AdminRoutes = (
   <Route
     path="/admin/*"
     element={
-      <ProtectedRoute role="admin">
+      <ProtectedRoute roles={["ADMIN", "MANAGER", "STAFF"]}>
         <AdminLayout />
       </ProtectedRoute>
     }
   >
-    <Route index element={<DashboardPage />} />
-    <Route path="users" element={<UsersPage />} />
-    <Route path="products" element={<ProductPage />} />
-    <Route path="brands" element={<BrandPage />} />
-    <Route path="categories" element={<CategoryPage />} />
-    <Route path="orders" element={<OrderPage />} />
-    <Route path="sizes" element={<SizePage />} />
-    <Route path="payments" element={<PaymentPage />} />
-    <Route path="football-fields" element={<FootballFieldPage />} />
-    <Route path="field-calendar" element={<AdminFieldCalendarPage />} />
-    <Route path="bookings" element={<BookingPage />} />
-    <Route path="bookings/:bookingId" element={<AdminBookingDetailPage />} />
-    <Route path="maintenance" element={<MaintenanceManagementPage />} />
-    <Route path="pricing-rules" element={<PricingRulePage />} />
-    <Route path="holiday-pricing-rules" element={<HolidayPricingRulePage />} />
-    <Route path="vouchers" element={<VoucherPage />} />
-    <Route path="extra-services" element={<ExtraServicePage />} />
-    <Route path="holidays" element={<HolidayPage />} />
-    <Route path="imports" element={<ImportPage />} />
+    <Route index element={allow(<DashboardPage />, ADMIN_MANAGER_STAFF)} />
+    <Route path="users" element={allow(<UsersPage />, ADMIN)} />
+    <Route path="products" element={allow(<ProductPage />, ADMIN_MANAGER)} />
+    <Route path="brands" element={allow(<BrandPage />, ADMIN_MANAGER)} />
+    <Route path="categories" element={allow(<CategoryPage />, ADMIN_MANAGER)} />
+    <Route path="orders" element={allow(<OrderPage />, ADMIN_MANAGER_STAFF)} />
+    <Route path="sizes" element={allow(<SizePage />, ADMIN_MANAGER)} />
+    <Route path="payments" element={allow(<PaymentPage />, ADMIN_MANAGER)} />
+    <Route path="football-fields" element={allow(<FootballFieldPage />, ADMIN_MANAGER)} />
+    <Route path="field-calendar" element={allow(<AdminFieldCalendarPage />, ADMIN_MANAGER_STAFF)} />
+    <Route path="bookings" element={allow(<BookingPage />, ADMIN_MANAGER_STAFF)} />
+    <Route path="bookings/:bookingId" element={allow(<AdminBookingDetailPage />, ADMIN_MANAGER_STAFF)} />
+    <Route path="maintenance" element={allow(<MaintenanceManagementPage />, ADMIN_MANAGER)} />
+    <Route path="pricing-rules" element={allow(<PricingRulePage />, ADMIN_MANAGER)} />
+    <Route path="holiday-pricing-rules" element={allow(<HolidayPricingRulePage />, ADMIN_MANAGER)} />
+    <Route path="vouchers" element={allow(<VoucherPage />, ADMIN_MANAGER)} />
+    <Route path="extra-services" element={allow(<ExtraServicePage />, ADMIN_MANAGER)} />
+    <Route path="holidays" element={allow(<HolidayPage />, ADMIN_MANAGER)} />
+    <Route path="imports" element={allow(<ImportPage />, ADMIN_MANAGER)} />
   </Route>
 );
 

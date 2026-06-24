@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "./apiService";
+
 const API_URL = "http://localhost:8080/api/public/dashboard";
 
 const handleResponse = async (response) => {
@@ -11,7 +13,7 @@ const handleResponse = async (response) => {
 };
 
 export const getDashboardSummary = async () => {
-  const response = await fetch(`${API_URL}/summary`, {
+  const response = await fetchWithAuth(`${API_URL}/summary`, {
     method: "GET",
   });
 
@@ -19,7 +21,7 @@ export const getDashboardSummary = async () => {
 };
 
 export const getMonthlyRevenue = async () => {
-  const response = await fetch(`${API_URL}/monthly-revenue`, {
+  const response = await fetchWithAuth(`${API_URL}/monthly-revenue`, {
     method: "GET",
   });
 
@@ -41,7 +43,7 @@ export const getAdminOverview = async ({
   }
 
   const query = params.toString();
-  const response = await fetch(
+  const response = await fetchWithAuth(
     `${API_URL}/admin-overview${query ? `?${query}` : ""}`,
     {
       method: "GET",

@@ -1,33 +1,52 @@
 import { useCallback, useEffect, useState } from "react";
-import { getUsers, createUser, updateUser, deleteUser } from "../../services/userService";
 import { Modal, Button, Form } from "react-bootstrap";
+
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  updateUserRole,
+  deleteUser,
+} from "../../services/userService";
 import "../../assets/styles/UserPage.css";
+
+const roleOptions = [
+  { value: "ROLE_CLIENT", label: "Khách hàng" },
+  { value: "ROLE_STAFF", label: "Nhân viên" },
+  { value: "ROLE_MANAGER", label: "Quản lý" },
+  { value: "ROLE_ADMIN", label: "Quản trị viên" },
+];
+
+const emptyForm = {
+  username: "",
+  email: "",
+  phone: "",
+  password: "",
+  role: "ROLE_CLIENT",
+};
 
 export default function UserPage() {
   const [users, setUsers] = useState([]);
   const [show, setShow] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [form, setForm] = useState({ username: "", email: "", phone: "", password: "" });
-
-  // Paging + Sorting + Search
+  const [form, setForm] = useState(emptyForm);
   const [pageNo, setPageNo] = useState(0);
   const [pageSize] = useState(10);
   const [sortBy, setSortBy] = useState("id");
   const [sortDir, setSortDir] = useState("asc");
   const [search, setSearch] = useState("");
-
   const [pageData, setPageData] = useState(null);
-
-  // modal confirm delete
   const [confirmUser, setConfirmUser] = useState(null);
 
   const loadUsers = useCallback(async () => {
     try {
       const data = await getUsers(pageNo, pageSize, sortBy, sortDir, search);
-      setUsers(data.content);
+      setUsers(data.content || []);
       setPageData(data);
     } catch (err) {
       console.error("Fetch users failed:", err);
+      setUsers([]);
+      setPageData(null);
     }
   }, [pageNo, pageSize, sortBy, sortDir, search]);
 
@@ -35,52 +54,54 @@ export default function UserPage() {
     loadUsers();
   }, [loadUsers]);
 
-  // Sort toggle
   const toggleSort = (field) => {
     if (sortBy === field) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortDir("asc");
+      setSortDir((current) => (current === "asc" ? "desc" : "asc"));
+      return;
     }
+
+    setSortBy(field);
+    setSortDir("asc");
   };
 
-  // Search debounce
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-    setPageNo(0); // reset page
-  };
-
-  // open modal create / edit
   const handleShow = (user = null) => {
-    if (user) {
-      setEditingUser(user);
-      setForm({
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        password: "",
-      });
-    } else {
-      setEditingUser(null);
-      setForm({ username: "", email: "", phone: "", password: "" });
-    }
+    setEditingUser(user);
+    setForm(
+      user
+        ? {
+            username: user.username || "",
+            email: user.email || "",
+            phone: user.phone || "",
+            password: "",
+            role: user.role || "ROLE_CLIENT",
+          }
+        : emptyForm
+    );
     setShow(true);
   };
 
   const handleClose = () => {
     setShow(false);
     setEditingUser(null);
+    setForm(emptyForm);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     try {
       if (editingUser) {
         await updateUser(editingUser.id, form);
+        if (form.role && form.role !== editingUser.role) {
+          await updateUserRole(editingUser.id, form.role);
+        }
       } else {
-        await createUser(form);
+        const createdUser = await createUser(form);
+        if (form.role !== "ROLE_CLIENT" && createdUser?.id) {
+          await updateUserRole(createdUser.id, form.role);
+        }
       }
+
       await loadUsers();
       handleClose();
     } catch (err) {
@@ -88,13 +109,9 @@ export default function UserPage() {
     }
   };
 
-  // delete
-  const handleDeleteClick = (user) => {
-    setConfirmUser(user);
-  };
-
   const confirmDelete = async () => {
     if (!confirmUser) return;
+
     try {
       await deleteUser(confirmUser.id);
       await loadUsers();
@@ -114,7 +131,10 @@ export default function UserPage() {
             type="text"
             placeholder="Tìm theo email..."
             value={search}
-            onChange={handleSearchChange}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPageNo(0);
+            }}
             style={{ width: "250px" }}
           />
 
@@ -131,22 +151,24 @@ export default function UserPage() {
             <th onClick={() => toggleSort("username")}>Tên đăng nhập</th>
             <th onClick={() => toggleSort("phone")}>Số điện thoại</th>
             <th onClick={() => toggleSort("email")}>Email</th>
+            <th>Vai trò</th>
             <th>Thao tác</th>
           </tr>
         </thead>
 
         <tbody>
-          {users.map((u) => (
-            <tr key={u.id}>
-              <td>{u.id}</td>
-              <td>{u.username}</td>
-              <td>{u.phone}</td>
-              <td>{u.email}</td>
+          {users.map((user) => (
+            <tr key={user.id}>
+              <td>{user.id}</td>
+              <td>{user.username}</td>
+              <td>{user.phone}</td>
+              <td>{user.email}</td>
+              <td>{String(user.role || "").replace("ROLE_", "")}</td>
               <td>
-                <Button size="sm" variant="warning" onClick={() => handleShow(u)}>
+                <Button size="sm" variant="warning" onClick={() => handleShow(user)}>
                   Sửa
                 </Button>{" "}
-                <Button size="sm" variant="danger" onClick={() => handleDeleteClick(u)}>
+                <Button size="sm" variant="danger" onClick={() => setConfirmUser(user)}>
                   Xóa
                 </Button>
               </td>
@@ -155,13 +177,9 @@ export default function UserPage() {
         </tbody>
       </table>
 
-      {/* Pagination */}
       {pageData && (
         <div className="pagination-section">
-          <Button
-            disabled={pageNo === 0}
-            onClick={() => setPageNo(pageNo - 1)}
-          >
+          <Button disabled={pageNo === 0} onClick={() => setPageNo(pageNo - 1)}>
             Trước
           </Button>
 
@@ -178,7 +196,6 @@ export default function UserPage() {
         </div>
       )}
 
-      {/* Modal Create / Edit User */}
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>{editingUser ? "Sửa người dùng" : "Thêm người dùng"}</Modal.Title>
@@ -190,7 +207,7 @@ export default function UserPage() {
               <Form.Control
                 type="text"
                 value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                onChange={(event) => setForm({ ...form, username: event.target.value })}
                 required
               />
             </Form.Group>
@@ -200,7 +217,7 @@ export default function UserPage() {
               <Form.Control
                 type="email"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(event) => setForm({ ...form, email: event.target.value })}
                 required
               />
             </Form.Group>
@@ -208,9 +225,9 @@ export default function UserPage() {
             <Form.Group className="mb-3">
               <Form.Label>Số điện thoại</Form.Label>
               <Form.Control
-                type="number"
+                type="text"
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onChange={(event) => setForm({ ...form, phone: event.target.value })}
                 required
               />
             </Form.Group>
@@ -220,9 +237,24 @@ export default function UserPage() {
               <Form.Control
                 type="password"
                 value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
                 placeholder={editingUser ? "Để trống nếu muốn giữ mật khẩu cũ" : ""}
+                required={!editingUser}
               />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Vai trò</Form.Label>
+              <Form.Select
+                value={form.role}
+                onChange={(event) => setForm({ ...form, role: event.target.value })}
+              >
+                {roleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
 
             <Button variant="success" type="submit">
@@ -232,7 +264,6 @@ export default function UserPage() {
         </Modal.Body>
       </Modal>
 
-      {/* Modal Confirm Delete */}
       <Modal show={!!confirmUser} onHide={() => setConfirmUser(null)}>
         <Modal.Header closeButton>
           <Modal.Title>Xác nhận xóa</Modal.Title>

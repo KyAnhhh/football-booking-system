@@ -1,0 +1,72 @@
+@startuml
+title Class Diagram - Pricing Domain
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide methods
+
+class FootballField {
+  Long id
+  String name
+  FieldType type
+  BigDecimal pricePerHour
+  FieldStatus status
+}
+
+class FieldPricingRule {
+  Long id
+  DayOfWeek dayOfWeek
+  LocalTime startTime
+  LocalTime endTime
+  BigDecimal pricePerSlot
+  Integer slotDuration
+  Boolean isActive
+}
+
+class Holiday {
+  Long id
+  String name
+  LocalDate holidayDate
+  String description
+  Boolean isActive
+}
+
+class HolidayPricingRule {
+  Long id
+  LocalTime startTime
+  LocalTime endTime
+  BigDecimal pricePerSlot
+  Integer slotDuration
+  Boolean isActive
+  LocalDateTime createdAt
+  LocalDateTime updatedAt
+}
+
+class PricingServiceImpl {
+  +calculatePrice(fieldId, startTime, endTime)
+  +calculateSlotPrice(fieldId, slotStartTime)
+  +calculatePriceForSlots(fieldId, slotStartTimes)
+  +generateSlotStartTimes(startTime, endTime, slotDurationMinutes)
+}
+
+FootballField "1" -- "0..*" FieldPricingRule : giá theo thứ
+FootballField "1" -- "0..*" HolidayPricingRule : giá ngày lễ
+Holiday "1" -- "0..*" HolidayPricingRule : ngày lễ
+
+PricingServiceImpl ..> HolidayPricingRule : ưu tiên tìm trước
+PricingServiceImpl ..> FieldPricingRule : fallback theo DayOfWeek
+
+note right of PricingServiceImpl
+  Logic hiện tại trong source:
+  1. Duyệt từng slot từ startTime đến endTime.
+  2. Tìm HolidayPricingRule theo fieldId, ngày lễ, slotTime.
+  3. Nếu không có, tìm FieldPricingRule theo DayOfWeek.
+  4. Cộng pricePerSlot theo slotDuration của rule.
+end note
+
+note bottom of FootballField
+  pricePerHour vẫn tồn tại trong FootballField,
+  nhưng flow booking hiện tính bằng PricingService.
+end note
+
+@enduml

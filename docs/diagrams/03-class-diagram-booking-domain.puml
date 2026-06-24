@@ -1,0 +1,164 @@
+@startuml
+title Class Diagram - Booking Domain
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide methods
+
+class User {
+  Long id
+  String username
+  String email
+  String phone
+  Role role
+  Integer loyaltyPoints
+}
+
+class FootballField {
+  Long id
+  String name
+  FieldType type
+  BigDecimal pricePerHour
+  FieldStatus status
+  String address
+}
+
+class Maintenance {
+  Long id
+  Long fieldId
+  LocalDateTime startTime
+  LocalDateTime endTime
+  String reason
+  String description
+  LocalDateTime createdAt
+  LocalDateTime updatedAt
+}
+
+class Booking {
+  Long id
+  LocalDateTime startTime
+  LocalDateTime endTime
+  BigDecimal originalPrice
+  BigDecimal extraServicePrice
+  BigDecimal membershipDiscount
+  BigDecimal voucherDiscount
+  String voucherCode
+  BigDecimal totalPrice
+  BookingStatus status
+  String contactPhone
+  String note
+  LocalDateTime createdAt
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+class Payment {
+  Long id
+  PaymentType paymentType
+  PaymentStatus paymentStatus
+  BigDecimal totalAmount
+  PaymentMethod paymentMethod
+  String transactionCode
+  LocalDateTime paymentDate
+}
+
+class ExtraService {
+  Long id
+  String name
+  BigDecimal price
+  Boolean isActive
+  Boolean trackStock
+  Integer stockQuantity
+  Integer remainingQuantity
+  String unit
+}
+
+class Voucher {
+  Long id
+  String code
+  String description
+  DiscountType discountType
+  BigDecimal discountValue
+  Integer quantity
+  Boolean isActive
+  LocalDateTime startDate
+  LocalDateTime endDate
+}
+
+class BookingExtraService {
+  Long id
+  Integer quantity
+  BigDecimal unitPrice
+  BigDecimal totalPrice
+  Boolean stockDeducted
+  Boolean stockReturned
+}
+
+class VoucherUsage {
+  Long id
+  Long voucherId
+  Long bookingId
+  Long userId
+  String voucherCode
+  BigDecimal discountAmount
+  Boolean isRefunded
+  LocalDateTime usedAt
+  LocalDateTime refundedAt
+}
+
+class BookingReview {
+  Long id
+}
+
+class BookingStatusHistory {
+  Long id
+  BookingStatus oldStatus
+  BookingStatus newStatus
+  String changedByName
+  String changedByRole
+  String note
+  LocalDateTime createdAt
+}
+
+User "1" -- "0..*" Booking : tạo
+FootballField "1" -- "0..*" Booking : được đặt
+FootballField "1" -- "0..*" Maintenance : lịch bảo trì
+Booking "1" -- "1" Payment : payment
+Booking "1" -- "0..*" BookingExtraService : dịch vụ thêm
+ExtraService "1" -- "0..*" BookingExtraService : được chọn
+Booking "1" -- "0..1" BookingReview : đánh giá
+Booking "1" -- "0..*" BookingStatusHistory : lịch sử trạng thái
+User "0..1" -- "0..*" BookingStatusHistory : người đổi trạng thái
+Voucher "1" -- "0..*" VoucherUsage : sử dụng
+Booking "1" -- "0..1" VoucherUsage : voucher trong booking
+User "1" -- "0..*" VoucherUsage : người dùng voucher
+
+Booking --> BookingStatus
+
+note right of VoucherUsage
+  Source hiện vẫn giữ voucherId, bookingId, userId
+  để phục vụ service hiện tại.
+  Đồng thời đã có @ManyToOne read-only:
+  voucher, booking, user.
+end note
+
+note right of Maintenance
+  Source hiện vẫn giữ fieldId
+  và đã thêm @ManyToOne read-only tới FootballField.
+end note
+
+note bottom of Booking
+  Booking có breakdown giá:
+  originalPrice, extraServicePrice,
+  membershipDiscount, voucherDiscount,
+  totalPrice.
+end note
+
+@enduml

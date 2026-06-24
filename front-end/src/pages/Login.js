@@ -5,6 +5,11 @@ import "../assets/styles/Login.css";
 import { login } from "../services/authService";
 import { jwtDecode } from "jwt-decode";
 
+const normalizeRole = (value) =>
+  String(value || "")
+    .replace("ROLE_", "")
+    .toUpperCase();
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,9 +32,10 @@ export default function Login() {
         sessionStorage.setItem("accessToken", data.accessToken);
         sessionStorage.setItem("refreshToken", data.refreshToken);
         const decoded = jwtDecode(data.accessToken);
+        const role = normalizeRole(decoded.role);
 
         setTimeout(() => {
-          navigate(decoded.role && decoded.role.includes("ADMIN") ? "/admin" : "/");
+          navigate(["ADMIN", "MANAGER", "STAFF"].includes(role) ? "/admin" : "/");
         }, 800);
       } else {
         swal({ text: data.message || "Email hoặc mật khẩu không đúng.", icon: "error" });

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import {
   BsSpeedometer2,
   BsPeople,
@@ -26,38 +27,51 @@ import "../assets/styles/AdminLayout.css";
 import "../assets/styles/AdminManager.css";
 import NotificationBell from "../components/notification/NotificationBell";
 
+const normalizeRole = (value) =>
+  String(value || "")
+    .replace("ROLE_", "")
+    .toUpperCase();
+
 const navItems = [
-  { to: "/admin/imports", label: "Import dữ liệu", icon: BsUpload },
-  { to: "/admin", label: "Tổng quan", icon: BsSpeedometer2, end: true },
-  { to: "/admin/bookings", label: "Đặt sân", icon: BsReceipt },
-  { to: "/admin/field-calendar", label: "Lịch sân", icon: BsCalendarWeek },
-  { to: "/admin/football-fields", label: "Sân bóng", icon: BsHouseDoor },
-  { to: "/admin/pricing-rules", label: "Bảng giá", icon: BsCashCoin },
-  { to: "/admin/holiday-pricing-rules", label: "Giá ngày lễ", icon: BsCalendar2Plus },
-  { to: "/admin/maintenance", label: "Bảo trì", icon: BsTools },
-  { to: "/admin/vouchers", label: "Voucher", icon: BsTicketPerforated },
-  { to: "/admin/extra-services", label: "Dịch vụ thêm", icon: BsPlusSquare },
-  { to: "/admin/holidays", label: "Ngày lễ", icon: BsCalendarEvent },
-  { to: "/admin/products", label: "Sản phẩm", icon: BsBoxSeam },
-  { to: "/admin/brands", label: "Thương hiệu", icon: BsTags },
-  { to: "/admin/categories", label: "Danh mục", icon: BsGrid },
-  { to: "/admin/sizes", label: "Kích cỡ", icon: BsRulers },
-  { to: "/admin/orders", label: "Đơn hàng", icon: BsReceipt },
-  { to: "/admin/payments", label: "Thanh toán", icon: BsReceipt },
-  { to: "/admin/users", label: "Người dùng", icon: BsPeople },
+  { to: "/admin/imports", label: "Import dữ liệu", icon: BsUpload, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin", label: "Tổng quan", icon: BsSpeedometer2, end: true, roles: ["ADMIN", "MANAGER", "STAFF"] },
+  { to: "/admin/bookings", label: "Đặt sân", icon: BsReceipt, roles: ["ADMIN", "MANAGER", "STAFF"] },
+  { to: "/admin/field-calendar", label: "Lịch sân", icon: BsCalendarWeek, roles: ["ADMIN", "MANAGER", "STAFF"] },
+  { to: "/admin/football-fields", label: "Sân bóng", icon: BsHouseDoor, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/pricing-rules", label: "Bảng giá", icon: BsCashCoin, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/holiday-pricing-rules", label: "Giá ngày lễ", icon: BsCalendar2Plus, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/maintenance", label: "Bảo trì", icon: BsTools, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/vouchers", label: "Voucher", icon: BsTicketPerforated, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/extra-services", label: "Dịch vụ thêm", icon: BsPlusSquare, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/holidays", label: "Ngày lễ", icon: BsCalendarEvent, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/products", label: "Sản phẩm", icon: BsBoxSeam, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/brands", label: "Thương hiệu", icon: BsTags, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/categories", label: "Danh mục", icon: BsGrid, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/sizes", label: "Kích cỡ", icon: BsRulers, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/orders", label: "Đơn hàng", icon: BsReceipt, roles: ["ADMIN", "MANAGER", "STAFF"] },
+  { to: "/admin/payments", label: "Thanh toán", icon: BsReceipt, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/users", label: "Người dùng", icon: BsPeople, roles: ["ADMIN"] },
 ];
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const toggleSidebar = () => {
-    setCollapsed((current) => !current);
-  };
+  const currentRole = useMemo(() => {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return "";
 
-  const toggleUserMenu = () => {
-    setUserMenuOpen((current) => !current);
-  };
+    try {
+      return normalizeRole(jwtDecode(token).role);
+    } catch {
+      return "";
+    }
+  }, []);
+
+  const visibleNavItems = useMemo(
+    () => navItems.filter((item) => item.roles.includes(currentRole)),
+    [currentRole]
+  );
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -74,7 +88,7 @@ export default function AdminLayout() {
             className="toggle-btn"
             type="button"
             aria-label="Thu gọn menu quản trị"
-            onClick={toggleSidebar}
+            onClick={() => setCollapsed((current) => !current)}
           >
             <BsList />
           </button>
@@ -84,7 +98,7 @@ export default function AdminLayout() {
 
         <nav className="admin-nav" aria-label="Điều hướng quản trị">
           <ul>
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               return (
                 <li key={item.to}>
@@ -106,7 +120,7 @@ export default function AdminLayout() {
               className="toggle-btn mobile"
               type="button"
               aria-label="Mở menu quản trị"
-              onClick={toggleSidebar}
+              onClick={() => setCollapsed((current) => !current)}
             >
               <BsList />
             </button>
@@ -114,31 +128,31 @@ export default function AdminLayout() {
           </div>
 
           <div className="admin-navbar-actions">
-          <NotificationBell context="admin" />
+            <NotificationBell context="admin" />
 
-          <div className={`admin-user-menu ${userMenuOpen ? "show" : ""}`}>
-            <button
-              className="admin-user-trigger"
-              type="button"
-              aria-expanded={userMenuOpen}
-              onClick={toggleUserMenu}
-            >
-              <BsPersonCircle />
-              <span>Admin</span>
-            </button>
-
-            <div className="admin-user-dropdown">
-              <NavLink to="/">
-                <BsHouseDoor />
-                <span>Về trang khách</span>
-              </NavLink>
-
-              <button type="button" onClick={handleLogout}>
-                <BsBoxArrowRight />
-                <span>Đăng xuất</span>
+            <div className={`admin-user-menu ${userMenuOpen ? "show" : ""}`}>
+              <button
+                className="admin-user-trigger"
+                type="button"
+                aria-expanded={userMenuOpen}
+                onClick={() => setUserMenuOpen((current) => !current)}
+              >
+                <BsPersonCircle />
+                <span>{currentRole || "Admin"}</span>
               </button>
+
+              <div className="admin-user-dropdown">
+                <NavLink to="/">
+                  <BsHouseDoor />
+                  <span>Về trang khách</span>
+                </NavLink>
+
+                <button type="button" onClick={handleLogout}>
+                  <BsBoxArrowRight />
+                  <span>Đăng xuất</span>
+                </button>
+              </div>
             </div>
-          </div>
           </div>
         </header>
 

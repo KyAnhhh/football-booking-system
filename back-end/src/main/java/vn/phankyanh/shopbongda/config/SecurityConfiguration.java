@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -59,9 +60,32 @@ public class SecurityConfiguration {
                 .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/public/dashboard/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
                         .requestMatchers(public_list).permitAll()
+                        .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/membership-tiers/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/imports/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/bookings/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                        .requestMatchers("/api/admin/calendar/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                        .requestMatchers("/api/admin/orders/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/extra-services/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                        .requestMatchers("/api/admin/extra-services/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/payments/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/fields/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/maintenance/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/pricing-rules/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/holiday-pricing-rules/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/holidays/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/vouchers/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/products/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/product-images/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/product-variants/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/brands/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/categories/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/sizes/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/reviews/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(admin_list).hasRole("ADMIN")
-                        .requestMatchers(user_list).hasAnyRole("CLIENT", "ADMIN")
+                        .requestMatchers(user_list).hasAnyRole("CLIENT", "ADMIN", "MANAGER", "STAFF")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

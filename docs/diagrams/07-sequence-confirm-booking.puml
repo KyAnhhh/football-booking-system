@@ -1,0 +1,60 @@
+@startuml
+title Sequence Diagram - Xác nhận booking
+
+skinparam shadowing false
+autonumber
+
+actor "Admin / Staff / Manager" as ADMIN
+boundary "AdminBookingController" as CTRL
+control "BookingServiceImpl" as BOOKING_SERVICE
+database "BookingRepository" as BOOKING_REPO
+entity "Booking" as BOOKING
+entity "Payment" as PAYMENT
+control "MembershipService" as MEMBERSHIP_SERVICE
+control "NotificationService" as NOTIFICATION_SERVICE
+control "BookingStatusHistoryService" as HISTORY_SERVICE
+
+ADMIN -> CTRL : PATCH /api/admin/bookings/{id}/confirm
+CTRL -> BOOKING_SERVICE : confirmBooking(bookingId)
+
+BOOKING_SERVICE -> BOOKING_REPO : findByIdForUpdate(bookingId)
+BOOKING_REPO --> BOOKING_SERVICE : Booking
+
+BOOKING_SERVICE -> BOOKING : getStatus()
+
+alt Status khác PENDING
+  BOOKING_SERVICE --> CTRL : IllegalStateException\nBooking already processed
+  CTRL --> ADMIN : Trả lỗi
+else Status là PENDING
+  BOOKING_SERVICE -> BOOKING : getPayment()
+
+  alt Payment không tồn tại
+    BOOKING_SERVICE --> CTRL : RuntimeException\nPayment not found
+    CTRL --> ADMIN : Trả lỗi
+  else Payment tồn tại
+    BOOKING_SERVICE -> PAYMENT : setPaymentStatus(PAID)
+    BOOKING_SERVICE -> PAYMENT : setPaymentDate(now)
+    BOOKING_SERVICE -> MEMBERSHIP_SERVICE : addPoints(userId, totalPrice)
+    BOOKING_SERVICE -> BOOKING : setStatus(CONFIRMED)
+    BOOKING_SERVICE -> BOOKING_REPO : save(booking)
+    BOOKING_REPO --> BOOKING_SERVICE : updatedBooking
+    BOOKING_SERVICE -> NOTIFICATION_SERVICE : notifyUserBookingStatusChanged(updatedBooking, previousStatus)
+    BOOKING_SERVICE -> HISTORY_SERVICE : record PENDING sang CONFIRMED
+    BOOKING_SERVICE --> CTRL : void
+    CTRL --> ADMIN : ApiResponse void
+  end
+end
+
+note right of BOOKING_SERVICE
+  Source còn có updateBookingStatus(...).
+  Khi newStatus = CONFIRMED, method này cũng gọi confirmPendingBooking().
+  Vì vậy payment và membership point dùng chung logic xác nhận.
+end note
+
+legend bottom
+  EmailService được gọi trong updateBookingStatus().
+  confirmBooking() trực tiếp hiện gửi notification và history,
+  nhưng không gọi email trong method confirmBooking().
+endlegend
+
+@enduml

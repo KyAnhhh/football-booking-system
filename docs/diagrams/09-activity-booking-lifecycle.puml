@@ -1,0 +1,92 @@
+@startuml
+title Activity Diagram - Vòng đời booking
+
+skinparam shadowing false
+
+start
+:Khách hàng hoặc Admin tạo booking;
+:Validate request, thời gian, user và sân;
+:Check field status;
+:Check maintenance;
+:Check booking conflict;
+:Tính giá và tạo Payment UNPAID;
+:Lưu Booking với status PENDING;
+:Ghi BookingStatusHistory tạo PENDING;
+
+if (Booking được xác nhận?) then (Có)
+  :Admin / Staff / Manager confirm;
+
+  if (Status hiện tại là PENDING?) then (Có)
+    :Payment chuyển PAID;
+    :paymentDate = now;
+    :MembershipService.addPoints();
+    :Booking chuyển CONFIRMED;
+    :Gửi notification;
+    :Ghi history PENDING sang CONFIRMED;
+
+    if (Khách check-in?) then (Có)
+      :Booking chuyển IN_PROGRESS;
+      :Ghi history CONFIRMED sang IN_PROGRESS;
+
+      if (Khách check-out?) then (Có)
+        :Booking chuyển COMPLETED;
+        :Ghi history IN_PROGRESS sang COMPLETED;
+        stop
+      else (Chưa)
+        :Booking vẫn IN_PROGRESS;
+        stop
+      endif
+    else (Chưa)
+      if (Admin hủy booking?) then (Có)
+        :Booking chuyển CANCELLED;
+        :Hoàn tồn kho extra nếu đã trừ;
+        :Ghi history CONFIRMED sang CANCELLED;
+        stop
+      else (Chờ xử lý)
+        :Booking vẫn CONFIRMED;
+        stop
+      endif
+    endif
+  else (Không)
+    :Từ chối confirm vì booking đã được xử lý;
+    stop
+  endif
+else (Không)
+  if (Khách hủy booking?) then (Có)
+    if (Status là PENDING và chưa qua giờ?) then (Có)
+      :Payment UNPAID chuyển FAILED;
+      :Refund voucher cho booking;
+      :Hoàn tồn kho extra;
+      :Booking chuyển CANCELLED;
+      :Ghi history PENDING sang CANCELLED;
+      stop
+    else (Không)
+      :Từ chối hủy;
+      stop
+    endif
+  else (Không)
+    if (Admin set EXPIRED?) then (Có)
+      :Payment UNPAID chuyển FAILED;
+      :Refund voucher cho booking;
+      :Hoàn tồn kho extra;
+      :Booking chuyển EXPIRED;
+      :Ghi history PENDING sang EXPIRED;
+      stop
+    else (Tiếp tục chờ)
+      :Booking vẫn PENDING;
+      stop
+    endif
+  endif
+endif
+
+legend right
+  Status có trong source:
+  PENDING, CONFIRMED, CANCELLED,
+  IN_PROGRESS, COMPLETED, EXPIRED.
+
+  Source hiện chỉ cho khách tự hủy booking PENDING.
+  Cancel/refund tiền thực tế chưa thấy module refund payment riêng.
+  Code hiện xử lý FAILED payment khi PENDING unpaid bị hủy hoặc expired.
+endlegend
+
+@enduml

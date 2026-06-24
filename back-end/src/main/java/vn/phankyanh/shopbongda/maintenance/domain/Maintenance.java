@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import vn.phankyanh.shopbongda.field.domain.FootballField;
+
 @Entity
 @Table(name = "maintenances")
 @Getter
@@ -20,6 +22,10 @@ public class Maintenance {
 
     @Column(name = "field_id", nullable = false)
     private Long fieldId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "field_id", insertable = false, updatable = false)
+    private FootballField field;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
