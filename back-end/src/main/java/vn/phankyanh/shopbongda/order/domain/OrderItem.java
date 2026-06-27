@@ -95,6 +95,17 @@ public class OrderItem {
     @Min(1)
     private Integer quantity;
 
+    @Builder.Default
+    private Boolean stockDeducted = false;
+
+    @Builder.Default
+    private Boolean stockReserved = false;
+
+    @Builder.Default
+    private Boolean stockReturned = false;
+
+    private Long inventoryReservationId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

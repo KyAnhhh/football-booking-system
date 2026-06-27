@@ -16,6 +16,10 @@ database "ExtraServiceRepository" as EXTRA_REPO
 control "MembershipService" as MEMBERSHIP_SERVICE
 control "VoucherService" as VOUCHER_SERVICE
 database "BookingExtraServiceRepository" as BOOKING_EXTRA_REPO
+control "InventoryService" as INVENTORY_SERVICE
+database "InventoryStockRepository" as INVENTORY_STOCK_REPO
+database "InventoryTransactionRepository" as INVENTORY_TX_REPO
+database "InventoryReservationRepository" as INVENTORY_RESERVATION_REPO
 control "NotificationService" as NOTIFICATION_SERVICE
 control "BookingStatusHistoryService" as HISTORY_SERVICE
 entity "Payment" as PAYMENT
@@ -52,7 +56,12 @@ else Sân khả dụng
       BOOKING_SERVICE -> EXTRA_REPO : findByIdForUpdate(serviceId)
       EXTRA_REPO --> BOOKING_SERVICE : ExtraService
       BOOKING_SERVICE -> BOOKING_SERVICE : Validate active và quantity
-      BOOKING_SERVICE -> BOOKING_SERVICE : Trừ remainingQuantity nếu trackStock=true
+      opt trackStock=true và có inventoryItemId
+        BOOKING_SERVICE -> INVENTORY_SERVICE : getStockByItemId(inventoryItemId)
+        INVENTORY_SERVICE --> BOOKING_SERVICE : availableQuantity
+      else Chưa liên kết Inventory
+        BOOKING_SERVICE -> BOOKING_SERVICE : kiểm tra remainingQuantity
+      end
     end
 
     BOOKING_SERVICE -> BOOKING_SERVICE : originalPrice = fieldPrice + extraServicePrice
@@ -73,6 +82,18 @@ else Sân khả dụng
     end
 
     loop Từng dịch vụ thêm đã chọn
+      opt trackStock=true và có inventoryItemId
+        BOOKING_SERVICE -> INVENTORY_SERVICE : reserveStock(itemId, quantity, BOOKING,\nbookingId, bookingExtraId, userId)
+        INVENTORY_SERVICE -> INVENTORY_STOCK_REPO : findByInventoryItemIdForUpdate(itemId)
+        INVENTORY_STOCK_REPO --> INVENTORY_SERVICE : InventoryStock đã khóa
+        INVENTORY_SERVICE -> INVENTORY_STOCK_REPO : save(reservedQuantity + quantity)
+        INVENTORY_SERVICE -> INVENTORY_RESERVATION_REPO : save ACTIVE reservation
+        INVENTORY_SERVICE -> INVENTORY_TX_REPO : save RESERVE transaction
+        INVENTORY_TX_REPO --> INVENTORY_SERVICE : InventoryTransaction
+        INVENTORY_SERVICE --> BOOKING_SERVICE : reservationId + availableQuantity
+      else Chưa liên kết Inventory
+        BOOKING_SERVICE -> BOOKING_SERVICE : trừ remainingQuantity trực tiếp
+      end
       BOOKING_SERVICE -> BOOKING_EXTRA_REPO : save BookingExtraService
     end
 
@@ -84,8 +105,9 @@ else Sân khả dụng
 end
 
 legend bottom
-  Source hiện tại consume voucher và trừ tồn kho extra ngay khi tạo booking.
-  Nếu booking PENDING bị hủy hoặc expired, code có flow hoàn voucher và hoàn tồn kho extra.
+  Booking PENDING chỉ giữ kho bằng reservedQuantity.
+  CONFIRMED mới commit và trừ quantityOnHand.
+  CANCELLED hoặc EXPIRED sẽ release reservation chưa commit.
 endlegend
 
 @enduml

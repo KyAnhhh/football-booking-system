@@ -17,6 +17,7 @@ import {
   QrCode,
   Truck,
 } from "lucide-react";
+import { useCart } from "../../contexts/CartContext";
 
 const phoneRegex = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
 
@@ -306,6 +307,7 @@ export default function Checkout() {
   });
 
   const location = useLocation();
+  const { refreshCartCount } = useCart();
   const checkoutMode = location.state?.mode || "CART";
   const buyNowProduct = location.state?.product || null;
 
@@ -445,6 +447,9 @@ export default function Checkout() {
       }
 
       setOrderId(response.id);
+      if (checkoutMode !== "BUY_NOW") {
+        await refreshCartCount();
+      }
 
       if (paymentMethod === "VIETQR") {
         setShowQR(true);

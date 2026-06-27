@@ -6,6 +6,7 @@ import {
   getAdminExtraServices,
   updateExtraService,
 } from "../../services/extraService";
+import { getInventoryItems } from "../../services/inventoryService";
 import "../../assets/styles/AdminCrudPage.css";
 
 const emptyForm = {
@@ -17,12 +18,15 @@ const emptyForm = {
   stockQuantity: 0,
   remainingQuantity: 0,
   unit: "",
+  inventoryItemId: "",
 };
 
-const formatMoney = (value) => `${Number(value || 0).toLocaleString("vi-VN")} VND`;
+const formatMoney = (value) =>
+  `${Number(value || 0).toLocaleString("vi-VN")} VND`;
 
 export default function ExtraServicePage() {
   const [items, setItems] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -32,9 +36,18 @@ export default function ExtraServicePage() {
     setItems(data || []);
   }, []);
 
+  const loadInventoryItems = useCallback(async () => {
+    const data = await getInventoryItems({
+      page: 0,
+      size: 200,
+      itemType: "EXTRA_SERVICE",
+    });
+    setInventoryItems(data.content || []);
+  }, []);
+
   useEffect(() => {
-    loadItems().catch(console.error);
-  }, [loadItems]);
+    Promise.all([loadItems(), loadInventoryItems()]).catch(console.error);
+  }, [loadItems, loadInventoryItems]);
 
   const openModal = (item = null) => {
     setEditing(item);
@@ -49,6 +62,7 @@ export default function ExtraServicePage() {
             stockQuantity: item.stockQuantity ?? 0,
             remainingQuantity: item.remainingQuantity ?? 0,
             unit: item.unit || "",
+            inventoryItemId: item.inventoryItemId || "",
           }
         : emptyForm
     );
@@ -62,8 +76,14 @@ export default function ExtraServicePage() {
       ...form,
       price: Number(form.price),
       stockQuantity: form.trackStock ? Number(form.stockQuantity || 0) : 0,
-      remainingQuantity: form.trackStock ? Number(form.remainingQuantity || 0) : 0,
+      remainingQuantity: form.trackStock
+        ? Number(form.remainingQuantity || 0)
+        : 0,
       unit: form.unit?.trim() || null,
+      inventoryItemId:
+        form.trackStock && form.inventoryItemId
+          ? Number(form.inventoryItemId)
+          : null,
     };
 
     if (editing) {
@@ -73,7 +93,7 @@ export default function ExtraServicePage() {
     }
 
     setShowModal(false);
-    await loadItems();
+    await Promise.all([loadItems(), loadInventoryItems()]);
   };
 
   const handleDelete = async (id) => {
@@ -100,6 +120,7 @@ export default function ExtraServicePage() {
               <th>Mô tả</th>
               <th>Giá</th>
               <th>Tồn kho</th>
+              <th>Mã kho</th>
               <th>Trạng thái</th>
               <th>Thao tác</th>
             </tr>
@@ -117,24 +138,44 @@ export default function ExtraServicePage() {
                   <td>{formatMoney(item.price)}</td>
                   <td>
                     {item.trackStock ? (
-                      <span className={`admin-crud-badge ${lowStock ? "inactive" : "active"}`}>
-                        Còn {item.remainingQuantity || 0}/{item.stockQuantity || 0} {item.unit || ""}
+                      <span
+                        className={`admin-crud-badge ${
+                          lowStock ? "inactive" : "active"
+                        }`}
+                      >
+                        Còn {item.remainingQuantity || 0}/
+                        {item.stockQuantity || 0} {item.unit || ""}
                       </span>
                     ) : (
-                      <span className="admin-crud-badge active">Không giới hạn</span>
+                      <span className="admin-crud-badge active">
+                        Không giới hạn
+                      </span>
                     )}
                   </td>
+                  <td>{item.inventoryItemId || "-"}</td>
                   <td>
-                    <span className={`admin-crud-badge ${item.isActive ? "active" : "inactive"}`}>
+                    <span
+                      className={`admin-crud-badge ${
+                        item.isActive ? "active" : "inactive"
+                      }`}
+                    >
                       {item.isActive ? "Đang bật" : "Đã tắt"}
                     </span>
                   </td>
                   <td>
                     <div className="admin-crud-row-actions">
-                      <Button size="sm" variant="warning" onClick={() => openModal(item)}>
+                      <Button
+                        size="sm"
+                        variant="warning"
+                        onClick={() => openModal(item)}
+                      >
                         Sửa
                       </Button>
-                      <Button size="sm" variant="danger" onClick={() => handleDelete(item.id)}>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleDelete(item.id)}
+                      >
                         Xóa
                       </Button>
                     </div>
@@ -148,7 +189,9 @@ export default function ExtraServicePage() {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editing ? "Sửa dịch vụ thêm" : "Thêm dịch vụ thêm"}</Modal.Title>
+          <Modal.Title>
+            {editing ? "Sửa dịch vụ thêm" : "Thêm dịch vụ thêm"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
@@ -156,7 +199,9 @@ export default function ExtraServicePage() {
               <Form.Label>Tên dịch vụ</Form.Label>
               <Form.Control
                 value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, name: event.target.value })
+                }
                 required
               />
             </Form.Group>
@@ -165,7 +210,9 @@ export default function ExtraServicePage() {
               <Form.Label>Mô tả</Form.Label>
               <Form.Control
                 value={form.description}
-                onChange={(event) => setForm({ ...form, description: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, description: event.target.value })
+                }
               />
             </Form.Group>
 
@@ -175,7 +222,9 @@ export default function ExtraServicePage() {
                 type="number"
                 min="0"
                 value={form.price}
-                onChange={(event) => setForm({ ...form, price: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, price: event.target.value })
+                }
                 required
               />
             </Form.Group>
@@ -185,7 +234,9 @@ export default function ExtraServicePage() {
               <Form.Control
                 placeholder="chai, bộ, quả, lượt..."
                 value={form.unit}
-                onChange={(event) => setForm({ ...form, unit: event.target.value })}
+                onChange={(event) =>
+                  setForm({ ...form, unit: event.target.value })
+                }
               />
             </Form.Group>
 
@@ -198,51 +249,78 @@ export default function ExtraServicePage() {
                 setForm({
                   ...form,
                   trackStock: event.target.checked,
+                  inventoryItemId: event.target.checked
+                    ? form.inventoryItemId
+                    : "",
                 })
               }
             />
 
             {form.trackStock && (
-              <div className="admin-crud-form-grid">
+              <>
                 <Form.Group className="mb-3">
-                  <Form.Label>Tổng tồn</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={form.stockQuantity}
+                  <Form.Label>Liên kết item kho</Form.Label>
+                  <Form.Select
+                    value={form.inventoryItemId}
                     onChange={(event) =>
                       setForm({
                         ...form,
-                        stockQuantity: event.target.value,
+                        inventoryItemId: event.target.value,
                       })
                     }
-                    required
-                  />
+                  >
+                    <option value="">Tự tạo item kho</option>
+                    {inventoryItems.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.itemCode} - {item.name}
+                      </option>
+                    ))}
+                  </Form.Select>
                 </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>Còn lại</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    value={form.remainingQuantity}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        remainingQuantity: event.target.value,
-                      })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </div>
+                <div className="admin-crud-form-grid">
+                  <Form.Group className="mb-3">
+                    <Form.Label>Tổng tồn</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      value={form.stockQuantity}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          stockQuantity: event.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Còn lại</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      value={form.remainingQuantity}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          remainingQuantity: event.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </div>
+              </>
             )}
 
             <Form.Check
               type="checkbox"
               label="Đang bật"
               checked={form.isActive}
-              onChange={(event) => setForm({ ...form, isActive: event.target.checked })}
+              onChange={(event) =>
+                setForm({ ...form, isActive: event.target.checked })
+              }
             />
 
             <Button className="mt-3" type="submit" variant="success">

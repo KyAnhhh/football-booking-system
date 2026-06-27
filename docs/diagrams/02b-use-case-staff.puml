@@ -42,6 +42,7 @@ UC_CHECK_OUT .> UC_UPDATE_STATUS : <<include>>
 legend bottom
   Dựa trên SecurityConfiguration và AdminRoutes hiện tại.
   Staff được vào dashboard, calendar, booking, booking detail và orders.
+  Staff không được quản lý user, role, membership tier hoặc dữ liệu cấu hình hệ thống.
   Một số quyền Staff hiện vẫn ở mức route, chưa tách sâu theo từng hành động nhỏ.
 endlegend
 

@@ -78,6 +78,7 @@ class ExtraService {
   Integer stockQuantity
   Integer remainingQuantity
   String unit
+  Long inventoryItemId
 }
 
 class Voucher {
@@ -98,7 +99,10 @@ class BookingExtraService {
   BigDecimal unitPrice
   BigDecimal totalPrice
   Boolean stockDeducted
+  Boolean stockReserved
   Boolean stockReturned
+  Long inventoryReservationId
+  Long inventoryTransactionId
 }
 
 class VoucherUsage {
@@ -111,6 +115,35 @@ class VoucherUsage {
   Boolean isRefunded
   LocalDateTime usedAt
   LocalDateTime refundedAt
+}
+
+class InventoryItem {
+  Long id
+  String itemCode
+  InventoryItemType itemType
+}
+
+class InventoryStock {
+  Long id
+  Integer quantityOnHand
+  Integer reservedQuantity
+  Integer availableQuantity
+}
+
+class InventoryTransaction {
+  Long id
+  InventoryTransactionType transactionType
+  Integer quantity
+  Integer beforeQuantity
+  Integer afterQuantity
+  InventoryReferenceType referenceType
+  Long referenceId
+}
+
+class InventoryReservation {
+  Long id
+  Integer quantity
+  InventoryReservationStatus status
 }
 
 class BookingReview {
@@ -141,6 +174,12 @@ Booking "1" -- "0..1" VoucherUsage : voucher trong booking
 User "1" -- "0..*" VoucherUsage : người dùng voucher
 
 Booking --> BookingStatus
+ExtraService "0..*" ..> "0..1" InventoryItem : inventoryItemId
+InventoryItem "1" -- "1" InventoryStock : current stock
+InventoryItem "1" -- "0..*" InventoryTransaction : stock history
+BookingExtraService "0..*" ..> "0..1" InventoryTransaction : inventoryTransactionId
+BookingExtraService "0..*" ..> "0..1" InventoryReservation : inventoryReservationId
+InventoryItem "1" -- "0..*" InventoryReservation : reservations
 
 note right of VoucherUsage
   Source hiện vẫn giữ voucherId, bookingId, userId
@@ -159,6 +198,12 @@ note bottom of Booking
   originalPrice, extraServicePrice,
   membershipDiscount, voucherDiscount,
   totalPrice.
+end note
+
+note bottom of BookingExtraService
+  Khi tạo booking, extra có inventoryItemId sẽ trừ tồn bằng khóa bi quan
+  và lưu inventoryTransactionId. Khi CANCELLED hoặc EXPIRED,
+  stockDeducted/stockReturned bảo đảm hoàn tồn đúng một lần.
 end note
 
 @enduml

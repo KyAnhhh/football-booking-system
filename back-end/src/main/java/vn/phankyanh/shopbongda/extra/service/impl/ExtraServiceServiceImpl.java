@@ -6,6 +6,10 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 
+import vn.phankyanh.shopbongda.inventory.domain.InventoryItemType;
+import vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
+import vn.phankyanh.shopbongda.inventory.service.InventoryService;
 import vn.phankyanh.shopbongda.extra.domain.ExtraService;
 import vn.phankyanh.shopbongda.extra.dto.request.ExtraServiceRequest;
 import vn.phankyanh.shopbongda.extra.dto.response.ExtraServiceResponse;
@@ -21,6 +25,8 @@ public class ExtraServiceServiceImpl
     private final ExtraServiceRepository extraServiceRepository;
 
     private final ExtraServiceMapper extraServiceMapper;
+
+    private final InventoryService inventoryService;
 
     @Override
     public ExtraServiceResponse create(
@@ -55,6 +61,8 @@ public class ExtraServiceServiceImpl
 
         ExtraService saved =
                 extraServiceRepository.save(service);
+
+        ensureInventoryForExtraService(saved);
 
         return extraServiceMapper.toResponse(saved);
     }
@@ -113,6 +121,8 @@ public class ExtraServiceServiceImpl
 
         ExtraService updated =
                 extraServiceRepository.save(service);
+
+        ensureInventoryForExtraService(updated);
 
         return extraServiceMapper.toResponse(updated);
     }
@@ -192,5 +202,56 @@ public class ExtraServiceServiceImpl
                     service.getStockQuantity()
             );
         }
+    }
+
+    private void ensureInventoryForExtraService(
+            ExtraService service
+    ) {
+        if (!Boolean.TRUE.equals(service.getTrackStock())) {
+            return;
+        }
+
+        if (service.getInventoryItemId() == null) {
+            Long inventoryItemId =
+                    inventoryService.createLinkedItem(
+                            "EX-" + service.getId(),
+                            service.getName(),
+                            InventoryItemType.EXTRA_SERVICE,
+                            service.getId(),
+                            service.getUnit(),
+                            service.getRemainingQuantity()
+                    );
+
+            service.setInventoryItemId(inventoryItemId);
+            extraServiceRepository.save(service);
+            return;
+        }
+
+        InventoryStockResponse stock =
+                inventoryService.getStockByItemId(
+                        service.getInventoryItemId()
+                );
+
+        int target = service.getRemainingQuantity() == null
+                ? 0
+                : service.getRemainingQuantity();
+        int delta = target - stock.getQuantityOnHand();
+
+        if (delta == 0) {
+            return;
+        }
+
+        StockAdjustmentRequest request =
+                new StockAdjustmentRequest();
+        request.setInventoryItemId(service.getInventoryItemId());
+        request.setTransactionType(
+                delta > 0
+                        ? vn.phankyanh.shopbongda.inventory.domain.InventoryTransactionType.ADJUSTMENT_INCREASE
+                        : vn.phankyanh.shopbongda.inventory.domain.InventoryTransactionType.ADJUSTMENT_DECREASE
+        );
+        request.setQuantity(Math.abs(delta));
+        request.setNote("Đồng bộ tồn kho từ dịch vụ thêm");
+
+        inventoryService.adjustStock(request, null);
     }
 }

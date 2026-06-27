@@ -19,7 +19,7 @@ public class UserCreateRequest {
     @NotBlank(message = "Phone không được để trống")
     private String phone;
 
-    private final Role role = Role.ROLE_CLIENT;
+    private Role role = Role.ROLE_CLIENT;
 
-    private final String status = "active";
+    private String status = "active";
 }

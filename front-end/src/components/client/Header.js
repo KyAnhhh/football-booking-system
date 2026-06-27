@@ -14,9 +14,11 @@ import {
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+
 import "../../assets/styles/Header.css";
 import { logout } from "../../services/authService";
 import NotificationBell from "../notification/NotificationBell";
+import { useCart } from "../../contexts/CartContext";
 
 const NAV_ITEMS = [
   { label: "Trang chủ", to: "/" },
@@ -33,6 +35,7 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const userMenuRef = useRef(null);
+  const { cartCount, refreshCartCount, clearCartCount } = useCart();
 
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -43,28 +46,40 @@ export default function Header() {
 
     if (!token) {
       setUser(null);
+      clearCartCount();
       return;
     }
 
     try {
-      const decode = jwtDecode(token);
+      const decoded = jwtDecode(token);
 
-      if (decode.exp * 1000 < Date.now()) {
+      if (decoded.exp * 1000 < Date.now()) {
         sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
         setUser(null);
+        clearCartCount();
         return;
       }
 
       setUser({
-        id: decode.id,
-        username: decode.sub,
-        role: decode.role?.replace("ROLE_", ""),
+        id: decoded.id,
+        username: decoded.sub,
+        role: decoded.role?.replace("ROLE_", ""),
       });
     } catch (error) {
       setUser(null);
+      clearCartCount();
     }
-  }, [location.pathname]);
+  }, [location.pathname, clearCartCount]);
+
+  useEffect(() => {
+    if (user) {
+      refreshCartCount();
+      return;
+    }
+
+    clearCartCount();
+  }, [user, location.pathname, refreshCartCount, clearCartCount]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -101,6 +116,7 @@ export default function Header() {
     } finally {
       sessionStorage.removeItem("accessToken");
       sessionStorage.removeItem("refreshToken");
+      clearCartCount();
       setUser(null);
       setUserMenuOpen(false);
       setOpen(false);
@@ -113,6 +129,7 @@ export default function Header() {
   }
 
   const canAccessAdmin = ADMIN_ROLES.includes(user?.role);
+  const displayCartCount = cartCount > 99 ? "99+" : cartCount;
 
   return (
     <header className="fs-header">
@@ -143,6 +160,11 @@ export default function Header() {
         <div className="fs-actions">
           <Link className="fs-icon-btn fs-cart-btn" to="/cart" aria-label="Giỏ hàng">
             <ShoppingCart size={20} strokeWidth={2} />
+            {cartCount > 0 && (
+              <span className="fs-cart-badge" aria-label={`${cartCount} sản phẩm trong giỏ`}>
+                {displayCartCount}
+              </span>
+            )}
           </Link>
 
           {user ? (
@@ -229,6 +251,9 @@ export default function Header() {
         <Link className="fs-mobile-link" to="/cart">
           <ShoppingBag size={18} />
           Giỏ hàng
+          {cartCount > 0 && (
+            <span className="fs-mobile-cart-count">{displayCartCount}</span>
+          )}
         </Link>
 
         {user ? (
@@ -247,7 +272,11 @@ export default function Header() {
                 Quản trị hệ thống
               </Link>
             )}
-            <button className="fs-mobile-link fs-mobile-logout" type="button" onClick={handleLogout}>
+            <button
+              className="fs-mobile-link fs-mobile-logout"
+              type="button"
+              onClick={handleLogout}
+            >
               <LogOut size={18} />
               Đăng xuất
             </button>

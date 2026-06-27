@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getMyCart, removeCartItem } from "../../services/cartService";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../assets/styles/Cart.css";
 import { ShoppingBag, Trash2 } from "lucide-react";
+import { useCart } from "../../contexts/CartContext";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {
@@ -24,22 +25,25 @@ export default function Cart() {
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
   const navigate = useNavigate();
+  const { updateCartCountFromCart, refreshCartCount } = useCart();
 
-  const loadCart = async () => {
+  const loadCart = useCallback(async () => {
     try {
       const data = await getMyCart();
       setCart(data);
+      updateCartCountFromCart(data);
       setSelectedItems([]);
     } catch {
       setCart(null);
+      updateCartCountFromCart(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [updateCartCountFromCart]);
 
   useEffect(() => {
     loadCart();
-  }, []);
+  }, [loadCart]);
 
   const items = useMemo(() => cart?.items || [], [cart]);
 
@@ -92,6 +96,7 @@ export default function Cart() {
 
     await removeCartItem(itemId);
     Swal.fire("Đã xóa", "Sản phẩm đã được xóa khỏi giỏ hàng.", "success");
+    await refreshCartCount();
     loadCart();
   };
 

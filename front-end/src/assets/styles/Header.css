@@ -136,6 +136,30 @@
   transform: translateY(-1px);
 }
 
+.fs-cart-btn {
+  position: relative;
+}
+
+.fs-cart-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.28);
+}
+
 .fs-user-menu {
   position: relative;
 }
@@ -297,6 +321,21 @@
   background: #eff8f2;
   color: #15352a;
   outline: none;
+}
+
+.fs-mobile-cart-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 900;
 }
 
 .fs-mobile-login {

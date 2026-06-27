@@ -71,7 +71,14 @@ export default function BookingPage() {
       try {
         const [fieldData, userData] = await Promise.all([
           getFields({ page: 0, size: 1000 }),
-          getUsers(0, 1000, "id", "asc", ""),
+          getUsers({
+            pageNo: 0,
+            pageSize: 1000,
+            sortBy: "id",
+            sortDir: "asc",
+            role: "ROLE_CLIENT",
+            status: "active",
+          }),
         ]);
         setFields(fieldData?.content || []);
         setUsers(userData?.content || []);

@@ -23,4 +23,6 @@ public class ExtraServiceRequest {
     private Integer remainingQuantity;
 
     private String unit;
+
+    private Long inventoryItemId;
 }

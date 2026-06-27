@@ -34,6 +34,7 @@ const normalizeRole = (value) =>
 
 const navItems = [
   { to: "/admin/imports", label: "Import dữ liệu", icon: BsUpload, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/inventory", label: "Kho", icon: BsBoxSeam, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin", label: "Tổng quan", icon: BsSpeedometer2, end: true, roles: ["ADMIN", "MANAGER", "STAFF"] },
   { to: "/admin/bookings", label: "Đặt sân", icon: BsReceipt, roles: ["ADMIN", "MANAGER", "STAFF"] },
   { to: "/admin/field-calendar", label: "Lịch sân", icon: BsCalendarWeek, roles: ["ADMIN", "MANAGER", "STAFF"] },
@@ -50,7 +51,7 @@ const navItems = [
   { to: "/admin/sizes", label: "Kích cỡ", icon: BsRulers, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin/orders", label: "Đơn hàng", icon: BsReceipt, roles: ["ADMIN", "MANAGER", "STAFF"] },
   { to: "/admin/payments", label: "Thanh toán", icon: BsReceipt, roles: ["ADMIN", "MANAGER"] },
-  { to: "/admin/users", label: "Người dùng", icon: BsPeople, roles: ["ADMIN"] },
+  { to: "/admin/users", label: "Người dùng", icon: BsPeople, roles: ["ADMIN", "MANAGER"] },
 ];
 
 export default function AdminLayout() {

@@ -32,6 +32,12 @@ rectangle "Admin Management" {
   usecase "Quản lý kích cỡ" as UC_SIZE
   usecase "Import dữ liệu" as UC_IMPORT
   usecase "Xem thông báo" as UC_NOTIFICATION
+
+  usecase "Xem danh sách Staff / Client" as UC_USER_LIST
+  usecase "Tạo Staff / Client" as UC_USER_CREATE
+  usecase "Sửa thông tin Staff / Client" as UC_USER_UPDATE
+  usecase "Khóa / mở Staff hoặc Client" as UC_USER_STATUS
+  usecase "Đổi role giữa Staff và Client" as UC_USER_ROLE_LIMITED
 }
 
 MANAGER --> UC_LOGIN
@@ -60,15 +66,28 @@ MANAGER --> UC_SIZE
 MANAGER --> UC_IMPORT
 MANAGER --> UC_NOTIFICATION
 
+MANAGER --> UC_USER_LIST
+MANAGER --> UC_USER_CREATE
+MANAGER --> UC_USER_UPDATE
+MANAGER --> UC_USER_STATUS
+MANAGER --> UC_USER_ROLE_LIMITED
+
 UC_ADMIN_BOOKING .> UC_BOOKING : <<extend>>
 UC_CONFIRM .> UC_BOOKING : <<extend>>
 UC_CHECK .> UC_BOOKING : <<extend>>
 UC_HOLIDAY_PRICING .> UC_HOLIDAY : <<include>>
 UC_HOLIDAY_PRICING .> UC_FIELD : <<include>>
+UC_USER_CREATE .> UC_USER_LIST : <<extend>>
+UC_USER_UPDATE .> UC_USER_LIST : <<extend>>
+UC_USER_STATUS .> UC_USER_LIST : <<extend>>
+UC_USER_ROLE_LIMITED .> UC_USER_LIST : <<extend>>
 
 legend bottom
   Manager tập trung vào vận hành và dữ liệu kinh doanh.
-  Không bao gồm quản lý user/role và membership tier theo SecurityConfiguration hiện tại.
+  Theo code hiện tại, Manager được vào /admin/users.
+  Manager chỉ được quản lý tài khoản ROLE_STAFF và ROLE_CLIENT.
+  Manager không được tạo, khóa, sửa hoặc đổi role của Admin và Manager khác.
+  Manager không quản lý membership tier.
 endlegend
 
 @enduml

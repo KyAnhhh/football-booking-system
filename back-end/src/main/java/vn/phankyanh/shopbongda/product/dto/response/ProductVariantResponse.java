@@ -19,4 +19,5 @@ public class ProductVariantResponse {
     private BigDecimal price;
     private Integer stock;
     private Integer soldQuantity;
+    private Long inventoryItemId;
 }

@@ -65,6 +65,7 @@ UC_FIELD_DETAIL .> UC_FIELD_REVIEW : <<include>>
 
 legend bottom
   Dựa trên ClientRoutes và các API /api/public, /api/user.
+  Khách hàng chỉ được quản lý hồ sơ cá nhân của chính mình.
   Khách hàng chỉ được hủy booking khi booking còn PENDING theo BookingServiceImpl.
 endlegend
 

@@ -4,19 +4,22 @@ title Activity Diagram - Vòng đời booking
 skinparam shadowing false
 
 start
-:Khách hàng hoặc Admin tạo booking;
+:Khách hàng hoặc Admin / Manager / Staff tạo booking;
 :Validate request, thời gian, user và sân;
 :Check field status;
 :Check maintenance;
 :Check booking conflict;
+:Kiểm tra tồn kho cho extra đã liên kết Inventory;
 :Tính giá và tạo Payment UNPAID;
 :Lưu Booking với status PENDING;
+:Khóa InventoryStock, tăng reservedQuantity và tạo reservation ACTIVE;
 :Ghi BookingStatusHistory tạo PENDING;
 
 if (Booking được xác nhận?) then (Có)
-  :Admin / Staff / Manager confirm;
+  :Admin / Manager / Staff confirm;
 
   if (Status hiện tại là PENDING?) then (Có)
+    :Commit reservation và trừ quantityOnHand;
     :Payment chuyển PAID;
     :paymentDate = now;
     :MembershipService.addPoints();
@@ -24,11 +27,11 @@ if (Booking được xác nhận?) then (Có)
     :Gửi notification;
     :Ghi history PENDING sang CONFIRMED;
 
-    if (Khách check-in?) then (Có)
+    if (Nhân viên check-in?) then (Có)
       :Booking chuyển IN_PROGRESS;
       :Ghi history CONFIRMED sang IN_PROGRESS;
 
-      if (Khách check-out?) then (Có)
+      if (Nhân viên check-out?) then (Có)
         :Booking chuyển COMPLETED;
         :Ghi history IN_PROGRESS sang COMPLETED;
         stop
@@ -37,9 +40,10 @@ if (Booking được xác nhận?) then (Có)
         stop
       endif
     else (Chưa)
-      if (Admin hủy booking?) then (Có)
+      if (Admin / Manager / Staff hủy booking?) then (Có)
         :Booking chuyển CANCELLED;
-        :Hoàn tồn kho extra nếu đã trừ;
+        :Release reservation nếu chưa commit;
+        :Nếu đã commit thì hoàn tồn bằng RETURN;
         :Ghi history CONFIRMED sang CANCELLED;
         stop
       else (Chờ xử lý)
@@ -52,11 +56,12 @@ if (Booking được xác nhận?) then (Có)
     stop
   endif
 else (Không)
-  if (Khách hủy booking?) then (Có)
+  if (Khách hàng hủy booking?) then (Có)
     if (Status là PENDING và chưa qua giờ?) then (Có)
       :Payment UNPAID chuyển FAILED;
       :Refund voucher cho booking;
-      :Hoàn tồn kho extra;
+      :Release reservation ACTIVE;
+      :Ghi InventoryTransaction loại RELEASE;
       :Booking chuyển CANCELLED;
       :Ghi history PENDING sang CANCELLED;
       stop
@@ -65,10 +70,11 @@ else (Không)
       stop
     endif
   else (Không)
-    if (Admin set EXPIRED?) then (Có)
+    if (Admin / Manager / Staff set EXPIRED?) then (Có)
       :Payment UNPAID chuyển FAILED;
       :Refund voucher cho booking;
-      :Hoàn tồn kho extra;
+      :Release reservation ACTIVE;
+      :Ghi InventoryTransaction loại RELEASE;
       :Booking chuyển EXPIRED;
       :Ghi history PENDING sang EXPIRED;
       stop
@@ -83,6 +89,12 @@ legend right
   Status có trong source:
   PENDING, CONFIRMED, CANCELLED,
   IN_PROGRESS, COMPLETED, EXPIRED.
+
+  Phân quyền actor hiện tại:
+  Admin: quản lý toàn hệ thống và toàn bộ user.
+  Manager: vận hành nghiệp vụ, chỉ quản lý Staff và Client.
+  Staff: vận hành booking, calendar, order.
+  Client: tạo booking, xem booking của mình, hủy booking PENDING.
 
   Source hiện chỉ cho khách tự hủy booking PENDING.
   Cancel/refund tiền thực tế chưa thấy module refund payment riêng.

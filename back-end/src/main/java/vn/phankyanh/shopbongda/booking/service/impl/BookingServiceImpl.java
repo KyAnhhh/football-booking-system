@@ -29,6 +29,11 @@ import vn.phankyanh.shopbongda.extra.domain.ExtraService;
 import vn.phankyanh.shopbongda.extra.dto.request.BookingExtraServiceRequest;
 import vn.phankyanh.shopbongda.extra.repository.ExtraServiceRepository;
 import vn.phankyanh.shopbongda.extra.repository.BookingExtraServiceRepository;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryTransactionResponse;
+import vn.phankyanh.shopbongda.inventory.domain.InventoryReferenceType;
+import vn.phankyanh.shopbongda.inventory.service.InventoryService;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.dto.response.SlotResponse;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
@@ -62,6 +67,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingExtraServiceRepository bookingExtraServiceRepository;
     private final NotificationService notificationService;
     private final BookingStatusHistoryService bookingStatusHistoryService;
+    private final InventoryService inventoryService;
     
 
     private static final int SLOT_DURATION = 90;
@@ -727,6 +733,8 @@ public class BookingServiceImpl implements BookingService {
                 );
                 }
 
+                commitExtraReservations(booking);
+
                 payment.setPaymentStatus(
                         PaymentStatus.PAID
                 );
@@ -878,11 +886,6 @@ public class BookingServiceImpl implements BookingService {
                                 item.getQuantity()
                         );
 
-                        deductExtraStock(
-                                service,
-                                item.getQuantity()
-                        );
-
                         selectedServices.add(
                                 new SelectedExtraService(
                                         service,
@@ -958,12 +961,43 @@ public class BookingServiceImpl implements BookingService {
                                         .unitPrice(service.getPrice())
                                         .totalPrice(item.totalPrice())
                                         .stockDeducted(
-                                                Boolean.TRUE.equals(
-                                                        service.getTrackStock()
-                                                )
+                                                false
                                         )
+                                        .stockReserved(false)
                                         .stockReturned(false)
                                         .build();
+
+                        bookingService = bookingExtraServiceRepository.save(
+                                bookingService
+                        );
+
+                        if (Boolean.TRUE.equals(service.getTrackStock())) {
+                                if (service.getInventoryItemId() != null) {
+                                        InventoryReservationResponse reservation =
+                                                inventoryService.reserveStock(
+                                                        service.getInventoryItemId(),
+                                                        item.quantity(),
+                                                        InventoryReferenceType.BOOKING,
+                                                        booking.getId(),
+                                                        bookingService.getId(),
+                                                        booking.getUser().getId()
+                                                );
+
+                                        service.setRemainingQuantity(
+                                                reservation.getAvailableQuantity()
+                                        );
+                                        bookingService.setInventoryReservationId(
+                                                reservation.getId()
+                                        );
+                                        bookingService.setStockReserved(true);
+                                } else {
+                                        deductExtraStock(
+                                                service,
+                                                item.quantity()
+                                        );
+                                        bookingService.setStockDeducted(true);
+                                }
+                        }
 
                         BookingExtraService savedService =
                                 bookingExtraServiceRepository.save(
@@ -976,6 +1010,37 @@ public class BookingServiceImpl implements BookingService {
                 return savedServices;
         }
 
+        private void commitExtraReservations(
+                Booking booking
+        ) {
+                List<BookingExtraService> extraServices =
+                        bookingExtraServiceRepository.findByBookingId(
+                                booking.getId()
+                        );
+
+                for (BookingExtraService bookingExtra : extraServices) {
+                        if (!Boolean.TRUE.equals(bookingExtra.getStockReserved())
+                                || bookingExtra.getInventoryReservationId() == null) {
+                                continue;
+                        }
+
+                        InventoryReservationResponse reservation =
+                                inventoryService.commitReservation(
+                                        bookingExtra.getInventoryReservationId(),
+                                        booking.getUser().getId()
+                                );
+
+                        ExtraService service = bookingExtra.getExtraService();
+                        service.setRemainingQuantity(
+                                reservation.getAvailableQuantity()
+                        );
+                        bookingExtra.setStockReserved(false);
+                        bookingExtra.setStockDeducted(true);
+                        bookingExtra.setStockReturned(false);
+                        bookingExtraServiceRepository.save(bookingExtra);
+                }
+        }
+
         private void restoreExtraStockForBooking(
                 Booking booking
         ) {
@@ -986,8 +1051,10 @@ public class BookingServiceImpl implements BookingService {
                         );
 
                 for (BookingExtraService bookingExtra : extraServices) {
-                        if (!Boolean.TRUE.equals(
+                        if ((!Boolean.TRUE.equals(
                                 bookingExtra.getStockDeducted())
+                                && !Boolean.TRUE.equals(
+                                bookingExtra.getStockReserved()))
                                 || Boolean.TRUE.equals(
                                         bookingExtra.getStockReturned())) {
 
@@ -1005,10 +1072,37 @@ public class BookingServiceImpl implements BookingService {
                                                 new RuntimeException(
                                                         "Extra service not found"));
 
-                        service.setRemainingQuantity(
-                                service.getRemainingQuantity()
-                                        + bookingExtra.getQuantity()
-                        );
+                        if (service.getInventoryItemId() != null) {
+                                if (Boolean.TRUE.equals(
+                                        bookingExtra.getStockReserved())) {
+                                        InventoryReservationResponse reservation =
+                                                inventoryService.releaseReservation(
+                                                        bookingExtra.getInventoryReservationId(),
+                                                        booking.getUser().getId()
+                                                );
+                                        service.setRemainingQuantity(
+                                                reservation.getAvailableQuantity()
+                                        );
+                                        bookingExtra.setStockReserved(false);
+                                } else {
+                                        InventoryTransactionResponse transaction =
+                                                inventoryService.returnForBookingExtra(
+                                                        service.getInventoryItemId(),
+                                                        bookingExtra.getQuantity(),
+                                                        booking.getId(),
+                                                        booking.getUser().getId()
+                                                );
+
+                                        service.setRemainingQuantity(
+                                                transaction.getAfterQuantity()
+                                        );
+                                }
+                        } else {
+                                service.setRemainingQuantity(
+                                        service.getRemainingQuantity()
+                                                + bookingExtra.getQuantity()
+                                );
+                        }
 
                         bookingExtra.setStockReturned(true);
                         bookingExtraServiceRepository.save(bookingExtra);
@@ -1029,6 +1123,21 @@ public class BookingServiceImpl implements BookingService {
 
                 if (!Boolean.TRUE.equals(
                         service.getTrackStock())) {
+
+                        return;
+                }
+
+                if (service.getInventoryItemId() != null) {
+                        InventoryStockResponse stock =
+                                inventoryService.getStockByItemId(
+                                        service.getInventoryItemId()
+                                );
+
+                        if (stock.getAvailableQuantity() == null
+                                || stock.getAvailableQuantity() < quantity) {
+                                throw new RuntimeException(
+                                        "Extra service stock is not enough");
+                        }
 
                         return;
                 }

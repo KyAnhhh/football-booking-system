@@ -7,10 +7,18 @@ skinparam shadowing false
 actor "Quản trị viên\nROLE_ADMIN" as ADMIN
 
 rectangle "System Administration" {
+  usecase "Quản lý kho" as UC_INVENTORY
+  usecase "Quản lý item và tồn kho" as UC_INVENTORY_ITEM
+  usecase "Nhập kho và nhà cung cấp" as UC_STOCK_IMPORT
+  usecase "Điều chỉnh và xem lịch sử kho" as UC_STOCK_HISTORY
   usecase "Đăng nhập admin" as UC_LOGIN
   usecase "Xem dashboard" as UC_DASHBOARD
-  usecase "Quản lý người dùng" as UC_USER
+
+  usecase "Quản lý toàn bộ người dùng" as UC_USER
+  usecase "Tạo Admin / Manager / Staff / Client" as UC_CREATE_USER
   usecase "Cập nhật role người dùng" as UC_ROLE
+  usecase "Khóa / mở tài khoản" as UC_STATUS
+  usecase "Xóa tài khoản" as UC_DELETE_USER
   usecase "Quản lý membership tier" as UC_MEMBERSHIP
 
   usecase "Quản lý booking" as UC_BOOKING
@@ -32,9 +40,13 @@ rectangle "System Administration" {
 }
 
 ADMIN --> UC_LOGIN
+ADMIN --> UC_INVENTORY
 ADMIN --> UC_DASHBOARD
 ADMIN --> UC_USER
+ADMIN --> UC_CREATE_USER
 ADMIN --> UC_ROLE
+ADMIN --> UC_STATUS
+ADMIN --> UC_DELETE_USER
 ADMIN --> UC_MEMBERSHIP
 
 ADMIN --> UC_BOOKING
@@ -54,7 +66,13 @@ ADMIN --> UC_PAYMENT
 ADMIN --> UC_IMPORT
 ADMIN --> UC_NOTIFICATION
 
+UC_CREATE_USER .> UC_USER : <<extend>>
+UC_INVENTORY_ITEM .> UC_INVENTORY : <<extend>>
+UC_STOCK_IMPORT .> UC_INVENTORY : <<extend>>
+UC_STOCK_HISTORY .> UC_INVENTORY : <<extend>>
 UC_ROLE .> UC_USER : <<extend>>
+UC_STATUS .> UC_USER : <<extend>>
+UC_DELETE_USER .> UC_USER : <<extend>>
 UC_CONFIRM .> UC_BOOKING : <<extend>>
 UC_CHECK .> UC_BOOKING : <<extend>>
 UC_HOLIDAY_PRICING .> UC_HOLIDAY : <<include>>
@@ -62,7 +80,10 @@ UC_HOLIDAY_PRICING .> UC_FIELD : <<include>>
 
 legend bottom
   Admin có quyền cao nhất trong hệ thống.
-  Theo SecurityConfiguration, Admin là actor duy nhất quản lý users và membership tiers.
+  Theo code hiện tại, Admin quản lý toàn bộ actor:
+  ROLE_ADMIN, ROLE_MANAGER, ROLE_STAFF và ROLE_CLIENT.
+  Admin là actor duy nhất quản lý membership tier.
+  Admin không được tự đổi role, tự khóa hoặc tự xóa tài khoản của chính mình.
 endlegend
 
 @enduml

@@ -63,6 +63,9 @@ public class ProductVariant {
 
     @Builder.Default
     private Integer soldQuantity = 0;
+
+    @Column(name = "inventory_item_id")
+    private Long inventoryItemId;
 }
 
 

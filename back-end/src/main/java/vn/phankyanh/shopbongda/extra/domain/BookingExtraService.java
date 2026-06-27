@@ -42,5 +42,11 @@ public class BookingExtraService {
 
     private Boolean stockDeducted;
 
+    private Boolean stockReserved;
+
     private Boolean stockReturned;
+
+    private Long inventoryReservationId;
+
+    private Long inventoryTransactionId;
 }

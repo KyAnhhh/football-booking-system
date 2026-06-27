@@ -19,11 +19,11 @@ import VoucherPage from "../pages/admin/VoucherPage";
 import ExtraServicePage from "../pages/admin/ExtraServicePage";
 import HolidayPage from "../pages/admin/HolidayPage";
 import ImportPage from "../pages/admin/ImportPage";
+import InventoryPage from "../pages/admin/InventoryPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
 
-const ADMIN = ["ADMIN"];
 const ADMIN_MANAGER = ["ADMIN", "MANAGER"];
 const ADMIN_MANAGER_STAFF = ["ADMIN", "MANAGER", "STAFF"];
 
@@ -43,7 +43,7 @@ const AdminRoutes = (
     }
   >
     <Route index element={allow(<DashboardPage />, ADMIN_MANAGER_STAFF)} />
-    <Route path="users" element={allow(<UsersPage />, ADMIN)} />
+    <Route path="users" element={allow(<UsersPage />, ADMIN_MANAGER)} />
     <Route path="products" element={allow(<ProductPage />, ADMIN_MANAGER)} />
     <Route path="brands" element={allow(<BrandPage />, ADMIN_MANAGER)} />
     <Route path="categories" element={allow(<CategoryPage />, ADMIN_MANAGER)} />
@@ -60,6 +60,7 @@ const AdminRoutes = (
     <Route path="vouchers" element={allow(<VoucherPage />, ADMIN_MANAGER)} />
     <Route path="extra-services" element={allow(<ExtraServicePage />, ADMIN_MANAGER)} />
     <Route path="holidays" element={allow(<HolidayPage />, ADMIN_MANAGER)} />
+    <Route path="inventory" element={allow(<InventoryPage />, ADMIN_MANAGER)} />
     <Route path="imports" element={allow(<ImportPage />, ADMIN_MANAGER)} />
   </Route>
 );

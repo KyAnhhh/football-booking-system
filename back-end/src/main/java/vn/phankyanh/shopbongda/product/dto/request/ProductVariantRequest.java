@@ -24,4 +24,6 @@ public class ProductVariantRequest {
     @NotNull(message = "Stock không được để trống")
     @Min(value = 0, message = "Stock phải >= 0")
     private Integer stock;
+
+    private Long inventoryItemId;
 }

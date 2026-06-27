@@ -62,9 +62,10 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/public/dashboard/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
                         .requestMatchers(public_list).permitAll()
-                        .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/users/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/admin/membership-tiers/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/imports/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/inventory/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/admin/bookings/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
                         .requestMatchers("/api/admin/calendar/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
                         .requestMatchers("/api/admin/orders/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")

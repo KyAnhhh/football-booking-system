@@ -13,12 +13,31 @@ const handleResponse = async (response) => {
   return result.data ?? result.message;
 };
 
-export const getUsers = async (pageNo = 0, pageSize = 10, sortBy = "id", sortDir = "asc", search = "") => {
+export const getUsers = async ({
+  pageNo = 0,
+  pageSize = 10,
+  sortBy = "id",
+  sortDir = "asc",
+  search = "",
+  role = "",
+  status = "",
+} = {}) => {
   const headers = {
     "Content-Type": "application/json",
   };
 
-  const url = `${API_URL_ADMIN}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}&search=${search}`;
+  const params = new URLSearchParams({
+    pageNo,
+    pageSize,
+    sortBy,
+    sortDir,
+  });
+
+  if (search) params.append("search", search);
+  if (role) params.append("role", role);
+  if (status) params.append("status", status);
+
+  const url = `${API_URL_ADMIN}?${params.toString()}`;
 
   const response = await fetchWithAuth(url, { headers });
   return await handleResponse(response);
@@ -55,6 +74,15 @@ export const updateUserRole = async (id, role) => {
   const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}/role`, {
     method: "PUT",
     body: JSON.stringify({ role }),
+  });
+
+  return await handleResponse(response);
+};
+
+export const updateUserStatus = async (id, status) => {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}/status`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
   });
 
   return await handleResponse(response);

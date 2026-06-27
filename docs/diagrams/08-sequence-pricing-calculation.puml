@@ -11,6 +11,7 @@ database "FieldPricingRuleRepository" as FieldRuleRepo
 control "MembershipService" as MembershipService
 control "VoucherService" as VoucherService
 database "ExtraServiceRepository" as ExtraRepo
+control "InventoryService" as InventoryService
 
 BookingService -> PricingService : calculatePrice(fieldId, startTime, endTime)
 PricingService -> PricingService : validateBookingTime(startTime, endTime)
@@ -38,6 +39,10 @@ opt có dịch vụ thêm
   loop từng service trong request
     BookingService -> ExtraRepo : findByIdForUpdate(serviceId)
     ExtraRepo --> BookingService : ExtraService
+    opt trackStock=true và có inventoryItemId
+      BookingService -> InventoryService : getStockByItemId(inventoryItemId)
+      InventoryService --> BookingService : availableQuantity
+    end
     BookingService -> BookingService : totalExtra += price * quantity
   end
 end
@@ -63,6 +68,11 @@ end note
 note bottom
   FootballField.pricePerHour vẫn có trong entity,
   nhưng flow booking hiện dùng PricingService để tính giá.
+end note
+
+note bottom
+  Inventory chỉ xác thực số lượng extra khả dụng.
+  Giá extra vẫn lấy từ ExtraService.price.
 end note
 
 @enduml

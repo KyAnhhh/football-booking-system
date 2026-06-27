@@ -14,6 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
+import vn.phankyanh.shopbongda.inventory.domain.InventoryReferenceType;
+import vn.phankyanh.shopbongda.inventory.service.InventoryService;
 import vn.phankyanh.shopbongda.order.domain.Cart;
 import vn.phankyanh.shopbongda.order.domain.CartItem;
 import vn.phankyanh.shopbongda.order.domain.Order;
@@ -54,6 +58,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductVariantRepository productVariantRepository;
     private final ShippingService shippingService;
     private final EmailService emailService;
+    private final InventoryService inventoryService;
 
     @Override
     public Page<OrderResponse> getAllOrders(
@@ -159,20 +164,13 @@ public class OrderServiceImpl implements OrderService {
                     .findById(itemRequest.getProductVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant not found"));
 
-            if (variant.getStock() < itemRequest.getQuantity()) {
+            if (variant.getInventoryItemId() == null
+                    && variant.getStock() < itemRequest.getQuantity()) {
                 throw new RuntimeException(
                         "Not enough stock for variant: "
                                 + variant.getProduct().getName()
                 );
             }
-
-            variant.setStock(
-                    variant.getStock() - itemRequest.getQuantity()
-            );
-
-            variant.setSoldQuantity(
-                    variant.getSoldQuantity() + itemRequest.getQuantity()
-            );
 
             BigDecimal unitPrice = variant.getPrice();
 
@@ -209,6 +207,9 @@ public class OrderServiceImpl implements OrderService {
                     .finalPrice(finalPrice)
                     .quantity(itemRequest.getQuantity())
                     .total(total)
+                    .stockDeducted(false)
+                    .stockReserved(false)
+                    .stockReturned(false)
                     .build();
 
             orderItems.add(orderItem);
@@ -238,6 +239,10 @@ public class OrderServiceImpl implements OrderService {
         order.setPayment(payment);
 
         Order savedOrder = orderRepository.save(order);
+
+        reserveStockForOrder(savedOrder, userId);
+
+        savedOrder = orderRepository.save(savedOrder);
 
         return orderMapper.toOrderResponse(savedOrder);
     }
@@ -290,21 +295,14 @@ public class OrderServiceImpl implements OrderService {
 
             ProductVariant variant = cartItem.getProductVariant();
 
-            if (variant.getStock() < cartItem.getTotalQuantity()) {
+            if (variant.getInventoryItemId() == null
+                    && variant.getStock() < cartItem.getTotalQuantity()) {
 
                 throw new RuntimeException(
                     "Not enough stock for product: "
                         + cartItem.getProductName()
                 );
             }
-
-            variant.setStock(
-                variant.getStock() - cartItem.getTotalQuantity()
-            );
-
-            variant.setSoldQuantity(
-                variant.getSoldQuantity() + cartItem.getTotalQuantity()
-            );
 
             BigDecimal itemTotal = cartItem.getPriceAtAddedTime()
                 .multiply(BigDecimal.valueOf(cartItem.getTotalQuantity()));
@@ -320,6 +318,9 @@ public class OrderServiceImpl implements OrderService {
                 .discountAmount(BigDecimal.ZERO)
                 .finalPrice(cartItem.getPriceAtAddedTime())
                 .total(itemTotal)
+                .stockDeducted(false)
+                .stockReserved(false)
+                .stockReturned(false)
                 .imageUrl(
                     variant.getProduct().getImages().isEmpty()
                         ? null
@@ -355,7 +356,11 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotalAmount(finalTotalAmount);
 
-        orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        reserveStockForOrder(savedOrder, userId);
+
+        orderRepository.save(savedOrder);
 
         selectedItems.forEach(cartItemRepository::delete);
 
@@ -368,7 +373,7 @@ public class OrderServiceImpl implements OrderService {
 
         cart.setTotalAmount(cartTotal);
 
-        return orderMapper.toOrderResponse(order);
+        return orderMapper.toOrderResponse(savedOrder);
     }
 
     @Override
@@ -389,7 +394,11 @@ public class OrderServiceImpl implements OrderService {
 
         boolean shouldSendEmail = false;
 
-        if (newStatus == OrderStatus.DELIVERED) {
+        if (newStatus == OrderStatus.CONFIRMED) {
+
+            commitStockForOrder(order, null);
+
+        } else if (newStatus == OrderStatus.DELIVERED) {
 
             Payment payment = order.getPayment();
 
@@ -410,21 +419,7 @@ public class OrderServiceImpl implements OrderService {
 
         } else if (newStatus == OrderStatus.CANCELLED) {
 
-            for (OrderItem item : order.getOrderItems()) {
-
-                ProductVariant variant = item.getProductVariant();
-
-                variant.setStock(
-                        variant.getStock() + item.getQuantity()
-                );
-
-                variant.setSoldQuantity(
-                        Math.max(
-                                0,
-                                variant.getSoldQuantity() - item.getQuantity()
-                        )
-                );
-            }
+            returnStockForOrder(order, null);
 
             Payment payment = order.getPayment();
 
@@ -473,21 +468,7 @@ public class OrderServiceImpl implements OrderService {
 
         order.setUpdatedAt(LocalDateTime.now());
 
-        for (OrderItem item : order.getOrderItems()) {
-
-            ProductVariant variant = item.getProductVariant();
-
-            variant.setStock(
-                    variant.getStock() + item.getQuantity()
-            );
-
-            variant.setSoldQuantity(
-                    Math.max(
-                            0,
-                            variant.getSoldQuantity() - item.getQuantity()
-                    )
-            );
-        }
+        returnStockForOrder(order, userId);
 
         orderRepository.save(order);
     }
@@ -545,5 +526,144 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return false;
+    }
+
+    private void reserveStockForOrder(
+            Order order,
+            Long actorId
+    ) {
+        for (OrderItem item : order.getOrderItems()) {
+            if (Boolean.TRUE.equals(item.getStockReserved())
+                    || Boolean.TRUE.equals(item.getStockDeducted())) {
+                continue;
+            }
+
+            ProductVariant variant = item.getProductVariant();
+
+            if (variant.getInventoryItemId() != null) {
+                InventoryReservationResponse reservation =
+                        inventoryService.reserveStock(
+                        variant.getInventoryItemId(),
+                        item.getQuantity(),
+                        InventoryReferenceType.ORDER,
+                        order.getId(),
+                        item.getId(),
+                        actorId
+                );
+
+                item.setInventoryReservationId(reservation.getId());
+                item.setStockReserved(true);
+                syncVariantStockFromInventory(variant);
+            } else {
+                if (variant.getStock() < item.getQuantity()) {
+                    throw new RuntimeException(
+                            "Not enough stock for product: "
+                                    + item.getProductName()
+                    );
+                }
+
+                variant.setStock(
+                        variant.getStock() - item.getQuantity()
+                );
+                variant.setSoldQuantity(
+                        safeNumber(variant.getSoldQuantity()) + item.getQuantity()
+                );
+                item.setStockDeducted(true);
+            }
+
+            item.setStockReturned(false);
+        }
+    }
+
+    private void commitStockForOrder(
+            Order order,
+            Long actorId
+    ) {
+        for (OrderItem item : order.getOrderItems()) {
+            if (!Boolean.TRUE.equals(item.getStockReserved())
+                    || item.getInventoryReservationId() == null) {
+                continue;
+            }
+
+            inventoryService.commitReservation(
+                    item.getInventoryReservationId(),
+                    actorId
+            );
+
+            ProductVariant variant = item.getProductVariant();
+            syncVariantStockFromInventory(variant);
+            variant.setSoldQuantity(
+                    safeNumber(variant.getSoldQuantity()) + item.getQuantity()
+            );
+            item.setStockReserved(false);
+            item.setStockDeducted(true);
+            item.setStockReturned(false);
+        }
+    }
+
+    private void returnStockForOrder(
+            Order order,
+            Long actorId
+    ) {
+        for (OrderItem item : order.getOrderItems()) {
+            if ((!Boolean.TRUE.equals(item.getStockDeducted())
+                    && !Boolean.TRUE.equals(item.getStockReserved()))
+                    || Boolean.TRUE.equals(item.getStockReturned())) {
+                continue;
+            }
+
+            ProductVariant variant = item.getProductVariant();
+
+            if (variant.getInventoryItemId() != null) {
+                if (Boolean.TRUE.equals(item.getStockReserved())) {
+                    inventoryService.releaseReservation(
+                            item.getInventoryReservationId(),
+                            actorId
+                    );
+                    item.setStockReserved(false);
+                } else {
+                    inventoryService.returnForOrder(
+                            variant.getInventoryItemId(),
+                            item.getQuantity(),
+                            order.getId(),
+                            actorId
+                    );
+                    variant.setSoldQuantity(
+                            Math.max(
+                                    0,
+                                    safeNumber(variant.getSoldQuantity())
+                                            - item.getQuantity()
+                            )
+                    );
+                }
+
+                syncVariantStockFromInventory(variant);
+            } else {
+                variant.setStock(
+                        safeNumber(variant.getStock()) + item.getQuantity()
+                );
+                variant.setSoldQuantity(
+                        Math.max(
+                                0,
+                                safeNumber(variant.getSoldQuantity())
+                                    - item.getQuantity()
+                        )
+                );
+            }
+            item.setStockReturned(true);
+        }
+    }
+
+    private void syncVariantStockFromInventory(ProductVariant variant) {
+        InventoryStockResponse stock =
+                inventoryService.getStockByItemId(
+                        variant.getInventoryItemId()
+                );
+
+        variant.setStock(stock.getAvailableQuantity());
+    }
+
+    private int safeNumber(Integer value) {
+        return value == null ? 0 : value;
     }
 }

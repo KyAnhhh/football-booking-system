@@ -74,6 +74,32 @@
   border-radius: 6px !important;
 }
 
+.user-status {
+  display: inline-flex;
+  align-items: center;
+  min-width: 112px;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.user-status-active {
+  color: #0f5132;
+  background: #d1e7dd;
+}
+
+.user-status-locked {
+  color: #842029;
+  background: #f8d7da;
+}
+
+.user-status-inactive {
+  color: #664d03;
+  background: #fff3cd;
+}
+
 .pagination-section {
   display: flex;
   justify-content: center;

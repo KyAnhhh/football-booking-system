@@ -6,6 +6,7 @@ import swal from "sweetalert";
 import "../../assets/styles/ProductDetail.css";
 import ReviewSection from "../../components/review/ReviewSection";
 import { ChevronLeft, Minus, Plus, ShoppingBag, Star } from "lucide-react";
+import { useCart } from "../../contexts/CartContext";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {
@@ -16,6 +17,7 @@ const formatCurrency = (value) =>
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { refreshCartCount } = useCart();
 
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -124,6 +126,7 @@ export default function ProductDetail() {
         sizeId: selectedVariant.sizeId,
         quantity,
       });
+      await refreshCartCount();
 
       swal("Đã thêm vào giỏ hàng", "Sản phẩm đã được thêm thành công.", "success");
     } catch (error) {

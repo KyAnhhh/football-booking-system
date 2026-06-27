@@ -39,6 +39,7 @@ package "Frontend React" {
     component "PaymentPage" as A_PAYMENT
     component "UserPage" as A_USER
     component "ImportPage" as A_IMPORT
+    component "InventoryPage" as A_INVENTORY
   }
 }
 
@@ -61,6 +62,7 @@ package "Backend Spring Boot" {
   component "order" as PKG_ORDER
   component "review" as PKG_REVIEW
   component "importer" as PKG_IMPORTER
+  component "inventory" as PKG_INVENTORY
   component "shared" as PKG_SHARED
 }
 
@@ -87,6 +89,7 @@ FE_ADMIN --> PKG_ORDER
 FE_ADMIN --> PKG_PAYMENT
 FE_ADMIN --> PKG_USER
 FE_ADMIN --> PKG_IMPORTER
+FE_ADMIN --> PKG_INVENTORY
 
 PKG_SECURITY --> PKG_USER : JWT + Role
 PKG_BOOKING --> PKG_FIELD
@@ -95,6 +98,7 @@ PKG_BOOKING --> PKG_MAINTENANCE
 PKG_BOOKING --> PKG_MEMBERSHIP
 PKG_BOOKING --> PKG_VOUCHER
 PKG_BOOKING --> PKG_EXTRA
+PKG_BOOKING --> PKG_INVENTORY : extra stock
 PKG_BOOKING --> PKG_PAYMENT
 PKG_BOOKING --> PKG_NOTIFICATION
 PKG_BOOKING --> PKG_REVIEW
@@ -103,6 +107,7 @@ PKG_PRICING --> PKG_FIELD
 PKG_CALENDAR --> PKG_BOOKING
 PKG_CALENDAR --> PKG_FIELD
 PKG_ORDER --> PKG_PRODUCT
+PKG_ORDER --> PKG_INVENTORY : product stock
 PKG_ORDER --> PKG_PAYMENT
 PKG_ORDER --> PKG_USER
 PKG_REVIEW --> PKG_PRODUCT
@@ -113,11 +118,18 @@ PKG_IMPORTER --> PKG_FIELD
 PKG_IMPORTER --> PKG_PRICING
 PKG_IMPORTER --> PKG_HOLIDAY
 PKG_IMPORTER --> PKG_EXTRA
+PKG_PRODUCT --> PKG_INVENTORY : linked variant
+PKG_EXTRA --> PKG_INVENTORY : linked service
 
 note right of PKG_SECURITY
   Role hiện có trong source:
-  ROLE_ADMIN, ROLE_CLIENT,
-  ROLE_MANAGER, ROLE_STAFF
+  ROLE_ADMIN, ROLE_MANAGER,
+  ROLE_STAFF, ROLE_CLIENT.
+
+  Admin quản lý toàn bộ user.
+  Manager chỉ quản lý Staff và Client.
+  Staff không quản lý user.
+  Client chỉ quản lý hồ sơ cá nhân.
 end note
 
 @enduml

@@ -36,4 +36,6 @@ public class ExtraService {
     private Integer remainingQuantity;
 
     private String unit;
+
+    private Long inventoryItemId;
 }

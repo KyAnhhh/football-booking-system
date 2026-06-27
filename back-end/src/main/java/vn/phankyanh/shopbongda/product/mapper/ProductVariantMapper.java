@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import vn.phankyanh.shopbongda.product.domain.ProductVariant;
 import vn.phankyanh.shopbongda.product.dto.request.ProductVariantRequest;
@@ -24,7 +25,9 @@ public interface ProductVariantMapper {
 
     List<ProductVariantResponse> toResponses(List<ProductVariant> variants);
 
-    @Mapping(target = "price", ignore = true)
-    @Mapping(target = "stock", ignore = true)
-    ProductVariant updateProductVariant(ProductVariant productVariant, ProductVariantRequest request);
+    @Mapping(target = "inventoryItemId", ignore = true)
+    ProductVariant updateProductVariant(
+            ProductVariantRequest request,
+            @MappingTarget ProductVariant productVariant
+    );
 }
