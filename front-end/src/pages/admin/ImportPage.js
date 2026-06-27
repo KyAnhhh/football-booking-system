@@ -165,6 +165,8 @@ export default function ImportPage() {
             <li>Import ảnh sản phẩm và ảnh sân bóng bằng URL.</li>
             <li>Import bảng giá sân, ngày lễ và giá ngày lễ.</li>
             <li>Import dịch vụ thêm nếu sân có bán nước, thuê bóng hoặc áo bib.</li>
+            <li>Import nhà cung cấp trước khi import phiếu nhập kho.</li>
+            <li>Import item kho rồi mới import số lượng bằng phiếu nhập kho.</li>
           </ol>
           <p>
             Nếu chỉ import sản phẩm mà chưa import biến thể, sản phẩm sẽ chưa có giá và tồn kho để bán.

@@ -99,6 +99,10 @@ class ShippingAddress {
   String fullName
   String phone
   String address
+  String addressLine
+  String ward
+  String district
+  String city
 }
 
 class Order {

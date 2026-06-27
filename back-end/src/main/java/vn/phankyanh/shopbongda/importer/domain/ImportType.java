@@ -10,7 +10,10 @@ public enum ImportType {
     FIELD_PRICING_RULES("field-pricing-rules"),
     HOLIDAYS("holidays"),
     HOLIDAY_PRICING_RULES("holiday-pricing-rules"),
-    EXTRA_SERVICES("extra-services");
+    EXTRA_SERVICES("extra-services"),
+    SUPPLIERS("suppliers"),
+    INVENTORY_ITEMS("inventory-items"),
+    STOCK_IMPORTS("stock-imports");
 
     private final String path;
 

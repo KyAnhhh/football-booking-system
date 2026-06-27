@@ -8,5 +8,5 @@ import vn.phankyanh.shopbongda.importer.dto.ImportResultResponse;
 public interface ImportService {
     String getTemplate(ImportType type);
 
-    ImportResultResponse importCsv(ImportType type, MultipartFile file);
+    ImportResultResponse importCsv(ImportType type, MultipartFile file, Long actorId);
 }

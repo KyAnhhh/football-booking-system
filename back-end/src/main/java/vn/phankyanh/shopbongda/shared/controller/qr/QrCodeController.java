@@ -23,7 +23,7 @@ public class QrCodeController {
 
         Long userId = jwt.getClaim("id");
 
-        OrderResponse order = orderService.getOrderForQr(orderId);
+        OrderResponse order = orderService.getOrderForQr(orderId, userId);
 
         if (!order.getUserId().equals(userId)) {
             throw new RuntimeException("Không có quyền");

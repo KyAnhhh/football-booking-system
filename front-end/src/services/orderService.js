@@ -102,3 +102,11 @@ export const checkout = async (request) => {
   });
   return await handleResponse(response);
 }
+
+export const markOrderPaymentSubmitted = async (orderId) => {
+  const response = await fetchWithAuth(
+    `${API_URL_USER}/${orderId}/payment-submitted`,
+    { method: "PUT" }
+  );
+  return handleResponse(response);
+};

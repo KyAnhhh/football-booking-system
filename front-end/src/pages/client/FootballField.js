@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
 import {
   CalendarDays,
@@ -68,19 +68,32 @@ const getPageMetadata = (data, fallbackCount) => {
 
 export default function FootballField() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialStartTime = searchParams.get("startTime") || "";
+  const initialEndTime = searchParams.get("endTime") || "";
+  const initialSlotValue =
+    initialStartTime && initialEndTime
+      ? `${initialStartTime}|${initialEndTime}`
+      : "";
   const [fields, setFields] = useState([]);
   const [maintenanceMap, setMaintenanceMap] = useState({});
   const [keyword, setKeyword] = useState("");
   const [priceRange, setPriceRange] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedSlotValue, setSelectedSlotValue] = useState("");
+  const [selectedDate, setSelectedDate] = useState(
+    searchParams.get("date") || ""
+  );
+  const [selectedSlotValue, setSelectedSlotValue] = useState(
+    slotOptions.some((slot) => slot.value === initialSlotValue)
+      ? initialSlotValue
+      : ""
+  );
   const [loading, setLoading] = useState(false);
   const [pageNo, setPageNo] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [suggestions, setSuggestions] = useState([]);
   const [filters, setFilters] = useState({
-    type: "",
+    type: searchParams.get("type") || "",
     minPrice: "",
     maxPrice: "",
   });

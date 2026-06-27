@@ -24,9 +24,12 @@ import vn.phankyanh.shopbongda.inventory.dto.response.InventoryItemResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryTransactionResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.ProductVariantSyncPreviewResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.ProductVariantSyncResultResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.StockImportResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.SupplierResponse;
 import vn.phankyanh.shopbongda.inventory.service.InventoryService;
+import vn.phankyanh.shopbongda.inventory.service.ProductVariantInventorySyncService;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
@@ -35,6 +38,7 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 public class AdminInventoryController {
 
     private final InventoryService inventoryService;
+    private final ProductVariantInventorySyncService productVariantSyncService;
 
     @PostMapping("/items")
     public ApiResponse<InventoryItemResponse> createItem(
@@ -156,6 +160,24 @@ public class AdminInventoryController {
         return response(
                 "Điều chỉnh kho thành công",
                 inventoryService.adjustStock(request, jwt.getClaim("id"))
+        );
+    }
+
+    @GetMapping("/product-variant-sync/preview")
+    public ApiResponse<ProductVariantSyncPreviewResponse>
+            previewProductVariantSync() {
+        return response(
+                "Xem trước đồng bộ sản phẩm thành công",
+                productVariantSyncService.preview()
+        );
+    }
+
+    @PostMapping("/product-variant-sync")
+    public ApiResponse<ProductVariantSyncResultResponse>
+            syncProductVariants() {
+        return response(
+                "Đồng bộ sản phẩm vào kho hoàn tất",
+                productVariantSyncService.sync()
         );
     }
 

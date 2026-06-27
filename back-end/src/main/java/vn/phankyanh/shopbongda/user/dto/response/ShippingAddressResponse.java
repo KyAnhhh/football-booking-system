@@ -10,9 +10,13 @@ import java.time.LocalDateTime;
 public class ShippingAddressResponse {
     private Long id;
     private Long userId;
-    private String fullName;
+    private String receiverName;
     private String phone;
-    private String address;
+    private String addressLine;
+    private String ward;
+    private String district;
+    private String city;
+    private String formattedAddress;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

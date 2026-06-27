@@ -70,7 +70,15 @@ export default function NotificationBell({ context = "client" }) {
   }, []);
 
   const getTargetPath = (notification) => {
-    if (notification.referenceType !== "BOOKING" || !notification.referenceId) {
+    if (!notification.referenceId) {
+      return context === "admin" ? "/admin" : "/";
+    }
+
+    if (notification.referenceType === "ORDER") {
+      return context === "admin" ? "/admin/orders" : "/my-orders";
+    }
+
+    if (notification.referenceType !== "BOOKING") {
       return context === "admin" ? "/admin" : "/";
     }
 

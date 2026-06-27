@@ -39,6 +39,15 @@ public class ShippingAddress {
     @NotBlank(message = "address không được để trống")
     private String address;
 
+    @Column(name = "address_line")
+    private String addressLine;
+
+    private String ward;
+
+    private String district;
+
+    private String city;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

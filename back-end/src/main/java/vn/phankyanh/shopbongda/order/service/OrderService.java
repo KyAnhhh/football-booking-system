@@ -22,7 +22,9 @@ public interface OrderService {
 
     OrderResponse getOrderById(Long id, Long userId);
 
-    OrderResponse getOrderForQr(Long orderId);
+    OrderResponse getOrderForQr(Long orderId, Long userId);
+
+    OrderResponse markPaymentSubmitted(Long orderId, Long userId);
 
     List<OrderResponse> getMyOrders(Long userId);
 

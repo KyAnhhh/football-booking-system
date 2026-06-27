@@ -234,8 +234,13 @@ public class InventoryServiceImpl implements InventoryService {
                 : supplierRepository.findById(request.getSupplierId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
 
+        String importCode = resolveImportCode(request.getImportCode());
+        if (stockImportRepository.existsByImportCode(importCode)) {
+            throw new IllegalArgumentException("Mã phiếu nhập đã tồn tại");
+        }
+
         StockImport stockImport = StockImport.builder()
-                .importCode(resolveImportCode(request.getImportCode()))
+                .importCode(importCode)
                 .supplier(supplier)
                 .note(request.getNote())
                 .createdBy(actor)

@@ -181,6 +181,9 @@ note bottom of ProductVariant
   ProductVariant và ExtraService chỉ lưu inventoryItemId,
   không khai báo quan hệ JPA tới InventoryItem.
   stock và remainingQuantity hiện được đồng bộ làm dữ liệu tương thích.
+
+  ProductVariant cũ được đồng bộ bằng itemCode PV-{variantId}.
+  Mỗi variant được xử lý trong transaction riêng và có thể chạy lại an toàn.
 end note
 
 note bottom of InventoryTransaction

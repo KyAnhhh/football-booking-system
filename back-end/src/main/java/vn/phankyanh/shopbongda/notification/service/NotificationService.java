@@ -5,12 +5,20 @@ import java.util.List;
 import vn.phankyanh.shopbongda.booking.domain.Booking;
 import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
 import vn.phankyanh.shopbongda.notification.dto.response.NotificationResponse;
+import vn.phankyanh.shopbongda.order.domain.Order;
+import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 
 public interface NotificationService {
 
     void notifyAdminsBookingCreated(Booking booking);
 
     void notifyUserBookingStatusChanged(Booking booking, BookingStatus previousStatus);
+
+    void notifyOrderCreated(Order order);
+
+    void notifyOrderPaymentSubmitted(Order order);
+
+    void notifyUserOrderStatusChanged(Order order, OrderStatus previousStatus);
 
     List<NotificationResponse> getMyNotifications(Long userId, int limit);
 

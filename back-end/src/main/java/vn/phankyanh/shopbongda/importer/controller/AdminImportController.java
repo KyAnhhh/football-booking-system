@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.importer.domain.ImportType;
@@ -42,9 +44,14 @@ public class AdminImportController {
     @PostMapping(value = "/{type}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ImportResultResponse> importCsv(
             @PathVariable String type,
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        ImportResultResponse result = importService.importCsv(ImportType.fromPath(type), file);
+        ImportResultResponse result = importService.importCsv(
+                ImportType.fromPath(type),
+                file,
+                jwt == null ? null : jwt.getClaim("id")
+        );
         return new ApiResponse<>(1000, "Import dữ liệu hoàn tất", result);
     }
 }

@@ -1,5 +1,6 @@
 package vn.phankyanh.shopbongda.user.service;
 
+import java.util.List;
 import vn.phankyanh.shopbongda.user.dto.request.ShippingAddressRequest;
 import vn.phankyanh.shopbongda.user.dto.response.ShippingAddressResponse;
 
@@ -10,14 +11,15 @@ public interface ShippingAddressService {
             Long userId
     );
 
-    ShippingAddressResponse getMyAddress(Long userId);
+    List<ShippingAddressResponse> getMyAddresses(Long userId);
 
     ShippingAddressResponse update(
             Long id,
-            ShippingAddressRequest request
+            ShippingAddressRequest request,
+            Long userId
     );
 
-    ShippingAddressResponse getShippingAddressById(Long id);
+    ShippingAddressResponse getShippingAddressById(Long id, Long userId);
 
-    void delete(Long id);
+    void delete(Long id, Long userId);
 }

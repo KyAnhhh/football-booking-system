@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Form, Modal, Table } from "react-bootstrap";
 import swal from "sweetalert";
+import { BsArrowRepeat } from "react-icons/bs";
 
 import {
   adjustStock,
@@ -10,8 +11,10 @@ import {
   getInventoryReservations,
   getInventoryStocks,
   getInventoryTransactions,
+  getProductVariantSyncPreview,
   getSuppliers,
   importStock,
+  syncProductVariantsToInventory,
 } from "../../services/inventoryService";
 import "../../assets/styles/AdminCrudPage.css";
 import "../../assets/styles/InventoryPage.css";
@@ -73,6 +76,10 @@ export default function InventoryPage() {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [showProductSyncModal, setShowProductSyncModal] = useState(false);
+  const [productSyncPreview, setProductSyncPreview] = useState(null);
+  const [productSyncResult, setProductSyncResult] = useState(null);
+  const [productSyncLoading, setProductSyncLoading] = useState(false);
   const [itemForm, setItemForm] = useState(emptyItemForm);
   const [supplierForm, setSupplierForm] = useState(emptySupplierForm);
   const [importForm, setImportForm] = useState({
@@ -247,6 +254,45 @@ export default function InventoryPage() {
     }));
   };
 
+  const openProductSyncModal = async () => {
+    try {
+      setProductSyncLoading(true);
+      setProductSyncResult(null);
+      setShowProductSyncModal(true);
+      const preview = await getProductVariantSyncPreview();
+      setProductSyncPreview(preview);
+    } catch (error) {
+      setShowProductSyncModal(false);
+      swal(
+        "Lỗi",
+        error.message || "Không thể kiểm tra sản phẩm chưa liên kết kho.",
+        "error"
+      );
+    } finally {
+      setProductSyncLoading(false);
+    }
+  };
+
+  const handleProductSync = async () => {
+    try {
+      setProductSyncLoading(true);
+      const result = await syncProductVariantsToInventory();
+      setProductSyncResult(result);
+      setActiveTab("stocks");
+      setItemType("PRODUCT_VARIANT");
+      setPageNo(0);
+      await loadStocks();
+    } catch (error) {
+      swal(
+        "Lỗi",
+        error.message || "Không thể đồng bộ sản phẩm vào kho.",
+        "error"
+      );
+    } finally {
+      setProductSyncLoading(false);
+    }
+  };
+
   return (
     <div className="admin-crud-page inventory-page">
       <div className="admin-crud-header">
@@ -257,6 +303,10 @@ export default function InventoryPage() {
         </div>
 
         <div className="inventory-actions">
+          <Button variant="outline-dark" onClick={openProductSyncModal}>
+            <BsArrowRepeat />
+            Đồng bộ sản phẩm
+          </Button>
           <Button variant="outline-primary" onClick={() => setShowSupplierModal(true)}>
             + Nhà cung cấp
           </Button>
@@ -489,6 +539,92 @@ export default function InventoryPage() {
             <Button type="submit">Lưu</Button>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      <Modal
+        show={showProductSyncModal}
+        onHide={() => !productSyncLoading && setShowProductSyncModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton={!productSyncLoading}>
+          <Modal.Title>Đồng bộ sản phẩm vào kho</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {productSyncLoading && !productSyncPreview ? (
+            <p>Đang kiểm tra dữ liệu sản phẩm...</p>
+          ) : (
+            <>
+              <p>
+                Hệ thống sẽ tạo một item kho cho từng biến thể sản phẩm chưa
+                liên kết. Sản phẩm, đơn hàng và giỏ hàng hiện tại không bị xóa.
+              </p>
+
+              {productSyncPreview && (
+                <div className="inventory-sync-summary">
+                  <div><span>Tổng biến thể</span><strong>{productSyncPreview.totalVariants}</strong></div>
+                  <div><span>Đã liên kết</span><strong>{productSyncPreview.linkedVariants}</strong></div>
+                  <div><span>Chưa liên kết</span><strong>{productSyncPreview.unlinkedVariants}</strong></div>
+                  <div><span>Xung đột</span><strong>{productSyncPreview.conflictVariants}</strong></div>
+                </div>
+              )}
+
+              {productSyncResult && (
+                <>
+                  <div className="inventory-sync-result">
+                    Đã đồng bộ {productSyncResult.successRows}, bỏ qua{" "}
+                    {productSyncResult.skippedRows}, lỗi{" "}
+                    {productSyncResult.failedRows}.
+                  </div>
+
+                  {productSyncResult.errors?.length > 0 && (
+                    <Table responsive size="sm" className="mt-3">
+                      <thead>
+                        <tr>
+                          <th>Variant</th>
+                          <th>Mã kho</th>
+                          <th>Lỗi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {productSyncResult.errors.map((error) => (
+                          <tr key={error.variantId}>
+                            <td>#{error.variantId}</td>
+                            <td>{error.itemCode}</td>
+                            <td>{error.message}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="outline-secondary"
+            disabled={productSyncLoading}
+            onClick={() => setShowProductSyncModal(false)}
+          >
+            Đóng
+          </Button>
+          {!productSyncResult && (
+            <Button
+              variant="primary"
+              disabled={
+                productSyncLoading
+                || !productSyncPreview
+                || productSyncPreview.unlinkedVariants === 0
+              }
+              onClick={handleProductSync}
+            >
+              <BsArrowRepeat />
+              {productSyncLoading ? "Đang đồng bộ..." : "Xác nhận đồng bộ"}
+            </Button>
+          )}
+        </Modal.Footer>
       </Modal>
 
       <Modal show={showSupplierModal} onHide={() => setShowSupplierModal(false)}>

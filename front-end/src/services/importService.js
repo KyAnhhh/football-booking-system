@@ -53,6 +53,21 @@ export const IMPORT_TYPES = [
     label: "Dịch vụ thêm",
     description: "Import nước uống, thuê bóng, áo bib và tồn kho dịch vụ.",
   },
+  {
+    value: "suppliers",
+    label: "Nhà cung cấp",
+    description: "Import thông tin nhà cung cấp phục vụ nhập kho.",
+  },
+  {
+    value: "inventory-items",
+    label: "Item kho",
+    description: "Import danh mục vật tư, tài sản và hàng tiêu hao.",
+  },
+  {
+    value: "stock-imports",
+    label: "Phiếu nhập kho",
+    description: "Nhập số lượng tồn theo tên nhà cung cấp và mã item kho.",
+  },
 ];
 
 const handleResponse = async (response) => {

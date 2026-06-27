@@ -36,10 +36,16 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse getCartByUser(Long userId) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    User user = userRepository.findByIdForUpdate(userId)
+                            .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return cartRepository.findByUserId(userId)
-                .map(cartMapper::toCartResponse)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                    return cartRepository.findByUserId(userId)
+                            .orElseGet(() -> createNewCart(user));
+                });
+
+        return cartMapper.toCartResponse(cart);
     }
 
     @Override

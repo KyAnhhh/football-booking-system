@@ -14,17 +14,19 @@ public interface ShippingAddressMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "address", ignore = true)
+    @Mapping(source = "receiverName", target = "fullName")
     ShippingAddress toShippingAddress(ShippingAddressRequest request);
 
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "id", target = "id")
-    @Mapping(source = "phone", target = "phone")
-    @Mapping(source = "fullName", target = "fullName")
-    @Mapping(source = "address", target = "address")
+    @Mapping(source = "fullName", target = "receiverName")
+    @Mapping(source = "address", target = "formattedAddress")
     ShippingAddressResponse toResponse(ShippingAddress shippingAddress);
 
     @Mapping(target = "user", ignore = true) // tránh ghi đè user
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "address", ignore = true)
+    @Mapping(source = "receiverName", target = "fullName")
     void updateShippingAddress(@MappingTarget ShippingAddress shippingAddress, ShippingAddressRequest request);
 }

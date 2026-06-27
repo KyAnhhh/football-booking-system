@@ -97,6 +97,21 @@ public class UserOrderController {
         return apiResponse;
     }
 
+    @PutMapping("/{orderId}/payment-submitted")
+    public ApiResponse<OrderResponse> markPaymentSubmitted(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        Long userId = jwt.getClaim("id");
+
+        ApiResponse<OrderResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setData(
+                orderService.markPaymentSubmitted(orderId, userId)
+        );
+        apiResponse.setMessage("Đã ghi nhận yêu cầu kiểm tra chuyển khoản");
+        return apiResponse;
+    }
+
     @PutMapping("/{orderId}/confirm-receipt")
     public ApiResponse<Void> confirmReceive(
             @PathVariable Long orderId,

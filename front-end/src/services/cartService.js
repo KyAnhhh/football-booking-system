@@ -1,6 +1,7 @@
 import { fetchWithAuth } from "./apiService";
 
 const API_URL_USER = `http://localhost:8080/api/user/carts`;
+let pendingCartRequest = null;
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -21,17 +22,26 @@ function getAuthHeader() {
 }
 
 export const getMyCart = async () => {
+  if (pendingCartRequest) {
+    return pendingCartRequest;
+  }
+
   const headers = {
     "Content-Type": "application/json",
     ...getAuthHeader(),
   };
-  const response = await fetchWithAuth(`${API_URL_USER}`, {
-    method: "GET",
-    headers,
-  });
 
-  return await handleResponse(response);
-}
+  pendingCartRequest = fetchWithAuth(`${API_URL_USER}`, {
+      method: "GET",
+      headers,
+    })
+    .then(handleResponse)
+    .finally(() => {
+      pendingCartRequest = null;
+    });
+
+  return pendingCartRequest;
+};
 
 export const addItemToCart = async (request) => {
     const headers = {

@@ -18,6 +18,7 @@ import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryReferenceType;
 import vn.phankyanh.shopbongda.inventory.service.InventoryService;
+import vn.phankyanh.shopbongda.notification.service.NotificationService;
 import vn.phankyanh.shopbongda.order.domain.Cart;
 import vn.phankyanh.shopbongda.order.domain.CartItem;
 import vn.phankyanh.shopbongda.order.domain.Order;
@@ -33,6 +34,7 @@ import vn.phankyanh.shopbongda.order.repository.CartRepository;
 import vn.phankyanh.shopbongda.order.repository.OrderRepository;
 import vn.phankyanh.shopbongda.order.service.OrderService;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
+import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
 import vn.phankyanh.shopbongda.product.domain.ProductVariant;
@@ -59,6 +61,7 @@ public class OrderServiceImpl implements OrderService {
     private final ShippingService shippingService;
     private final EmailService emailService;
     private final InventoryService inventoryService;
+    private final NotificationService notificationService;
 
     @Override
     public Page<OrderResponse> getAllOrders(
@@ -116,14 +119,63 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponse getOrderForQr(Long orderId) {
+    public OrderResponse getOrderForQr(Long orderId, Long userId) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Không có quyền truy cập đơn hàng");
+        }
+
         if (order.getOrderStatus() != OrderStatus.PENDING) {
             throw new RuntimeException("Order not payable");
         }
+
+        if (order.getPaymentMethod() != PaymentMethod.VIETQR) {
+            throw new RuntimeException("Đơn hàng không sử dụng VietQR");
+        }
+
+        return orderMapper.toOrderResponse(order);
+    }
+
+    @Override
+    public OrderResponse markPaymentSubmitted(Long orderId, Long userId) {
+        Order order = orderRepository.findByIdWithPayment(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Không có quyền truy cập đơn hàng");
+        }
+
+        if (order.getOrderStatus() != OrderStatus.PENDING
+                || order.getPaymentMethod() != PaymentMethod.VIETQR) {
+            throw new RuntimeException(
+                    "Đơn hàng không thể gửi yêu cầu kiểm tra chuyển khoản"
+            );
+        }
+
+        Payment payment = order.getPayment();
+        if (payment == null) {
+            throw new RuntimeException("Order has no payment");
+        }
+
+        if (payment.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new RuntimeException("Đơn hàng đã được thanh toán");
+        }
+
+        if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
+            return orderMapper.toOrderResponse(order);
+        }
+
+        if (payment.getPaymentStatus() != PaymentStatus.UNPAID) {
+            throw new RuntimeException(
+                    "Trạng thái thanh toán không cho phép cập nhật"
+            );
+        }
+
+        payment.setPaymentStatus(PaymentStatus.PENDING);
+        notificationService.notifyOrderPaymentSubmitted(order);
 
         return orderMapper.toOrderResponse(order);
     }
@@ -145,7 +197,10 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         ShippingAddress shippingAddress = shippingAddressRepository
-                .findById(request.getShippingAddressId())
+                .findByIdAndUserId(
+                        request.getShippingAddressId(),
+                        userId
+                )
                 .orElseThrow(() -> new RuntimeException("Address not found"));
 
         Order order = Order.builder()
@@ -243,6 +298,8 @@ public class OrderServiceImpl implements OrderService {
         reserveStockForOrder(savedOrder, userId);
 
         savedOrder = orderRepository.save(savedOrder);
+
+        notificationService.notifyOrderCreated(savedOrder);
 
         return orderMapper.toOrderResponse(savedOrder);
     }
@@ -373,6 +430,8 @@ public class OrderServiceImpl implements OrderService {
 
         cart.setTotalAmount(cartTotal);
 
+        notificationService.notifyOrderCreated(savedOrder);
+
         return orderMapper.toOrderResponse(savedOrder);
     }
 
@@ -390,6 +449,7 @@ public class OrderServiceImpl implements OrderService {
             return orderMapper.toOrderResponse(order);
         }
 
+        OrderStatus previousStatus = order.getOrderStatus();
         order.setOrderStatus(newStatus);
 
         boolean shouldSendEmail = false;
@@ -403,6 +463,7 @@ public class OrderServiceImpl implements OrderService {
             Payment payment = order.getPayment();
 
             if (payment != null
+                    && payment.getPaymentMethod() == PaymentMethod.COD
                     && payment.getPaymentStatus() == PaymentStatus.UNPAID) {
 
                 payment.setPaymentStatus(PaymentStatus.PAID);
@@ -424,7 +485,8 @@ public class OrderServiceImpl implements OrderService {
             Payment payment = order.getPayment();
 
             if (payment != null
-                    && payment.getPaymentStatus() == PaymentStatus.UNPAID) {
+                    && (payment.getPaymentStatus() == PaymentStatus.UNPAID
+                        || payment.getPaymentStatus() == PaymentStatus.PENDING)) {
 
                 payment.setPaymentStatus(PaymentStatus.FAILED);
 
@@ -442,6 +504,8 @@ public class OrderServiceImpl implements OrderService {
                     newStatus
             );
         }
+
+        notificationService.notifyUserOrderStatusChanged(order, previousStatus);
 
         return orderMapper.toOrderResponse(order);
     }
@@ -464,13 +528,22 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Không thể hủy đơn hàng này");
         }
 
+        OrderStatus previousStatus = order.getOrderStatus();
         order.setOrderStatus(OrderStatus.CANCELLED);
 
         order.setUpdatedAt(LocalDateTime.now());
 
         returnStockForOrder(order, userId);
 
+        Payment payment = order.getPayment();
+        if (payment != null
+                && (payment.getPaymentStatus() == PaymentStatus.UNPAID
+                    || payment.getPaymentStatus() == PaymentStatus.PENDING)) {
+            payment.setPaymentStatus(PaymentStatus.FAILED);
+        }
+
         orderRepository.save(order);
+        notificationService.notifyUserOrderStatusChanged(order, previousStatus);
     }
 
     @Override
@@ -495,11 +568,13 @@ public class OrderServiceImpl implements OrderService {
             );
         }
 
+        OrderStatus previousStatus = order.getOrderStatus();
         order.setOrderStatus(OrderStatus.COMPLETED);
 
         order.setUpdatedAt(LocalDateTime.now());
 
         orderRepository.save(order);
+        notificationService.notifyUserOrderStatusChanged(order, previousStatus);
     }
 
     private boolean isValidStatusTransition(

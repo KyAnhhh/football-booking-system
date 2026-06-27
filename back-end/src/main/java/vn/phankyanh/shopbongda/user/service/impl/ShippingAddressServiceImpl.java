@@ -1,6 +1,9 @@
 package vn.phankyanh.shopbongda.user.service.impl;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.user.domain.ShippingAddress;
@@ -14,6 +17,7 @@ import vn.phankyanh.shopbongda.user.service.ShippingAddressService;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ShippingAddressServiceImpl implements ShippingAddressService {
 
     private final ShippingAddressRepository shippingAddressRepository;
@@ -37,44 +41,39 @@ public class ShippingAddressServiceImpl implements ShippingAddressService {
                 shippingAddressMapper.toShippingAddress(request);
 
         shippingAddress.setUser(user);
+        shippingAddress.setAddress(formatAddress(request));
 
-        shippingAddressRepository.save(shippingAddress);
-
-        return shippingAddressMapper.toResponse(shippingAddress);
+        return shippingAddressMapper.toResponse(
+                shippingAddressRepository.save(shippingAddress)
+        );
     }
 
     @Override
-    public ShippingAddressResponse getMyAddress(Long userId) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found with id " + userId
-                        )
-                );
-
-        if (user.getShippingAddresses() == null
-                || user.getShippingAddresses().isEmpty()) {
-
-            return null;
+    @Transactional(readOnly = true)
+    public List<ShippingAddressResponse> getMyAddresses(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("User not found with id " + userId);
         }
 
-        return shippingAddressMapper.toResponse(
-                user.getShippingAddresses().get(0)
-        );
+        return shippingAddressRepository
+                .findAllByUserIdOrderByIdDesc(userId)
+                .stream()
+                .map(shippingAddressMapper::toResponse)
+                .toList();
     }
 
     @Override
     public ShippingAddressResponse update(
             Long id,
-            ShippingAddressRequest request
+            ShippingAddressRequest request,
+            Long userId
     ) {
 
         ShippingAddress shippingAddress =
-                shippingAddressRepository.findById(id)
+                shippingAddressRepository.findByIdAndUserId(id, userId)
                         .orElseThrow(() ->
                                 new RuntimeException(
-                                        "Not found with id " + id
+                                        "Shipping address not found"
                                 )
                         );
 
@@ -82,20 +81,25 @@ public class ShippingAddressServiceImpl implements ShippingAddressService {
                 shippingAddress,
                 request
         );
+        shippingAddress.setAddress(formatAddress(request));
 
-        shippingAddressRepository.save(shippingAddress);
-
-        return shippingAddressMapper.toResponse(shippingAddress);
+        return shippingAddressMapper.toResponse(
+                shippingAddressRepository.save(shippingAddress)
+        );
     }
 
     @Override
-    public ShippingAddressResponse getShippingAddressById(Long id) {
+    @Transactional(readOnly = true)
+    public ShippingAddressResponse getShippingAddressById(
+            Long id,
+            Long userId
+    ) {
 
         ShippingAddress shippingAddress =
-                shippingAddressRepository.findById(id)
+                shippingAddressRepository.findByIdAndUserId(id, userId)
                         .orElseThrow(() ->
                                 new RuntimeException(
-                                        "Not found with id " + id
+                                        "Shipping address not found"
                                 )
                         );
 
@@ -103,12 +107,25 @@ public class ShippingAddressServiceImpl implements ShippingAddressService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(Long id, Long userId) {
+        ShippingAddress shippingAddress =
+                shippingAddressRepository.findByIdAndUserId(id, userId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Shipping address not found"
+                                )
+                        );
 
-        if (!shippingAddressRepository.existsById(id)) {
-            throw new RuntimeException("Not found with id " + id);
-        }
+        shippingAddressRepository.delete(shippingAddress);
+    }
 
-        shippingAddressRepository.deleteById(id);
+    private String formatAddress(ShippingAddressRequest request) {
+        return String.join(
+                ", ",
+                request.getAddressLine().trim(),
+                request.getWard().trim(),
+                request.getDistrict().trim(),
+                request.getCity().trim()
+        );
     }
 }

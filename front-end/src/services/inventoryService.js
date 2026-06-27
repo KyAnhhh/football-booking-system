@@ -133,3 +133,24 @@ export const adjustStock = async (payload) => {
 
   return handleResponse(response);
 };
+
+export const getProductVariantSyncPreview = async () => {
+  const response = await fetchWithAuth(
+    `${API_URL}/product-variant-sync/preview`,
+    { headers: getJsonHeaders() }
+  );
+
+  return handleResponse(response);
+};
+
+export const syncProductVariantsToInventory = async () => {
+  const response = await fetchWithAuth(
+    `${API_URL}/product-variant-sync`,
+    {
+      method: "POST",
+      headers: getJsonHeaders(),
+    }
+  );
+
+  return handleResponse(response);
+};

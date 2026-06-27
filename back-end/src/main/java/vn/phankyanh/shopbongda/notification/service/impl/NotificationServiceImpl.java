@@ -16,6 +16,8 @@ import vn.phankyanh.shopbongda.notification.domain.NotificationType;
 import vn.phankyanh.shopbongda.notification.dto.response.NotificationResponse;
 import vn.phankyanh.shopbongda.notification.repository.NotificationRepository;
 import vn.phankyanh.shopbongda.notification.service.NotificationService;
+import vn.phankyanh.shopbongda.order.domain.Order;
+import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 import vn.phankyanh.shopbongda.user.domain.Role;
 import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
@@ -25,6 +27,7 @@ import vn.phankyanh.shopbongda.user.repository.UserRepository;
 public class NotificationServiceImpl implements NotificationService {
 
     private static final String BOOKING_REFERENCE_TYPE = "BOOKING";
+    private static final String ORDER_REFERENCE_TYPE = "ORDER";
     private static final DateTimeFormatter BOOKING_TIME_FORMAT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -67,6 +70,81 @@ public class NotificationServiceImpl implements NotificationService {
                         .referenceId(booking.getId())
                         .isRead(false)
                         .build()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void notifyOrderCreated(Order order) {
+        notificationRepository.save(
+                buildOrderNotification(
+                        order.getUser(),
+                        NotificationType.ORDER_CREATED,
+                        "Đặt hàng thành công",
+                        String.format(
+                                "Đơn hàng #%d đã được tạo và đang chờ xử lý.",
+                                order.getId()
+                        ),
+                        order.getId()
+                )
+        );
+
+        for (User operator : getOrderOperators()) {
+            notificationRepository.save(
+                    buildOrderNotification(
+                            operator,
+                            NotificationType.ORDER_CREATED,
+                            "Có đơn hàng mới",
+                            String.format(
+                                    "%s vừa tạo đơn hàng #%d trị giá %,.0f đ.",
+                                    order.getUser().getUsername(),
+                                    order.getId(),
+                                    order.getTotalAmount()
+                            ),
+                            order.getId()
+                    )
+            );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void notifyOrderPaymentSubmitted(Order order) {
+        for (User operator : getOrderOperators()) {
+            notificationRepository.save(
+                    buildOrderNotification(
+                            operator,
+                            NotificationType.ORDER_PAYMENT_SUBMITTED,
+                            "Khách đã báo chuyển khoản",
+                            String.format(
+                                    "Đơn hàng #%d đang chờ kiểm tra giao dịch VietQR.",
+                                    order.getId()
+                            ),
+                            order.getId()
+                    )
+            );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void notifyUserOrderStatusChanged(
+            Order order,
+            OrderStatus previousStatus
+    ) {
+        notificationRepository.save(
+                buildOrderNotification(
+                        order.getUser(),
+                        NotificationType.ORDER_STATUS_CHANGED,
+                        "Đơn hàng đã cập nhật",
+                        String.format(
+                                "Đơn hàng #%d đã chuyển từ %s sang %s.",
+                                order.getId(),
+                                getOrderStatusLabel(previousStatus),
+                                getOrderStatusLabel(order.getOrderStatus())
+                        ),
+                        order.getId()
+                )
         );
     }
 
@@ -154,6 +232,45 @@ public class NotificationServiceImpl implements NotificationService {
             case IN_PROGRESS -> "Đang diễn ra";
             case COMPLETED -> "Hoàn tất";
             case EXPIRED -> "Hết hạn";
+        };
+    }
+
+    private List<User> getOrderOperators() {
+        return List.of(
+                Role.ROLE_ADMIN,
+                Role.ROLE_MANAGER,
+                Role.ROLE_STAFF
+        ).stream()
+                .flatMap(role -> userRepository.findByRole(role).stream())
+                .toList();
+    }
+
+    private Notification buildOrderNotification(
+            User user,
+            NotificationType type,
+            String title,
+            String message,
+            Long orderId
+    ) {
+        return Notification.builder()
+                .user(user)
+                .type(type)
+                .title(title)
+                .message(message)
+                .referenceType(ORDER_REFERENCE_TYPE)
+                .referenceId(orderId)
+                .isRead(false)
+                .build();
+    }
+
+    private String getOrderStatusLabel(OrderStatus status) {
+        return switch (status) {
+            case PENDING -> "Chờ xác nhận";
+            case CONFIRMED -> "Đã xác nhận";
+            case SHIPPING -> "Đang giao hàng";
+            case DELIVERED -> "Đã giao hàng";
+            case COMPLETED -> "Hoàn tất";
+            case CANCELLED -> "Đã hủy";
         };
     }
 }

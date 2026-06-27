@@ -1,0 +1,5 @@
+ALTER TABLE shipping_address
+    ADD COLUMN address_line VARCHAR(255) NULL,
+    ADD COLUMN ward VARCHAR(255) NULL,
+    ADD COLUMN district VARCHAR(255) NULL,
+    ADD COLUMN city VARCHAR(255) NULL;

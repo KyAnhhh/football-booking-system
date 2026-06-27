@@ -7,17 +7,19 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.extra.domain.ExtraService;
+import vn.phankyanh.shopbongda.extra.dto.request.ExtraServiceRequest;
 import vn.phankyanh.shopbongda.extra.repository.ExtraServiceRepository;
+import vn.phankyanh.shopbongda.extra.service.ExtraServiceService;
 import vn.phankyanh.shopbongda.field.domain.FieldStatus;
 import vn.phankyanh.shopbongda.field.domain.FieldType;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
@@ -30,6 +32,16 @@ import vn.phankyanh.shopbongda.importer.domain.ImportType;
 import vn.phankyanh.shopbongda.importer.dto.ImportResultResponse;
 import vn.phankyanh.shopbongda.importer.dto.ImportRowIssueResponse;
 import vn.phankyanh.shopbongda.importer.service.ImportService;
+import vn.phankyanh.shopbongda.inventory.domain.InventoryItem;
+import vn.phankyanh.shopbongda.inventory.domain.InventoryItemType;
+import vn.phankyanh.shopbongda.inventory.domain.Supplier;
+import vn.phankyanh.shopbongda.inventory.dto.request.InventoryItemRequest;
+import vn.phankyanh.shopbongda.inventory.dto.request.StockImportItemRequest;
+import vn.phankyanh.shopbongda.inventory.dto.request.StockImportRequest;
+import vn.phankyanh.shopbongda.inventory.dto.request.SupplierRequest;
+import vn.phankyanh.shopbongda.inventory.repository.InventoryItemRepository;
+import vn.phankyanh.shopbongda.inventory.repository.SupplierRepository;
+import vn.phankyanh.shopbongda.inventory.service.InventoryService;
 import vn.phankyanh.shopbongda.pricing.domain.FieldPricingRule;
 import vn.phankyanh.shopbongda.pricing.domain.HolidayPricingRule;
 import vn.phankyanh.shopbongda.pricing.repository.FieldPricingRuleRepository;
@@ -39,6 +51,7 @@ import vn.phankyanh.shopbongda.product.domain.Category;
 import vn.phankyanh.shopbongda.product.domain.Product;
 import vn.phankyanh.shopbongda.product.domain.ProductImage;
 import vn.phankyanh.shopbongda.product.domain.ProductVariant;
+import vn.phankyanh.shopbongda.product.dto.request.ProductVariantRequest;
 import vn.phankyanh.shopbongda.product.domain.Size;
 import vn.phankyanh.shopbongda.product.repository.BrandRepository;
 import vn.phankyanh.shopbongda.product.repository.CategoryRepository;
@@ -46,6 +59,7 @@ import vn.phankyanh.shopbongda.product.repository.ProductImageRepository;
 import vn.phankyanh.shopbongda.product.repository.ProductRepository;
 import vn.phankyanh.shopbongda.product.repository.ProductVariantRepository;
 import vn.phankyanh.shopbongda.product.repository.SizeRepository;
+import vn.phankyanh.shopbongda.product.service.ProductVariantService;
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +77,11 @@ public class ImportServiceImpl implements ImportService {
     private final HolidayRepository holidayRepository;
     private final HolidayPricingRuleRepository holidayPricingRuleRepository;
     private final ExtraServiceRepository extraServiceRepository;
+    private final ProductVariantService productVariantService;
+    private final ExtraServiceService extraServiceService;
+    private final InventoryService inventoryService;
+    private final InventoryItemRepository inventoryItemRepository;
+    private final SupplierRepository supplierRepository;
 
     @Override
     public String getTemplate(ImportType type) {
@@ -97,12 +116,23 @@ public class ImportServiceImpl implements ImportService {
             case EXTRA_SERVICES -> "name,description,price,isActive,trackStock,stockQuantity,remainingQuantity,unit\n"
                     + "Nuoc suoi Lavie,Chai nuoc 500ml,10000,true,true,100,100,chai\n"
                     + "Thue bong da,Bong da tieu chuan thi dau,50000,true,true,20,20,qua\n";
+            case SUPPLIERS -> "name,phone,email,address,active\n"
+                    + "Nha cung cap the thao,0909000001,supplier@example.com,TP HCM,true\n";
+            case INVENTORY_ITEMS -> "itemCode,name,itemType,unit,lowStockThreshold,active\n"
+                    + "WATER-500,Nuoc suoi 500ml,CONSUMABLE,chai,10,true\n"
+                    + "BALL-MATCH,Bong thi dau,FIELD_ASSET,qua,2,true\n";
+            case STOCK_IMPORTS -> "importCode,supplierName,itemCode,quantity,unitCost,note\n"
+                    + "IMP-DEMO-001,Nha cung cap the thao,WATER-500,100,5000,Nhap kho demo\n"
+                    + "IMP-DEMO-002,Nha cung cap the thao,BALL-MATCH,10,350000,Nhap kho demo\n";
         };
     }
 
     @Override
-    @Transactional
-    public ImportResultResponse importCsv(ImportType type, MultipartFile file) {
+    public ImportResultResponse importCsv(
+            ImportType type,
+            MultipartFile file,
+            Long actorId
+    ) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File CSV không được để trống");
         }
@@ -126,7 +156,13 @@ public class ImportServiceImpl implements ImportService {
                 result.setTotalRows(result.getTotalRows() + 1);
 
                 try {
-                    Long createdId = importRow(type, record, rowNumber, result);
+                    Long createdId = importRow(
+                            type,
+                            record,
+                            rowNumber,
+                            result,
+                            actorId
+                    );
                     if (createdId == null) {
                         result.setFailedRows(result.getFailedRows() + 1);
                     } else {
@@ -146,7 +182,13 @@ public class ImportServiceImpl implements ImportService {
         return result;
     }
 
-    private Long importRow(ImportType type, CSVRecord record, int rowNumber, ImportResultResponse result) {
+    private Long importRow(
+            ImportType type,
+            CSVRecord record,
+            int rowNumber,
+            ImportResultResponse result,
+            Long actorId
+    ) {
         return switch (type) {
             case SIZES -> importSize(record, rowNumber, result);
             case PRODUCTS -> importProduct(record, rowNumber, result);
@@ -158,6 +200,9 @@ public class ImportServiceImpl implements ImportService {
             case HOLIDAYS -> importHoliday(record, rowNumber, result);
             case HOLIDAY_PRICING_RULES -> importHolidayPricingRule(record, rowNumber, result);
             case EXTRA_SERVICES -> importExtraService(record, rowNumber, result);
+            case SUPPLIERS -> importSupplier(record, rowNumber, result);
+            case INVENTORY_ITEMS -> importInventoryItem(record, rowNumber, result);
+            case STOCK_IMPORTS -> importStockImport(record, actorId);
         };
     }
 
@@ -277,15 +322,13 @@ public class ImportServiceImpl implements ImportService {
             return null;
         }
 
-        ProductVariant variant = ProductVariant.builder()
-                .product(product)
-                .size(size)
-                .price(price)
-                .stock(stock)
-                .soldQuantity(0)
-                .build();
+        ProductVariantRequest request = new ProductVariantRequest();
+        request.setProductId(productId);
+        request.setSizeId(sizeId);
+        request.setPrice(price);
+        request.setStock(stock);
 
-        return productVariantRepository.save(variant).getId();
+        return productVariantService.createProductVariant(request).getId();
     }
 
     private Long importFootballField(CSVRecord record, int rowNumber, ImportResultResponse result) {
@@ -570,18 +613,155 @@ public class ImportServiceImpl implements ImportService {
             remainingQuantity = 0;
         }
 
-        ExtraService extraService = ExtraService.builder()
-                .name(name)
-                .description(description)
-                .price(price)
-                .isActive(isActive)
-                .trackStock(trackStock)
-                .stockQuantity(stockQuantity)
-                .remainingQuantity(remainingQuantity)
-                .unit(unit)
-                .build();
+        ExtraServiceRequest request = new ExtraServiceRequest();
+        request.setName(name);
+        request.setDescription(description);
+        request.setPrice(price);
+        request.setIsActive(isActive);
+        request.setTrackStock(trackStock);
+        request.setStockQuantity(stockQuantity);
+        request.setRemainingQuantity(remainingQuantity);
+        request.setUnit(unit);
 
-        return extraServiceRepository.save(extraService).getId();
+        return extraServiceService.create(request).getId();
+    }
+
+    private Long importSupplier(
+            CSVRecord record,
+            int rowNumber,
+            ImportResultResponse result
+    ) {
+        String name = value(record, "name");
+        if (isBlank(name)) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "name",
+                    name,
+                    "Tên nhà cung cấp không được để trống"
+            ));
+            return null;
+        }
+        if (supplierRepository.existsByNameIgnoreCase(name)) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "name",
+                    name,
+                    "Nhà cung cấp đã tồn tại"
+            ));
+            return null;
+        }
+
+        SupplierRequest request = new SupplierRequest();
+        request.setName(name);
+        request.setPhone(value(record, "phone"));
+        request.setEmail(value(record, "email"));
+        request.setAddress(value(record, "address"));
+        request.setActive(parseBoolean(value(record, "active"), "active"));
+
+        return inventoryService.createSupplier(request).getId();
+    }
+
+    private Long importInventoryItem(
+            CSVRecord record,
+            int rowNumber,
+            ImportResultResponse result
+    ) {
+        String itemCode = value(record, "itemCode");
+        String name = value(record, "name");
+        if (isBlank(itemCode) || isBlank(name)) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    isBlank(itemCode) ? "itemCode" : "name",
+                    isBlank(itemCode) ? itemCode : name,
+                    "Mã và tên item kho không được để trống"
+            ));
+            return null;
+        }
+        if (inventoryItemRepository.existsByItemCode(itemCode)) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "itemCode",
+                    itemCode,
+                    "Mã item kho đã tồn tại"
+            ));
+            return null;
+        }
+
+        InventoryItemType itemType;
+        try {
+            itemType = InventoryItemType.valueOf(
+                    value(record, "itemType").toUpperCase()
+            );
+        } catch (RuntimeException ex) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "itemType",
+                    value(record, "itemType"),
+                    "Loại item kho không hợp lệ"
+            ));
+            return null;
+        }
+
+        int threshold = parseInteger(
+                value(record, "lowStockThreshold"),
+                "lowStockThreshold"
+        );
+        if (threshold < 0) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "lowStockThreshold",
+                    String.valueOf(threshold),
+                    "Ngưỡng tồn thấp không được âm"
+            ));
+            return null;
+        }
+
+        InventoryItemRequest request = new InventoryItemRequest();
+        request.setItemCode(itemCode);
+        request.setName(name);
+        request.setItemType(itemType);
+        request.setUnit(value(record, "unit"));
+        request.setLowStockThreshold(threshold);
+        request.setActive(parseBoolean(value(record, "active"), "active"));
+
+        return inventoryService.createItem(request).getId();
+    }
+
+    private Long importStockImport(CSVRecord record, Long actorId) {
+        String supplierName = value(record, "supplierName");
+        String itemCode = value(record, "itemCode");
+
+        Supplier supplier = supplierRepository.findByNameIgnoreCase(supplierName)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Không tìm thấy nhà cung cấp: " + supplierName
+                ));
+        InventoryItem item = inventoryItemRepository.findByItemCode(itemCode)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Không tìm thấy item kho: " + itemCode
+                ));
+
+        int quantity = parseInteger(value(record, "quantity"), "quantity");
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Số lượng nhập phải lớn hơn 0");
+        }
+
+        BigDecimal unitCost = parseDecimal(value(record, "unitCost"), "unitCost");
+        if (unitCost.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Đơn giá nhập không được âm");
+        }
+
+        StockImportItemRequest itemRequest = new StockImportItemRequest();
+        itemRequest.setInventoryItemId(item.getId());
+        itemRequest.setQuantity(quantity);
+        itemRequest.setUnitCost(unitCost);
+
+        StockImportRequest request = new StockImportRequest();
+        request.setImportCode(value(record, "importCode"));
+        request.setSupplierId(supplier.getId());
+        request.setNote(value(record, "note"));
+        request.setItems(List.of(itemRequest));
+
+        return inventoryService.importStock(request, actorId).getId();
     }
 
     private String value(CSVRecord record, String field) {

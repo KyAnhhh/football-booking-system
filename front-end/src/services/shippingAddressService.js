@@ -15,14 +15,14 @@ function getAuthHeader() {
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export const createAddress = async (addressData, userId) => {
+export const createAddress = async (addressData) => {
   const response = await fetchWithAuth(API_URL_USER, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...getAuthHeader(),
     },
-    body: JSON.stringify({ ...addressData, userId }),
+    body: JSON.stringify(addressData),
   });
   return handleResponse(response);
 };
@@ -34,14 +34,12 @@ export const getMyAddress = async () => {
             ...getAuthHeader(),
         }
     });
-    if(response.status === 404) {
-        return null; // Trả về null nếu không tìm thấy địa chỉ giao hàng nào
-    }
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return handleResponse(response);
-}
+    const result = await response.json();
+    return Array.isArray(result.data) ? result.data : [];
+};
 
 export const updateAddress = async (id, addressData) => {
     const response = await fetchWithAuth(`${API_URL_USER}/${id}`, {

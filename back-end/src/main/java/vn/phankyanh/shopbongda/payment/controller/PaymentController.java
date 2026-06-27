@@ -83,7 +83,7 @@ public class PaymentController {
     }
 
     // Xác nhận thanh toán
-    @PutMapping("/user/payments/orders/{orderId}/confirm")
+    @PutMapping("/admin/payments/orders/{orderId}/confirm")
     public ResponseEntity<?> confirmPayment(@PathVariable Long orderId) {
         Payment payment = paymentService.confirmPayment(orderId);
         return ResponseEntity.ok(payment);

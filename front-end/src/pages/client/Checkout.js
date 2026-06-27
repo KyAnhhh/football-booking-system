@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Modal } from "react-bootstrap";
 import { getMyCart } from "../../services/cartService";
-import { checkout, createOrder } from "../../services/orderService";
+import {
+  checkout,
+  createOrder,
+  markOrderPaymentSubmitted,
+} from "../../services/orderService";
 import {
   getMyAddress,
   createAddress,
@@ -232,7 +237,13 @@ function CheckoutAddress({
   );
 }
 
-function CheckoutSummary({ selectedItems, shippingFee, onCheckout, loading }) {
+function CheckoutSummary({
+  selectedItems,
+  shippingFee,
+  onCheckout,
+  loading,
+  orderCreated,
+}) {
   const originalSubtotal = selectedItems.reduce(
     (sum, item) => sum + getItemBasePrice(item) * getItemQuantity(item),
     0
@@ -278,7 +289,7 @@ function CheckoutSummary({ selectedItems, shippingFee, onCheckout, loading }) {
         type="button"
         className="checkout-submit-btn"
         onClick={onCheckout}
-        disabled={loading || !selectedItems.length}
+        disabled={loading || !selectedItems.length || orderCreated}
       >
         {loading ? "Đang xử lý..." : "Đặt hàng"}
       </button>
@@ -287,6 +298,7 @@ function CheckoutSummary({ selectedItems, shippingFee, onCheckout, loading }) {
 }
 
 export default function Checkout() {
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
   const [addresses, setAddresses] = useState([]);
@@ -297,6 +309,8 @@ export default function Checkout() {
   const [showQR, setShowQR] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [orderTotal, setOrderTotal] = useState(0);
+  const [submittingTransfer, setSubmittingTransfer] = useState(false);
   const [newAddress, setNewAddress] = useState({
     receiverName: "",
     phone: "",
@@ -313,7 +327,7 @@ export default function Checkout() {
 
   useEffect(() => {
     const loadQr = async () => {
-      if (!orderId) return;
+      if (!showQR || !orderId) return;
       try {
         const url = await getQrCode(orderId);
         setQrCodeUrl(url);
@@ -323,7 +337,7 @@ export default function Checkout() {
     };
 
     loadQr();
-  }, [orderId]);
+  }, [showQR, orderId]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -447,6 +461,7 @@ export default function Checkout() {
       }
 
       setOrderId(response.id);
+      setOrderTotal(response.totalAmount);
       if (checkoutMode !== "BUY_NOW") {
         await refreshCartCount();
       }
@@ -456,7 +471,7 @@ export default function Checkout() {
       } else {
         Swal("Thành công", "Đơn hàng đã được tạo thành công.", "success").then(
           () => {
-            window.location.href = "/";
+            navigate("/");
           }
         );
       }
@@ -467,13 +482,30 @@ export default function Checkout() {
     }
   };
 
+  const handlePaymentSubmitted = async () => {
+    try {
+      setSubmittingTransfer(true);
+      await markOrderPaymentSubmitted(orderId);
+      setShowQR(false);
+      handleConfirmTransfer();
+    } catch (error) {
+      Swal(
+        "Không thể ghi nhận",
+        error.message || "Vui lòng thử lại sau.",
+        "error"
+      );
+    } finally {
+      setSubmittingTransfer(false);
+    }
+  };
+
   const handleConfirmTransfer = () => {
     Swal(
       "Đã ghi nhận",
       "Cảm ơn bạn. Admin sẽ kiểm tra giao dịch và xử lí đơn hàng.",
       "success"
     ).then(() => {
-      window.location.href = "/";
+      navigate("/my-orders");
     });
   };
 
@@ -511,7 +543,13 @@ export default function Checkout() {
           />
 
           {showQR && (
-            <section className="checkout-qr-panel">
+            <Modal
+              show={showQR}
+              onHide={() => setShowQR(false)}
+              centered
+              backdrop="static"
+              contentClassName="checkout-qr-modal"
+            >
               <div className="checkout-panel-title">
                 <QrCode size={20} />
                 <div>
@@ -520,16 +558,25 @@ export default function Checkout() {
                 </div>
               </div>
 
+              <div className="checkout-qr-order">
+                <span>Đơn hàng #{orderId}</span>
+                <strong>{formatCurrency(orderTotal)}</strong>
+              </div>
+
               {qrCodeUrl ? (
                 <img src={qrCodeUrl} alt="QR thanh toan" />
               ) : (
                 <div className="checkout-qr-loading">Đang tạo mã QR...</div>
               )}
 
-              <button type="button" onClick={handleConfirmTransfer}>
+              <button
+                type="button"
+                onClick={handlePaymentSubmitted}
+                disabled={!qrCodeUrl || submittingTransfer}
+              >
                 Tôi đã chuyển khoản
               </button>
-            </section>
+            </Modal>
           )}
         </div>
 
@@ -538,6 +585,7 @@ export default function Checkout() {
           shippingFee={shippingFee}
           onCheckout={handleCheckout}
           loading={loading}
+          orderCreated={Boolean(orderId)}
         />
       </div>
     </div>
