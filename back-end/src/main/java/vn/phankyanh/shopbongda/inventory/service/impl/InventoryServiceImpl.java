@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +26,7 @@ import vn.phankyanh.shopbongda.inventory.domain.InventoryTransaction;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryTransactionType;
 import vn.phankyanh.shopbongda.inventory.domain.StockImport;
 import vn.phankyanh.shopbongda.inventory.domain.StockImportItem;
+import vn.phankyanh.shopbongda.inventory.domain.StockImportStatus;
 import vn.phankyanh.shopbongda.inventory.domain.Supplier;
 import vn.phankyanh.shopbongda.inventory.dto.request.InventoryItemRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest;
@@ -31,6 +34,7 @@ import vn.phankyanh.shopbongda.inventory.dto.request.StockImportItemRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockImportRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.SupplierRequest;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryItemResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryConsistencyResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryTransactionResponse;
@@ -148,14 +152,23 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public Page<InventoryStockResponse> getStocks(int page, int size) {
+    public Page<InventoryStockResponse> getStocks(
+            int page,
+            int size,
+            String search,
+            InventoryItemType itemType
+    ) {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
                 Sort.by("updatedAt").descending()
         );
 
-        return stockRepository.findAll(pageable)
+        String normalizedSearch = search == null || search.isBlank()
+                ? null
+                : search.trim();
+
+        return stockRepository.search(normalizedSearch, itemType, pageable)
                 .map(this::toStockResponse);
     }
 
@@ -184,6 +197,10 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional
     public SupplierResponse createSupplier(SupplierRequest request) {
+        if (supplierRepository.existsByNameIgnoreCase(request.getName().trim())) {
+            throw new IllegalArgumentException("Tên nhà cung cấp đã tồn tại");
+        }
+
         Supplier supplier = Supplier.builder()
                 .name(request.getName().trim())
                 .phone(request.getPhone())
@@ -198,6 +215,14 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional
     public SupplierResponse updateSupplier(Long id, SupplierRequest request) {
+        supplierRepository.findByNameIgnoreCase(request.getName().trim())
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException(
+                            "Tên nhà cung cấp đã tồn tại"
+                    );
+                });
+
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
 
@@ -234,6 +259,12 @@ public class InventoryServiceImpl implements InventoryService {
                 : supplierRepository.findById(request.getSupplierId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
 
+        if (supplier != null && !Boolean.TRUE.equals(supplier.getActive())) {
+            throw new IllegalStateException(
+                    "Nhà cung cấp đã ngừng hoạt động, không thể nhập kho"
+            );
+        }
+
         String importCode = resolveImportCode(request.getImportCode());
         if (stockImportRepository.existsByImportCode(importCode)) {
             throw new IllegalArgumentException("Mã phiếu nhập đã tồn tại");
@@ -245,6 +276,7 @@ public class InventoryServiceImpl implements InventoryService {
                 .note(request.getNote())
                 .createdBy(actor)
                 .totalAmount(BigDecimal.ZERO)
+                .status(StockImportStatus.DRAFT)
                 .items(new ArrayList<>())
                 .build();
 
@@ -271,20 +303,191 @@ public class InventoryServiceImpl implements InventoryService {
             savedImport.getItems().add(importItem);
             totalAmount = totalAmount.add(totalCost);
 
-            changeStock(
-                    item,
-                    itemRequest.getQuantity(),
-                    InventoryTransactionType.IMPORT,
-                    InventoryReferenceType.STOCK_IMPORT,
-                    savedImport.getId(),
-                    "Nhập kho " + savedImport.getImportCode(),
-                    actor
-            );
         }
 
         savedImport.setTotalAmount(totalAmount);
 
         return toStockImportResponse(stockImportRepository.save(savedImport));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<StockImportResponse> getStockImports(
+            int page,
+            int size,
+            String search,
+            StockImportStatus status,
+            Long supplierId
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("id").descending()
+        );
+        String normalizedSearch =
+                search == null || search.isBlank() ? null : search.trim();
+
+        return stockImportRepository.search(
+                normalizedSearch,
+                status,
+                supplierId,
+                pageable
+        ).map(this::toStockImportResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StockImportResponse getStockImport(Long id) {
+        return toStockImportResponse(
+                stockImportRepository.findDetailById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException("Không tìm thấy phiếu nhập"))
+        );
+    }
+
+    @Override
+    @Transactional
+    public StockImportResponse postStockImport(Long id, Long actorId) {
+        StockImport stockImport = stockImportRepository.findByIdForUpdate(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Không tìm thấy phiếu nhập"));
+
+        if (stockImport.getStatus() == StockImportStatus.POSTED) {
+            return toStockImportResponse(stockImport);
+        }
+        if (stockImport.getStatus() != StockImportStatus.DRAFT) {
+            throw new IllegalStateException("Chỉ có thể ghi sổ phiếu nháp");
+        }
+        if (stockImport.getSupplier() != null
+                && !Boolean.TRUE.equals(stockImport.getSupplier().getActive())) {
+            throw new IllegalStateException("Nhà cung cấp đã ngừng hoạt động");
+        }
+
+        User actor = getActor(actorId);
+        for (StockImportItem line : stockImport.getItems()) {
+            if (!Boolean.TRUE.equals(line.getInventoryItem().getActive())) {
+                throw new IllegalStateException(
+                        "Item kho đã ngừng hoạt động: "
+                                + line.getInventoryItem().getName()
+                );
+            }
+
+            changeStock(
+                    line.getInventoryItem(),
+                    line.getQuantity(),
+                    InventoryTransactionType.IMPORT,
+                    InventoryReferenceType.STOCK_IMPORT,
+                    stockImport.getId(),
+                    "Ghi sổ phiếu nhập " + stockImport.getImportCode(),
+                    actor
+            );
+        }
+
+        stockImport.setStatus(StockImportStatus.POSTED);
+        stockImport.setPostedAt(LocalDateTime.now());
+        return toStockImportResponse(stockImportRepository.save(stockImport));
+    }
+
+    @Override
+    @Transactional
+    public StockImportResponse cancelStockImport(Long id) {
+        StockImport stockImport = stockImportRepository.findByIdForUpdate(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Không tìm thấy phiếu nhập"));
+
+        if (stockImport.getStatus() == StockImportStatus.CANCELLED) {
+            return toStockImportResponse(stockImport);
+        }
+        if (stockImport.getStatus() != StockImportStatus.DRAFT) {
+            throw new IllegalStateException(
+                    "Không thể hủy phiếu đã ghi sổ"
+            );
+        }
+
+        stockImport.setStatus(StockImportStatus.CANCELLED);
+        stockImport.setCancelledAt(LocalDateTime.now());
+        return toStockImportResponse(stockImportRepository.save(stockImport));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public InventoryConsistencyResponse checkConsistency() {
+        List<InventoryItem> items = itemRepository.findAll();
+        List<InventoryStock> stocks = stockRepository.findAll();
+        List<InventoryReservation> activeReservations =
+                reservationRepository.findAllByStatus(
+                        InventoryReservationStatus.ACTIVE
+                );
+        List<String> issues = new ArrayList<>();
+
+        Map<Long, InventoryStock> stocksByItem = new HashMap<>();
+        for (InventoryStock stock : stocks) {
+            Long itemId = stock.getInventoryItem().getId();
+            stocksByItem.put(itemId, stock);
+
+            if (stock.getQuantityOnHand() < 0
+                    || stock.getReservedQuantity() < 0
+                    || stock.getAvailableQuantity() < 0) {
+                issues.add("Item #" + itemId + " có số lượng âm");
+            }
+            if (stock.getReservedQuantity() > stock.getQuantityOnHand()) {
+                issues.add("Item #" + itemId + " giữ vượt tồn");
+            }
+            int expectedAvailable =
+                    stock.getQuantityOnHand() - stock.getReservedQuantity();
+            if (stock.getAvailableQuantity() != expectedAvailable) {
+                issues.add("Item #" + itemId + " sai tồn khả dụng");
+            }
+
+            transactionRepository
+                    .findTopByInventoryItemIdOrderByIdDesc(itemId)
+                    .ifPresent(transaction -> {
+                        if (!transaction.getAfterQuantity()
+                                .equals(stock.getQuantityOnHand())) {
+                            issues.add(
+                                    "Item #" + itemId
+                                            + " không khớp transaction cuối"
+                            );
+                        }
+                    });
+        }
+
+        for (InventoryItem item : items) {
+            if (!stocksByItem.containsKey(item.getId())) {
+                issues.add("Item #" + item.getId() + " chưa có dòng tồn kho");
+            }
+        }
+
+        Map<Long, Integer> activeReservedByItem = new HashMap<>();
+        for (InventoryReservation reservation : activeReservations) {
+            activeReservedByItem.merge(
+                    reservation.getInventoryItem().getId(),
+                    reservation.getQuantity(),
+                    Integer::sum
+            );
+        }
+        for (InventoryStock stock : stocks) {
+            int expectedReserved = activeReservedByItem.getOrDefault(
+                    stock.getInventoryItem().getId(),
+                    0
+            );
+            if (stock.getReservedQuantity() != expectedReserved) {
+                issues.add(
+                        "Item #" + stock.getInventoryItem().getId()
+                                + " không khớp tổng reservation đang hoạt động"
+                );
+            }
+        }
+
+        return InventoryConsistencyResponse.builder()
+                .valid(issues.isEmpty())
+                .checkedAt(LocalDateTime.now())
+                .itemsChecked(items.size())
+                .stocksChecked(stocks.size())
+                .activeReservationsChecked(activeReservations.size())
+                .issueCount(issues.size())
+                .issues(issues)
+                .build();
     }
 
     @Override
@@ -887,10 +1090,13 @@ public class InventoryServiceImpl implements InventoryService {
                 .supplierId(supplier == null ? null : supplier.getId())
                 .supplierName(supplier == null ? null : supplier.getName())
                 .totalAmount(stockImport.getTotalAmount())
+                .status(stockImport.getStatus())
                 .note(stockImport.getNote())
                 .createdById(actor == null ? null : actor.getId())
                 .createdByName(actor == null ? null : actor.getUsername())
                 .createdAt(stockImport.getCreatedAt())
+                .postedAt(stockImport.getPostedAt())
+                .cancelledAt(stockImport.getCancelledAt())
                 .items(items)
                 .build();
     }

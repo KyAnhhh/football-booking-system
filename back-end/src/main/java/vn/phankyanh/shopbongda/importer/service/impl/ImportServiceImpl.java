@@ -7,7 +7,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -123,7 +127,7 @@ public class ImportServiceImpl implements ImportService {
                     + "BALL-MATCH,Bong thi dau,FIELD_ASSET,qua,2,true\n";
             case STOCK_IMPORTS -> "importCode,supplierName,itemCode,quantity,unitCost,note\n"
                     + "IMP-DEMO-001,Nha cung cap the thao,WATER-500,100,5000,Nhap kho demo\n"
-                    + "IMP-DEMO-002,Nha cung cap the thao,BALL-MATCH,10,350000,Nhap kho demo\n";
+                    + "IMP-DEMO-001,Nha cung cap the thao,BALL-MATCH,10,350000,Nhap kho demo\n";
         };
     }
 
@@ -151,6 +155,12 @@ public class ImportServiceImpl implements ImportService {
                         .build()
                         .parse(reader)
         ) {
+            if (type == ImportType.STOCK_IMPORTS) {
+                importStockImports(parser, result, actorId);
+                result.setWarningRows(result.getWarnings().size());
+                return result;
+            }
+
             for (CSVRecord record : parser) {
                 int rowNumber = Math.toIntExact(record.getRecordNumber() + 1);
                 result.setTotalRows(result.getTotalRows() + 1);
@@ -202,7 +212,9 @@ public class ImportServiceImpl implements ImportService {
             case EXTRA_SERVICES -> importExtraService(record, rowNumber, result);
             case SUPPLIERS -> importSupplier(record, rowNumber, result);
             case INVENTORY_ITEMS -> importInventoryItem(record, rowNumber, result);
-            case STOCK_IMPORTS -> importStockImport(record, actorId);
+            case STOCK_IMPORTS -> throw new IllegalStateException(
+                    "Phiáº¿u nháº­p kho pháº£i Ä‘Æ°á»£c xá»­ lÃ½ theo nhÃ³m"
+            );
         };
     }
 
@@ -726,6 +738,190 @@ public class ImportServiceImpl implements ImportService {
 
         return inventoryService.createItem(request).getId();
     }
+
+    private void importStockImports(
+            CSVParser parser,
+            ImportResultResponse result,
+            Long actorId
+    ) {
+        Map<String, List<StockImportCsvRow>> rowsByImportCode =
+                new LinkedHashMap<>();
+        Set<String> invalidImportCodes = new HashSet<>();
+
+        for (CSVRecord record : parser) {
+            int rowNumber = Math.toIntExact(record.getRecordNumber() + 1);
+            result.setTotalRows(result.getTotalRows() + 1);
+            String importCode = record.isMapped("importCode")
+                    ? record.get("importCode").trim()
+                    : "";
+
+            try {
+                StockImportCsvRow row = parseStockImportRow(
+                        record,
+                        rowNumber
+                );
+                rowsByImportCode
+                        .computeIfAbsent(
+                                row.importCode(),
+                                ignored -> new ArrayList<>()
+                        )
+                        .add(row);
+            } catch (RuntimeException ex) {
+                result.setFailedRows(result.getFailedRows() + 1);
+                result.getErrors().add(
+                        issue(rowNumber, "row", importCode, ex.getMessage())
+                );
+                if (!isBlank(importCode)) {
+                    invalidImportCodes.add(importCode);
+                }
+            }
+        }
+
+        for (Map.Entry<String, List<StockImportCsvRow>> entry
+                : rowsByImportCode.entrySet()) {
+            List<StockImportCsvRow> rows = entry.getValue();
+            if (invalidImportCodes.contains(entry.getKey())) {
+                markStockImportGroupFailed(
+                        rows,
+                        result,
+                        "Phiếu có dòng không hợp lệ nên không được tạo"
+                );
+                continue;
+            }
+
+            try {
+                validateStockImportGroup(rows);
+                StockImportCsvRow first = rows.get(0);
+                StockImportRequest request = new StockImportRequest();
+                request.setImportCode(first.importCode());
+                request.setSupplierId(first.supplier().getId());
+                request.setNote(first.note());
+                request.setItems(rows.stream()
+                        .map(this::toStockImportItemRequest)
+                        .toList());
+
+                Long createdId = inventoryService
+                        .importStock(request, actorId)
+                        .getId();
+                result.getCreatedIds().add(createdId);
+                result.setSuccessRows(
+                        result.getSuccessRows() + rows.size()
+                );
+            } catch (RuntimeException ex) {
+                markStockImportGroupFailed(rows, result, ex.getMessage());
+            }
+        }
+    }
+
+    private StockImportCsvRow parseStockImportRow(
+            CSVRecord record,
+            int rowNumber
+    ) {
+        String importCode = value(record, "importCode");
+        if (isBlank(importCode)) {
+            throw new IllegalArgumentException(
+                    "Mã phiếu nhập không được để trống"
+            );
+        }
+
+        String supplierName = value(record, "supplierName");
+        String itemCode = value(record, "itemCode");
+        Supplier supplier = supplierRepository.findByNameIgnoreCase(supplierName)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Không tìm thấy nhà cung cấp: " + supplierName
+                ));
+        InventoryItem item = inventoryItemRepository.findByItemCode(itemCode)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Không tìm thấy item kho: " + itemCode
+                ));
+
+        int quantity = parseInteger(value(record, "quantity"), "quantity");
+        if (quantity <= 0) {
+            throw new IllegalArgumentException(
+                    "Số lượng nhập phải lớn hơn 0"
+            );
+        }
+
+        BigDecimal unitCost = parseDecimal(
+                value(record, "unitCost"),
+                "unitCost"
+        );
+        if (unitCost.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException(
+                    "Đơn giá nhập phải lớn hơn 0"
+            );
+        }
+
+        return new StockImportCsvRow(
+                rowNumber,
+                importCode,
+                supplier,
+                item,
+                quantity,
+                unitCost,
+                value(record, "note")
+        );
+    }
+
+    private void validateStockImportGroup(List<StockImportCsvRow> rows) {
+        StockImportCsvRow first = rows.get(0);
+        Set<Long> itemIds = new HashSet<>();
+
+        for (StockImportCsvRow row : rows) {
+            if (!first.supplier().getId().equals(row.supplier().getId())) {
+                throw new IllegalArgumentException(
+                        "Các dòng cùng mã phiếu phải cùng nhà cung cấp"
+                );
+            }
+            if (!first.note().equals(row.note())) {
+                throw new IllegalArgumentException(
+                        "Các dòng cùng mã phiếu phải cùng ghi chú"
+                );
+            }
+            if (!itemIds.add(row.item().getId())) {
+                throw new IllegalArgumentException(
+                        "Item kho bị lặp trong cùng phiếu: "
+                                + row.item().getItemCode()
+                );
+            }
+        }
+    }
+
+    private StockImportItemRequest toStockImportItemRequest(
+            StockImportCsvRow row
+    ) {
+        StockImportItemRequest request = new StockImportItemRequest();
+        request.setInventoryItemId(row.item().getId());
+        request.setQuantity(row.quantity());
+        request.setUnitCost(row.unitCost());
+        return request;
+    }
+
+    private void markStockImportGroupFailed(
+            List<StockImportCsvRow> rows,
+            ImportResultResponse result,
+            String message
+    ) {
+        result.setFailedRows(result.getFailedRows() + rows.size());
+        for (StockImportCsvRow row : rows) {
+            result.getErrors().add(issue(
+                    row.rowNumber(),
+                    "importCode",
+                    row.importCode(),
+                    message
+            ));
+        }
+    }
+
+    private record StockImportCsvRow(
+            int rowNumber,
+            String importCode,
+            Supplier supplier,
+            InventoryItem item,
+            int quantity,
+            BigDecimal unitCost,
+            String note
+    ) {}
 
     private Long importStockImport(CSVRecord record, Long actorId) {
         String supplierName = value(record, "supplierName");

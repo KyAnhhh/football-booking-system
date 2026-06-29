@@ -3,6 +3,7 @@ package vn.phankyanh.shopbongda.inventory.dto.request;
 import java.math.BigDecimal;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -16,5 +17,7 @@ public class StockImportItemRequest {
     @Min(value = 1, message = "Số lượng nhập phải lớn hơn 0")
     private Integer quantity;
 
+    @NotNull(message = "Giá nhập không được để trống")
+    @DecimalMin(value = "0.01", message = "Giá nhập phải lớn hơn 0")
     private BigDecimal unitCost;
 }

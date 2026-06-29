@@ -16,11 +16,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryItemType;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryReservationStatus;
+import vn.phankyanh.shopbongda.inventory.domain.StockImportStatus;
 import vn.phankyanh.shopbongda.inventory.dto.request.InventoryItemRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockImportRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.SupplierRequest;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryItemResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryConsistencyResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryTransactionResponse;
@@ -77,11 +79,13 @@ public class AdminInventoryController {
     @GetMapping("/stocks")
     public ApiResponse<Page<InventoryStockResponse>> getStocks(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) InventoryItemType itemType
     ) {
         return response(
                 "Lấy tồn kho thành công",
-                inventoryService.getStocks(page, size)
+                inventoryService.getStocks(page, size, search, itemType)
         );
     }
 
@@ -149,6 +153,65 @@ public class AdminInventoryController {
         return response(
                 "Nhập kho thành công",
                 inventoryService.importStock(request, jwt.getClaim("id"))
+        );
+    }
+
+    @GetMapping("/imports")
+    public ApiResponse<Page<StockImportResponse>> getStockImports(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) StockImportStatus status,
+            @RequestParam(required = false) Long supplierId
+    ) {
+        return response(
+                "Lấy danh sách phiếu nhập thành công",
+                inventoryService.getStockImports(
+                        page,
+                        size,
+                        search,
+                        status,
+                        supplierId
+                )
+        );
+    }
+
+    @GetMapping("/imports/{id}")
+    public ApiResponse<StockImportResponse> getStockImport(
+            @PathVariable Long id
+    ) {
+        return response(
+                "Lấy chi tiết phiếu nhập thành công",
+                inventoryService.getStockImport(id)
+        );
+    }
+
+    @PostMapping("/imports/{id}/post")
+    public ApiResponse<StockImportResponse> postStockImport(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return response(
+                "Ghi sổ phiếu nhập thành công",
+                inventoryService.postStockImport(id, jwt.getClaim("id"))
+        );
+    }
+
+    @PostMapping("/imports/{id}/cancel")
+    public ApiResponse<StockImportResponse> cancelStockImport(
+            @PathVariable Long id
+    ) {
+        return response(
+                "Hủy phiếu nhập thành công",
+                inventoryService.cancelStockImport(id)
+        );
+    }
+
+    @GetMapping("/consistency")
+    public ApiResponse<InventoryConsistencyResponse> checkConsistency() {
+        return response(
+                "Kiểm tra dữ liệu kho hoàn tất",
+                inventoryService.checkConsistency()
         );
     }
 

@@ -53,8 +53,16 @@ export const updateInventoryItem = async (id, payload) => {
   return handleResponse(response);
 };
 
-export const getInventoryStocks = async ({ page = 0, size = 20 } = {}) => {
+export const getInventoryStocks = async ({
+  page = 0,
+  size = 20,
+  search = "",
+  itemType = "",
+} = {}) => {
   const params = new URLSearchParams({ page, size });
+  if (search) params.append("search", search);
+  if (itemType) params.append("itemType", itemType);
+
   const response = await fetchWithAuth(`${API_URL}/stocks?${params.toString()}`, {
     headers: getJsonHeaders(),
   });
@@ -114,6 +122,16 @@ export const createSupplier = async (payload) => {
   return handleResponse(response);
 };
 
+export const updateSupplier = async (id, payload) => {
+  const response = await fetchWithAuth(`${API_URL}/suppliers/${id}`, {
+    method: "PUT",
+    headers: getJsonHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response);
+};
+
 export const importStock = async (payload) => {
   const response = await fetchWithAuth(`${API_URL}/imports`, {
     method: "POST",
@@ -121,6 +139,55 @@ export const importStock = async (payload) => {
     body: JSON.stringify(payload),
   });
 
+  return handleResponse(response);
+};
+
+export const getStockImports = async ({
+  page = 0,
+  size = 20,
+  search = "",
+  status = "",
+  supplierId = "",
+} = {}) => {
+  const params = new URLSearchParams({ page, size });
+  if (search) params.append("search", search);
+  if (status) params.append("status", status);
+  if (supplierId) params.append("supplierId", supplierId);
+
+  const response = await fetchWithAuth(
+    `${API_URL}/imports?${params.toString()}`,
+    { headers: getJsonHeaders() }
+  );
+  return handleResponse(response);
+};
+
+export const getStockImportById = async (id) => {
+  const response = await fetchWithAuth(`${API_URL}/imports/${id}`, {
+    headers: getJsonHeaders(),
+  });
+  return handleResponse(response);
+};
+
+export const postStockImport = async (id) => {
+  const response = await fetchWithAuth(`${API_URL}/imports/${id}/post`, {
+    method: "POST",
+    headers: getJsonHeaders(),
+  });
+  return handleResponse(response);
+};
+
+export const cancelStockImport = async (id) => {
+  const response = await fetchWithAuth(`${API_URL}/imports/${id}/cancel`, {
+    method: "POST",
+    headers: getJsonHeaders(),
+  });
+  return handleResponse(response);
+};
+
+export const checkInventoryConsistency = async () => {
+  const response = await fetchWithAuth(`${API_URL}/consistency`, {
+    headers: getJsonHeaders(),
+  });
   return handleResponse(response);
 };
 

@@ -13,4 +13,7 @@ public interface InventoryTransactionRepository
             Long inventoryItemId,
             Pageable pageable
     );
+
+    java.util.Optional<InventoryTransaction>
+            findTopByInventoryItemIdOrderByIdDesc(Long inventoryItemId);
 }

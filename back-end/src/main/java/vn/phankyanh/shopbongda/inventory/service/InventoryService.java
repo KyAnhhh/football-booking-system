@@ -5,11 +5,13 @@ import org.springframework.data.domain.Page;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryItemType;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryReferenceType;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryReservationStatus;
+import vn.phankyanh.shopbongda.inventory.domain.StockImportStatus;
 import vn.phankyanh.shopbongda.inventory.dto.request.InventoryItemRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockImportRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.SupplierRequest;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryItemResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryConsistencyResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryTransactionResponse;
@@ -29,7 +31,12 @@ public interface InventoryService {
             InventoryItemType itemType
     );
 
-    Page<InventoryStockResponse> getStocks(int page, int size);
+    Page<InventoryStockResponse> getStocks(
+            int page,
+            int size,
+            String search,
+            InventoryItemType itemType
+    );
 
     Page<InventoryTransactionResponse> getTransactions(
             int page,
@@ -44,6 +51,22 @@ public interface InventoryService {
     Page<SupplierResponse> getSuppliers(int page, int size);
 
     StockImportResponse importStock(StockImportRequest request, Long actorId);
+
+    Page<StockImportResponse> getStockImports(
+            int page,
+            int size,
+            String search,
+            StockImportStatus status,
+            Long supplierId
+    );
+
+    StockImportResponse getStockImport(Long id);
+
+    StockImportResponse postStockImport(Long id, Long actorId);
+
+    StockImportResponse cancelStockImport(Long id);
+
+    InventoryConsistencyResponse checkConsistency();
 
     InventoryTransactionResponse adjustStock(
             StockAdjustmentRequest request,

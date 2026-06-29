@@ -1,6 +1,7 @@
 package vn.phankyanh.shopbongda.inventory.repository;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,5 +24,9 @@ public interface InventoryReservationRepository
     Page<InventoryReservation> findByStatus(
             InventoryReservationStatus status,
             Pageable pageable
+    );
+
+    List<InventoryReservation> findAllByStatus(
+            InventoryReservationStatus status
     );
 }

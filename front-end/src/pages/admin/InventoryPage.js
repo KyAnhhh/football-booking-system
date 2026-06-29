@@ -5,16 +5,23 @@ import { BsArrowRepeat } from "react-icons/bs";
 
 import {
   adjustStock,
+  cancelStockImport,
+  checkInventoryConsistency,
   createInventoryItem,
   createSupplier,
   getInventoryItems,
   getInventoryReservations,
   getInventoryStocks,
   getInventoryTransactions,
+  getStockImportById,
+  getStockImports,
   getProductVariantSyncPreview,
   getSuppliers,
   importStock,
+  postStockImport,
   syncProductVariantsToInventory,
+  updateInventoryItem,
+  updateSupplier,
 } from "../../services/inventoryService";
 import "../../assets/styles/AdminCrudPage.css";
 import "../../assets/styles/InventoryPage.css";
@@ -56,17 +63,25 @@ const emptySupplierForm = {
 const getPageTotal = (pageData) =>
   pageData?.page?.totalPages || pageData?.totalPages || 1;
 
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(Number(value || 0));
+
 export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState("stocks");
   const [items, setItems] = useState([]);
   const [stocks, setStocks] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [reservations, setReservations] = useState([]);
+  const [stockImports, setStockImports] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [itemPage, setItemPage] = useState(null);
   const [stockPage, setStockPage] = useState(null);
   const [transactionPage, setTransactionPage] = useState(null);
   const [reservationPage, setReservationPage] = useState(null);
+  const [stockImportPage, setStockImportPage] = useState(null);
   const [pageNo, setPageNo] = useState(0);
   const [search, setSearch] = useState("");
   const [itemType, setItemType] = useState("");
@@ -77,11 +92,18 @@ export default function InventoryPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showProductSyncModal, setShowProductSyncModal] = useState(false);
+  const [showImportDetailModal, setShowImportDetailModal] = useState(false);
+  const [showConsistencyModal, setShowConsistencyModal] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [selectedStockImport, setSelectedStockImport] = useState(null);
+  const [consistencyResult, setConsistencyResult] = useState(null);
+  const [consistencyLoading, setConsistencyLoading] = useState(false);
   const [productSyncPreview, setProductSyncPreview] = useState(null);
   const [productSyncResult, setProductSyncResult] = useState(null);
   const [productSyncLoading, setProductSyncLoading] = useState(false);
   const [itemForm, setItemForm] = useState(emptyItemForm);
   const [supplierForm, setSupplierForm] = useState(emptySupplierForm);
+  const [editingSupplierId, setEditingSupplierId] = useState(null);
   const [importForm, setImportForm] = useState({
     importCode: "",
     supplierId: "",
@@ -100,6 +122,17 @@ export default function InventoryPage() {
     [items]
   );
 
+  const importTotal = useMemo(
+    () =>
+      importForm.items.reduce(
+        (total, item) =>
+          total
+          + Number(item.quantity || 0) * Number(item.unitCost || 0),
+        0
+      ),
+    [importForm.items]
+  );
+
   const loadItems = useCallback(async () => {
     const data = await getInventoryItems({
       page: pageNo,
@@ -112,10 +145,15 @@ export default function InventoryPage() {
   }, [pageNo, search, itemType]);
 
   const loadStocks = useCallback(async () => {
-    const data = await getInventoryStocks({ page: pageNo, size: 20 });
+    const data = await getInventoryStocks({
+      page: pageNo,
+      size: 20,
+      search,
+      itemType,
+    });
     setStocks(data.content || []);
     setStockPage(data);
-  }, [pageNo]);
+  }, [pageNo, search, itemType]);
 
   const loadTransactions = useCallback(async () => {
     const data = await getInventoryTransactions({ page: pageNo, size: 20 });
@@ -128,6 +166,16 @@ export default function InventoryPage() {
     setReservations(data.content || []);
     setReservationPage(data);
   }, [pageNo]);
+
+  const loadStockImports = useCallback(async () => {
+    const data = await getStockImports({
+      page: pageNo,
+      size: 20,
+      search,
+    });
+    setStockImports(data.content || []);
+    setStockImportPage(data);
+  }, [pageNo, search]);
 
   const loadSuppliers = useCallback(async () => {
     const data = await getSuppliers({ page: 0, size: 100 });
@@ -142,6 +190,7 @@ export default function InventoryPage() {
         activeTab === "stocks" ? loadStocks() : Promise.resolve(),
         activeTab === "transactions" ? loadTransactions() : Promise.resolve(),
         activeTab === "reservations" ? loadReservations() : Promise.resolve(),
+        activeTab === "imports" ? loadStockImports() : Promise.resolve(),
         loadSuppliers(),
       ]);
     } catch (error) {
@@ -155,6 +204,7 @@ export default function InventoryPage() {
     loadStocks,
     loadTransactions,
     loadReservations,
+    loadStockImports,
     loadSuppliers,
   ]);
 
@@ -163,7 +213,11 @@ export default function InventoryPage() {
   }, [loadData]);
 
   const currentPageData =
-    activeTab === "items"
+    activeTab === "suppliers"
+      ? null
+      : activeTab === "imports"
+        ? stockImportPage
+      : activeTab === "items"
       ? itemPage
       : activeTab === "reservations"
         ? reservationPage
@@ -171,6 +225,50 @@ export default function InventoryPage() {
         ? transactionPage
         : stockPage;
   const totalPages = getPageTotal(currentPageData);
+
+  const openCreateItem = () => {
+    setEditingItemId(null);
+    setItemForm(emptyItemForm);
+    setShowItemModal(true);
+  };
+
+  const openEditItemThreshold = (item) => {
+    setEditingItemId(item.id);
+    setItemForm({
+      itemCode: item.itemCode,
+      name: item.name,
+      itemType: item.itemType,
+      referenceId: item.referenceId || "",
+      unit: item.unit || "cái",
+      lowStockThreshold: item.lowStockThreshold || 0,
+      active: item.active,
+    });
+    setShowItemModal(true);
+  };
+
+  const handleUpdateItemThreshold = async (event) => {
+    event.preventDefault();
+    try {
+      await updateInventoryItem(editingItemId, {
+        ...itemForm,
+        referenceId: itemForm.referenceId
+          ? Number(itemForm.referenceId)
+          : null,
+        lowStockThreshold: Number(itemForm.lowStockThreshold || 0),
+      });
+      setShowItemModal(false);
+      setEditingItemId(null);
+      setItemForm(emptyItemForm);
+      await loadData();
+      swal("Thành công", "Đã cập nhật ngưỡng cảnh báo.", "success");
+    } catch (error) {
+      swal(
+        "Lỗi",
+        error.message || "Không thể cập nhật ngưỡng cảnh báo.",
+        "error"
+      );
+    }
+  };
 
   const handleCreateItem = async (event) => {
     event.preventDefault();
@@ -189,16 +287,68 @@ export default function InventoryPage() {
     }
   };
 
-  const handleCreateSupplier = async (event) => {
+  const handleSaveSupplier = async (event) => {
     event.preventDefault();
     try {
-      await createSupplier(supplierForm);
+      if (editingSupplierId) {
+        await updateSupplier(editingSupplierId, supplierForm);
+      } else {
+        await createSupplier(supplierForm);
+      }
       setShowSupplierModal(false);
       setSupplierForm(emptySupplierForm);
+      setEditingSupplierId(null);
       await loadSuppliers();
       swal("Thành công", "Đã tạo nhà cung cấp.", "success");
     } catch (error) {
       swal("Lỗi", error.message || "Không thể tạo nhà cung cấp.", "error");
+    }
+  };
+
+  const openCreateSupplier = () => {
+    setEditingSupplierId(null);
+    setSupplierForm(emptySupplierForm);
+    setShowSupplierModal(true);
+  };
+
+  const openEditSupplier = (supplier) => {
+    setEditingSupplierId(supplier.id);
+    setSupplierForm({
+      name: supplier.name || "",
+      phone: supplier.phone || "",
+      email: supplier.email || "",
+      address: supplier.address || "",
+      active: Boolean(supplier.active),
+    });
+    setShowSupplierModal(true);
+  };
+
+  const handleToggleSupplier = async (supplier) => {
+    const nextActive = !supplier.active;
+    const confirmed = await swal({
+      title: nextActive
+        ? "Kích hoạt nhà cung cấp?"
+        : "Ngừng hợp tác với nhà cung cấp?",
+      text: nextActive
+        ? "Nhà cung cấp sẽ được sử dụng lại trong phiếu nhập."
+        : "Nhà cung cấp sẽ được ẩn khỏi các phiếu nhập mới.",
+      icon: "warning",
+      buttons: ["Không", "Xác nhận"],
+      dangerMode: !nextActive,
+    });
+    if (!confirmed) return;
+
+    try {
+      await updateSupplier(supplier.id, {
+        name: supplier.name,
+        phone: supplier.phone,
+        email: supplier.email,
+        address: supplier.address,
+        active: nextActive,
+      });
+      await loadSuppliers();
+    } catch (error) {
+      swal("Lỗi", error.message || "Không thể cập nhật trạng thái.", "error");
     }
   };
 
@@ -216,10 +366,81 @@ export default function InventoryPage() {
         })),
       });
       setShowImportModal(false);
+      setImportForm({
+        importCode: "",
+        supplierId: "",
+        note: "",
+        items: [{ inventoryItemId: "", quantity: 1, unitCost: 0 }],
+      });
+      setActiveTab("imports");
+      setPageNo(0);
       await loadData();
       swal("Thành công", "Nhập kho thành công.", "success");
     } catch (error) {
       swal("Lỗi", error.message || "Không thể nhập kho.", "error");
+    }
+  };
+
+  const openStockImportDetail = async (id) => {
+    try {
+      const data = await getStockImportById(id);
+      setSelectedStockImport(data);
+      setShowImportDetailModal(true);
+    } catch (error) {
+      swal("Lỗi", error.message || "Không thể tải phiếu nhập.", "error");
+    }
+  };
+
+  const handlePostStockImport = async (stockImport) => {
+    const confirmed = await swal({
+      title: "Ghi sổ phiếu nhập?",
+      text: "Tồn kho sẽ được cộng và phiếu không thể chỉnh sửa sau bước này.",
+      icon: "warning",
+      buttons: ["Không", "Ghi sổ"],
+    });
+    if (!confirmed) return;
+
+    try {
+      await postStockImport(stockImport.id);
+      setShowImportDetailModal(false);
+      await Promise.all([loadStockImports(), loadStocks()]);
+      swal("Thành công", "Phiếu nhập đã được ghi sổ.", "success");
+    } catch (error) {
+      swal("Lỗi", error.message || "Không thể ghi sổ phiếu nhập.", "error");
+    }
+  };
+
+  const handleCancelStockImport = async (stockImport) => {
+    const confirmed = await swal({
+      title: "Hủy phiếu nhập?",
+      text: "Phiếu nháp sẽ bị hủy và không tác động đến tồn kho.",
+      icon: "warning",
+      buttons: ["Không", "Hủy phiếu"],
+      dangerMode: true,
+    });
+    if (!confirmed) return;
+
+    try {
+      await cancelStockImport(stockImport.id);
+      setShowImportDetailModal(false);
+      await loadStockImports();
+      swal("Đã hủy", "Phiếu nhập đã được hủy.", "success");
+    } catch (error) {
+      swal("Lỗi", error.message || "Không thể hủy phiếu nhập.", "error");
+    }
+  };
+
+  const handleCheckConsistency = async () => {
+    try {
+      setConsistencyLoading(true);
+      setShowConsistencyModal(true);
+      const result = await checkInventoryConsistency();
+      setConsistencyResult(result);
+    } catch (error) {
+      setShowConsistencyModal(false);
+      swal("Lỗi", error.message || "Không thể kiểm tra dữ liệu kho.", "error");
+    } finally {
+      setConsistencyLoading(false);
     }
   };
 
@@ -307,10 +528,13 @@ export default function InventoryPage() {
             <BsArrowRepeat />
             Đồng bộ sản phẩm
           </Button>
-          <Button variant="outline-primary" onClick={() => setShowSupplierModal(true)}>
+          <Button variant="outline-warning" onClick={handleCheckConsistency}>
+            Kiểm tra dữ liệu
+          </Button>
+          <Button variant="outline-primary" onClick={openCreateSupplier}>
             + Nhà cung cấp
           </Button>
-          <Button variant="outline-success" onClick={() => setShowItemModal(true)}>
+          <Button variant="outline-success" onClick={openCreateItem}>
             + Item kho
           </Button>
           <Button variant="success" onClick={() => setShowImportModal(true)}>
@@ -328,6 +552,8 @@ export default function InventoryPage() {
           ["items", "Item kho"],
           ["transactions", "Lịch sử"],
           ["reservations", "Giữ kho"],
+          ["suppliers", "Nhà cung cấp"],
+          ["imports", "Phiếu nhập"],
         ].map(([value, label]) => (
           <Button
             key={value}
@@ -411,6 +637,7 @@ export default function InventoryPage() {
               <th>Đơn vị</th>
               <th>Ngưỡng cảnh báo</th>
               <th>Trạng thái</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -423,6 +650,15 @@ export default function InventoryPage() {
                 <td>{item.unit}</td>
                 <td>{item.lowStockThreshold}</td>
                 <td>{item.active ? "Đang dùng" : "Ngừng"}</td>
+                <td>
+                  <Button
+                    size="sm"
+                    variant="outline-warning"
+                    onClick={() => openEditItemThreshold(item)}
+                  >
+                    Sửa ngưỡng
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -509,6 +745,154 @@ export default function InventoryPage() {
         </Table>
       )}
 
+      {activeTab === "imports" && (
+        <Table responsive hover className="admin-crud-table">
+          <thead>
+            <tr>
+              <th>Mã phiếu</th>
+              <th>Nhà cung cấp</th>
+              <th>Tổng giá trị</th>
+              <th>Người tạo</th>
+              <th>Ngày tạo</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stockImports.length > 0 ? (
+              stockImports.map((stockImport) => (
+                <tr key={stockImport.id}>
+                  <td><strong>{stockImport.importCode}</strong></td>
+                  <td>{stockImport.supplierName || "Không có"}</td>
+                  <td>{formatCurrency(stockImport.totalAmount)}</td>
+                  <td>{stockImport.createdByName || "-"}</td>
+                  <td>
+                    {new Date(stockImport.createdAt).toLocaleString("vi-VN")}
+                  </td>
+                  <td>
+                    <span
+                      className={`inventory-badge ${
+                        stockImport.status === "POSTED"
+                          ? "success"
+                          : stockImport.status === "CANCELLED"
+                            ? "danger"
+                            : "warning"
+                      }`}
+                    >
+                      {stockImport.status === "POSTED"
+                        ? "Đã ghi sổ"
+                        : stockImport.status === "CANCELLED"
+                          ? "Đã hủy"
+                          : "Phiếu nháp"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="inventory-row-actions">
+                      <Button
+                        size="sm"
+                        variant="outline-primary"
+                        onClick={() => openStockImportDetail(stockImport.id)}
+                      >
+                        Xem
+                      </Button>
+                      {stockImport.status === "DRAFT" && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline-success"
+                            onClick={() => handlePostStockImport(stockImport)}
+                          >
+                            Ghi sổ
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            onClick={() => handleCancelStockImport(stockImport)}
+                          >
+                            Hủy
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="text-center">
+                  Chưa có phiếu nhập.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </Table>
+      )}
+
+      {activeTab === "suppliers" && (
+        <Table responsive hover className="admin-crud-table">
+          <thead>
+            <tr>
+              <th>Nhà cung cấp</th>
+              <th>Điện thoại</th>
+              <th>Email</th>
+              <th>Địa chỉ</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {suppliers.length > 0 ? (
+              suppliers.map((supplier) => (
+                <tr key={supplier.id}>
+                  <td><strong>{supplier.name}</strong></td>
+                  <td>{supplier.phone || "-"}</td>
+                  <td>{supplier.email || "-"}</td>
+                  <td>{supplier.address || "-"}</td>
+                  <td>
+                    <span
+                      className={`inventory-badge ${
+                        supplier.active ? "success" : "danger"
+                      }`}
+                    >
+                      {supplier.active ? "Đang hợp tác" : "Đã ngừng"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="inventory-row-actions">
+                      <Button
+                        size="sm"
+                        variant="outline-primary"
+                        onClick={() => openEditSupplier(supplier)}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={
+                          supplier.active
+                            ? "outline-danger"
+                            : "outline-success"
+                        }
+                        onClick={() => handleToggleSupplier(supplier)}
+                      >
+                        {supplier.active ? "Ngừng" : "Kích hoạt"}
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center">
+                  Chưa có nhà cung cấp.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </Table>
+      )}
+
+      {activeTab !== "suppliers" && (
       <div className="inventory-pagination">
         <Button disabled={pageNo === 0 || loading} onClick={() => setPageNo(pageNo - 1)}>
           Trước
@@ -521,13 +905,29 @@ export default function InventoryPage() {
           Sau
         </Button>
       </div>
+      )}
 
-      <Modal show={showItemModal} onHide={() => setShowItemModal(false)}>
+      <Modal
+        show={showItemModal}
+        onHide={() => {
+          setShowItemModal(false);
+          setEditingItemId(null);
+          setItemForm(emptyItemForm);
+        }}
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Tạo item kho</Modal.Title>
+          <Modal.Title>
+            {editingItemId ? "Cập nhật ngưỡng cảnh báo" : "Tạo item kho"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleCreateItem}>
+          <Form
+            onSubmit={
+              editingItemId
+                ? handleUpdateItemThreshold
+                : handleCreateItem
+            }
+          >
             <Form.Control className="mb-2" placeholder="Mã kho" value={itemForm.itemCode} onChange={(e) => setItemForm({ ...itemForm, itemCode: e.target.value })} required />
             <Form.Control className="mb-2" placeholder="Tên item" value={itemForm.name} onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })} required />
             <Form.Select className="mb-2" value={itemForm.itemType} onChange={(e) => setItemForm({ ...itemForm, itemType: e.target.value })}>
@@ -627,12 +1027,150 @@ export default function InventoryPage() {
         </Modal.Footer>
       </Modal>
 
+      <Modal
+        show={showImportDetailModal}
+        onHide={() => setShowImportDetailModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            Phiếu nhập {selectedStockImport?.importCode || ""}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedStockImport && (
+            <>
+              <div className="inventory-import-detail-meta">
+                <div>
+                  <span>Nhà cung cấp</span>
+                  <strong>
+                    {selectedStockImport.supplierName || "Không có"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Trạng thái</span>
+                  <strong>{selectedStockImport.status}</strong>
+                </div>
+                <div>
+                  <span>Người tạo</span>
+                  <strong>{selectedStockImport.createdByName || "-"}</strong>
+                </div>
+                <div>
+                  <span>Ngày tạo</span>
+                  <strong>
+                    {new Date(
+                      selectedStockImport.createdAt
+                    ).toLocaleString("vi-VN")}
+                  </strong>
+                </div>
+              </div>
+
+              <Table responsive size="sm">
+                <thead>
+                  <tr>
+                    <th>Hàng hóa</th>
+                    <th>Số lượng</th>
+                    <th>Giá nhập</th>
+                    <th>Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedStockImport.items?.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.itemCode} - {item.itemName}</td>
+                      <td>{item.quantity}</td>
+                      <td>{formatCurrency(item.unitCost)}</td>
+                      <td>{formatCurrency(item.totalCost)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+
+              <div className="inventory-import-total">
+                <span>Tổng giá trị phiếu nhập</span>
+                <strong>
+                  {formatCurrency(selectedStockImport.totalAmount)}
+                </strong>
+              </div>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          {selectedStockImport?.status === "DRAFT" && (
+            <>
+              <Button
+                variant="outline-danger"
+                onClick={() => handleCancelStockImport(selectedStockImport)}
+              >
+                Hủy phiếu
+              </Button>
+              <Button
+                variant="success"
+                onClick={() => handlePostStockImport(selectedStockImport)}
+              >
+                Ghi sổ
+              </Button>
+            </>
+          )}
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowImportDetailModal(false)}
+          >
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={showConsistencyModal}
+        onHide={() => !consistencyLoading && setShowConsistencyModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton={!consistencyLoading}>
+          <Modal.Title>Kiểm tra tính nhất quán kho</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {consistencyLoading ? (
+            <p>Đang đối chiếu dữ liệu kho...</p>
+          ) : consistencyResult ? (
+            <>
+              <div
+                className={`inventory-consistency-summary ${
+                  consistencyResult.valid ? "valid" : "invalid"
+                }`}
+              >
+                <strong>
+                  {consistencyResult.valid
+                    ? "Dữ liệu kho đang nhất quán"
+                    : `Phát hiện ${consistencyResult.issueCount} vấn đề`}
+                </strong>
+                <span>
+                  {consistencyResult.itemsChecked} item ·{" "}
+                  {consistencyResult.stocksChecked} dòng tồn ·{" "}
+                  {consistencyResult.activeReservationsChecked} reservation
+                </span>
+              </div>
+
+              {consistencyResult.issues?.length > 0 && (
+                <ul className="inventory-consistency-issues">
+                  {consistencyResult.issues.map((issue, index) => (
+                    <li key={`${issue}-${index}`}>{issue}</li>
+                  ))}
+                </ul>
+              )}
+            </>
+          ) : null}
+        </Modal.Body>
+      </Modal>
+
       <Modal show={showSupplierModal} onHide={() => setShowSupplierModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Tạo nhà cung cấp</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleCreateSupplier}>
+          <Form onSubmit={handleSaveSupplier}>
             <Form.Control className="mb-2" placeholder="Tên nhà cung cấp" value={supplierForm.name} onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })} required />
             <Form.Control className="mb-2" placeholder="Số điện thoại" value={supplierForm.phone} onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })} />
             <Form.Control className="mb-2" placeholder="Email" value={supplierForm.email} onChange={(e) => setSupplierForm({ ...supplierForm, email: e.target.value })} />
@@ -651,9 +1189,23 @@ export default function InventoryPage() {
             <Form.Control className="mb-2" placeholder="Mã phiếu nhập tự sinh nếu bỏ trống" value={importForm.importCode} onChange={(e) => setImportForm({ ...importForm, importCode: e.target.value })} />
             <Form.Select className="mb-2" value={importForm.supplierId} onChange={(e) => setImportForm({ ...importForm, supplierId: e.target.value })}>
               <option value="">Không chọn nhà cung cấp</option>
-              {suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
+              {suppliers
+                .filter((supplier) => supplier.active)
+                .map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
             </Form.Select>
             <Form.Control className="mb-3" placeholder="Ghi chú" value={importForm.note} onChange={(e) => setImportForm({ ...importForm, note: e.target.value })} />
+
+            <div className="inventory-import-head" aria-hidden="true">
+              <span>Hàng hóa</span>
+              <span>Số lượng</span>
+              <span>Giá nhập/đơn vị</span>
+              <span>Thành tiền</span>
+              <span />
+            </div>
 
             {importForm.items.map((line, index) => (
               <div className="inventory-import-line" key={index}>
@@ -662,7 +1214,12 @@ export default function InventoryPage() {
                   {inventoryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </Form.Select>
                 <Form.Control type="number" min="1" value={line.quantity} onChange={(e) => updateImportLine(index, "quantity", e.target.value)} required />
-                <Form.Control type="number" min="0" value={line.unitCost} onChange={(e) => updateImportLine(index, "unitCost", e.target.value)} />
+                <Form.Control type="number" min="1" step="1000" value={line.unitCost} onChange={(e) => updateImportLine(index, "unitCost", e.target.value)} required />
+                <strong className="inventory-line-total">
+                  {formatCurrency(
+                    Number(line.quantity || 0) * Number(line.unitCost || 0)
+                  )}
+                </strong>
                 <Button variant="outline-danger" onClick={() => setImportForm((current) => ({ ...current, items: current.items.filter((_, itemIndex) => itemIndex !== index) }))}>
                   Xóa
                 </Button>
@@ -672,6 +1229,10 @@ export default function InventoryPage() {
             <Button className="mb-3" variant="outline-primary" type="button" onClick={() => setImportForm((current) => ({ ...current, items: [...current.items, { inventoryItemId: "", quantity: 1, unitCost: 0 }] }))}>
               + Thêm dòng
             </Button>
+            <div className="inventory-import-total">
+              <span>Tổng giá trị phiếu nhập</span>
+              <strong>{formatCurrency(importTotal)}</strong>
+            </div>
             <div>
               <Button type="submit" variant="success">Lưu phiếu nhập</Button>
             </div>
