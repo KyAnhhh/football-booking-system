@@ -1,0 +1,109 @@
+flowchart LR
+    %% ERD dạng flowchart để chia nhóm rõ khi import Draw.io.
+    %% Ký hiệu: PK = khóa chính, FK = khóa ngoại JPA/DB, REF = liên kết logic.
+
+    subgraph AUTH["User / Auth"]
+        U["USERS<br/>PK id<br/>FK membership_tier_id"]
+        SA["SHIPPING_ADDRESS<br/>PK id<br/>FK user_id"]
+        PRT["PASSWORD_RESET_TOKEN<br/>PK id<br/>FK user_id"]
+        MT["MEMBERSHIP_TIERS<br/>PK id"]
+        N["NOTIFICATIONS<br/>PK id<br/>FK user_id"]
+    end
+
+    subgraph PRODUCT["Product / Ecommerce"]
+        PR["PRODUCTS<br/>PK id<br/>FK category_id, brand_id"]
+        PV["PRODUCT_VARIANTS<br/>PK id<br/>FK product_id, size_id"]
+        PI["PRODUCT_IMAGES<br/>PK id<br/>FK product_id"]
+        CAT["CATEGORIES<br/>PK id"]
+        BR["BRANDS<br/>PK id"]
+        SZ["SIZES<br/>PK id"]
+        CART["CARTS<br/>PK id<br/>FK user_id UNIQUE"]
+        CI["CART_ITEMS<br/>PK id<br/>FK cart_id, product_variant_id, size_id"]
+        REV["REVIEWS<br/>PK id<br/>FK user_id, product_id, order_item_id"]
+        WL["WISHLIST<br/>PK id<br/>FK user_id, product_id"]
+    end
+
+    subgraph ORDERPAY["Order / Payment"]
+        ORD["ORDERS<br/>PK id<br/>FK user_id, payment_id, shipping_address_id"]
+        OI["ORDER_ITEMS<br/>PK id<br/>FK order_id, product_variant_id"]
+        PAY["PAYMENTS<br/>PK id"]
+    end
+
+    subgraph BOOKFIELD["Booking / Field"]
+        FF["FOOTBALL_FIELDS<br/>PK id"]
+        FFI["FOOTBALL_FIELD_IMAGES<br/>PK id<br/>FK field_id"]
+        BK["BOOKINGS<br/>PK id<br/>FK user_id, field_id, payment_id"]
+        BES["BOOKING_EXTRA_SERVICES<br/>PK id<br/>FK booking_id, extra_service_id"]
+        ES["EXTRA_SERVICES<br/>PK id<br/>REF inventory_item_id"]
+        BSH["BOOKING_STATUS_HISTORIES<br/>PK id<br/>FK booking_id, changed_by"]
+        BREV["BOOKING_REVIEWS<br/>PK id<br/>FK booking_id UNIQUE, user_id"]
+    end
+
+    subgraph PRICEMAINT["Pricing / Maintenance"]
+        FPR["FIELD_PRICING_RULES<br/>PK id<br/>FK field_id"]
+        HOL["HOLIDAYS<br/>PK id"]
+        HPR["HOLIDAY_PRICING_RULES<br/>PK id<br/>FK field_id, holiday_id"]
+        MAIN["MAINTENANCES<br/>PK id<br/>FK field_id"]
+    end
+
+    subgraph STOCK["Inventory / Import"]
+        II["INVENTORY_ITEMS<br/>PK id<br/>REF reference_id"]
+        IS["INVENTORY_STOCKS<br/>PK id<br/>FK inventory_item_id UNIQUE"]
+        IR["INVENTORY_RESERVATIONS<br/>PK id<br/>FK inventory_item_id, created_by"]
+        IT["INVENTORY_TRANSACTIONS<br/>PK id<br/>FK inventory_item_id, created_by"]
+        SUP["SUPPLIERS<br/>PK id"]
+        SI["STOCK_IMPORTS<br/>PK id<br/>FK supplier_id, created_by"]
+        SII["STOCK_IMPORT_ITEMS<br/>PK id<br/>FK stock_import_id, inventory_item_id"]
+    end
+
+    subgraph VOUCHER["Voucher"]
+        V["VOUCHERS<br/>PK id"]
+        VU["VOUCHER_USAGES<br/>PK id<br/>FK voucher_id, booking_id, user_id"]
+    end
+
+    MT -->|"1 : N"| U
+    U -->|"1 : N"| SA
+    U -->|"1 : 1"| CART
+    U -->|"1 : N"| PRT
+    U -->|"1 : N"| N
+    CAT -->|"1 : N"| PR
+    BR -->|"1 : N"| PR
+    PR -->|"1 : N"| PV
+    PR -->|"1 : N"| PI
+    SZ -->|"1 : N"| PV
+    CART -->|"1 : N"| CI
+    PV -->|"1 : N"| CI
+    U -->|"1 : N"| ORD
+    SA -->|"1 : N"| ORD
+    ORD -->|"1 : N"| OI
+    PV -->|"1 : N"| OI
+    ORD -->|"1 : 0..1"| PAY
+    U -->|"1 : N"| REV
+    PR -->|"1 : N"| REV
+    OI -->|"1 : N"| REV
+    U -->|"1 : N"| WL
+    PR -->|"1 : N"| WL
+    U -->|"1 : N"| BK
+    FF -->|"1 : N"| BK
+    PAY -->|"1 : 0..1"| BK
+    FF -->|"1 : N"| FFI
+    BK -->|"1 : N"| BES
+    ES -->|"1 : N"| BES
+    BK -->|"1 : N"| BSH
+    U -->|"1 : N"| BSH
+    BK -->|"1 : 0..1"| BREV
+    U -->|"1 : N"| BREV
+    FF -->|"1 : N"| FPR
+    FF -->|"1 : N"| HPR
+    HOL -->|"1 : N"| HPR
+    FF -->|"1 : N"| MAIN
+    II -->|"1 : 1"| IS
+    II -->|"1 : N"| IR
+    II -->|"1 : N"| IT
+    SUP -->|"1 : N"| SI
+    SI -->|"1 : N"| SII
+    II -->|"1 : N"| SII
+    V -->|"1 : N"| VU
+    BK -->|"1 : N"| VU
+    U -->|"1 : N"| VU
+    ES -.->|"REF, không phải association JPA"| II

@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    actor Customer as Khách hàng
+    participant C as UserBookingController
+    participant S as BookingService
+    participant F as FieldRepository
+    participant B as BookingRepository
+    participant P as PricingService
+    participant V as VoucherService
+    participant M as MembershipService
+    participant I as InventoryService
+    participant N as NotificationService
+
+    Customer->>C: POST /api/user/bookings
+    C->>S: createBooking(request, userId)
+    S->>F: find field
+    S->>B: lock/check overlapping slots
+    alt Trùng lịch hoặc bảo trì
+        S-->>C: lỗi không thể đặt sân
+    else Khung giờ hợp lệ
+        S->>P: calculatePrice(fieldId, start, end)
+        P-->>S: originalPrice
+        opt Có voucher
+            S->>V: validate/apply voucher
+            V-->>S: voucherDiscount
+        end
+        S->>M: applyMembershipDiscount(user, price)
+        M-->>S: membershipDiscount
+        opt Có dịch vụ thêm quản lý tồn
+            S->>I: reserve inventory
+            I-->>S: reservation
+        end
+        S->>B: save booking + payment + extras
+        S->>N: notifyAdminsBookingCreated()
+        S-->>C: BookingResponse
+        C-->>Customer: booking PENDING
+    end
+

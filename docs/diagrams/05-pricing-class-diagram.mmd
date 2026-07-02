@@ -1,0 +1,58 @@
+classDiagram
+    direction LR
+
+    class FootballField {
+        +Long id
+        +String name
+        +BigDecimal pricePerHour
+    }
+    class FieldPricingRule {
+        +Long id
+        +DayOfWeek dayOfWeek
+        +LocalTime startTime
+        +LocalTime endTime
+        +BigDecimal pricePerSlot
+        +Integer slotDuration
+        +Boolean isActive
+    }
+    class Holiday {
+        +Long id
+        +String name
+        +LocalDate holidayDate
+        +Boolean isActive
+    }
+    class HolidayPricingRule {
+        +Long id
+        +LocalTime startTime
+        +LocalTime endTime
+        +BigDecimal pricePerSlot
+        +Integer slotDuration
+        +Integer priority
+        +Boolean isActive
+    }
+    class PricingService {
+        <<interface>>
+        +calculatePrice(fieldId, start, end)
+        +calculateSlotPrice(fieldId, slotStart)
+        +calculatePriceForSlots(fieldId, slots)
+    }
+    class PricingServiceImpl {
+        -findSlotPricingForTime(fieldId, dateTime)
+        -getSlotDuration(value)
+    }
+    class FieldPricingRuleRepository {
+        <<repository>>
+        +findByFieldIdAndDayOfWeekAndIsActiveTrue()
+    }
+    class HolidayPricingRuleRepository {
+        <<repository>>
+        +findFirstApplicableRule()
+    }
+
+    FootballField "1" --> "0..*" FieldPricingRule
+    FootballField "1" --> "0..*" HolidayPricingRule
+    Holiday "1" --> "0..*" HolidayPricingRule
+    PricingService <|.. PricingServiceImpl
+    PricingServiceImpl ..> HolidayPricingRuleRepository : ưu tiên tra cứu
+    PricingServiceImpl ..> FieldPricingRuleRepository : giá ngày thường
+

@@ -1,0 +1,43 @@
+flowchart LR
+    UI["React Frontend<br/>pages · components · services"]
+    API["Spring REST API"]
+    SEC["Security / Auth<br/>JWT · Redis token"]
+    USER["User · Membership"]
+    BOOK["Booking · Field · Extra"]
+    PRICE["Pricing · Holiday"]
+    MAINT["Maintenance · Calendar"]
+    SHOP["Product · Cart · Order"]
+    PAY["Payment"]
+    INV["Inventory · Importer"]
+    ENG["Review · Voucher · Notification"]
+    SHARED["Shared services<br/>Email · Image · QR"]
+    DB[("JPA Database")]
+    EXT["VNPay / Cloudinary / Mail"]
+
+    UI --> API
+    API --> SEC
+    API --> USER
+    API --> BOOK
+    API --> SHOP
+    BOOK --> PRICE
+    BOOK --> MAINT
+    BOOK --> PAY
+    BOOK --> INV
+    SHOP --> PAY
+    SHOP --> INV
+    BOOK --> ENG
+    SHOP --> ENG
+    USER --> ENG
+    API --> SHARED
+    PAY --> EXT
+    SHARED --> EXT
+    SEC --> DB
+    USER --> DB
+    BOOK --> DB
+    PRICE --> DB
+    MAINT --> DB
+    SHOP --> DB
+    PAY --> DB
+    INV --> DB
+    ENG --> DB
+

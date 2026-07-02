@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    actor Customer as Khách hàng
+    participant C as UserOrderController
+    participant S as OrderService
+    participant Cart as CartRepository
+    participant Addr as ShippingAddressRepository
+    participant Price as OrderPriceCalculator
+    participant Ship as ShippingService
+    participant OrderRepo as OrderRepository
+    participant Inv as InventoryService
+    participant Notify as NotificationService
+
+    Customer->>C: POST /api/user/orders/checkout-cart
+    C->>S: checkout(userId, request)
+    S->>S: validate payment method
+    S->>Cart: find cart by userId
+    Cart-->>S: cart và selected items
+    S->>Addr: find address by id và userId
+    Addr-->>S: shipping address
+
+    loop Mỗi sản phẩm được chọn
+        S->>S: validate ownership và stock
+        S->>Price: calculate(unitPrice, discount, quantity)
+        Price-->>S: finalPrice và itemTotal
+        S->>S: tạo OrderItem
+    end
+
+    S->>Ship: calculate(orderItems, address)
+    Ship-->>S: shippingCost
+    S->>S: tạo Order PENDING và Payment UNPAID
+    S->>OrderRepo: save(order)
+    OrderRepo-->>S: savedOrder
+
+    S->>Inv: reserveStockForOrder(savedOrder)
+    alt Tồn kho không đủ
+        Inv-->>S: lỗi và rollback checkout
+        S-->>C: checkout thất bại
+        C-->>Customer: thông báo hết hàng
+    else Giữ tồn kho thành công
+        Inv-->>S: reservations
+        S->>OrderRepo: save stock reservation references
+        S->>Cart: delete selected cart items
+        S->>S: tính lại cart total
+        S->>Notify: notifyOrderCreated(savedOrder)
+        S-->>C: OrderResponse
+        C-->>Customer: order PENDING
+    end
+

@@ -1,0 +1,73 @@
+classDiagram
+    direction LR
+
+    class User {
+        +Long id
+        +String username
+        +Integer loyaltyPoints
+    }
+    class FootballField {
+        +Long id
+        +String name
+        +FieldType type
+        +FieldStatus status
+        +BigDecimal pricePerHour
+    }
+    class Booking {
+        +Long id
+        +LocalDateTime startTime
+        +LocalDateTime endTime
+        +BigDecimal totalPrice
+        +BookingStatus status
+        +String voucherCode
+    }
+    class BookingExtraService {
+        +Long id
+        +Integer quantity
+        +BigDecimal unitPrice
+        +BigDecimal totalPrice
+    }
+    class ExtraService {
+        +Long id
+        +String name
+        +BigDecimal price
+        +Boolean trackStock
+    }
+    class BookingStatusHistory {
+        +Long id
+        +BookingStatus oldStatus
+        +BookingStatus newStatus
+        +LocalDateTime createdAt
+    }
+    class BookingReview {
+        +Long id
+        +Integer rating
+        +String comment
+    }
+    class BookingService {
+        <<interface>>
+        +createBooking(request, userId)
+        +confirmBooking(bookingId)
+        +updateBookingStatus(bookingId, request, actorId)
+        +cancelBooking(bookingId, userId)
+    }
+    class BookingRepository {
+        <<repository>>
+        +findOverlappingBookings()
+        +findByIdForUpdate()
+    }
+    class BookingMapper {
+        <<mapper>>
+        +toBookingResponse(booking)
+    }
+
+    User "1" --> "0..*" Booking
+    FootballField "1" --> "0..*" Booking
+    Booking "1" *-- "0..*" BookingExtraService
+    ExtraService "1" --> "0..*" BookingExtraService
+    Booking "1" *-- "0..*" BookingStatusHistory
+    User "0..1" --> "0..*" BookingStatusHistory : changedBy
+    Booking "1" --> "0..1" BookingReview
+    BookingService ..> BookingRepository
+    BookingService ..> BookingMapper
+
