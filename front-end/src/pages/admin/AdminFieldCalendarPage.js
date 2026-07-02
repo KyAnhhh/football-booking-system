@@ -12,6 +12,7 @@ const statusLabels = {
   MAINTENANCE: "Bảo trì",
   PENDING: "Chờ xác nhận",
   CONFIRMED: "Đã xác nhận",
+  IN_PROGRESS: "Đang diễn ra",
   COMPLETED: "Hoàn tất",
   CANCELLED: "Đã hủy",
   EXPIRED: "Hết hạn",
@@ -148,7 +149,9 @@ export default function AdminFieldCalendarPage() {
     return {
       available: slots.filter((slot) => slot.status === "AVAILABLE").length,
       pending: slots.filter((slot) => slot.status === "PENDING").length,
-      booked: slots.filter((slot) => ["CONFIRMED", "COMPLETED"].includes(slot.status)).length,
+      booked: slots.filter((slot) =>
+        ["CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(slot.status)
+      ).length,
       maintenance: slots.filter((slot) => slot.status === "MAINTENANCE").length,
     };
   }, [calendar]);

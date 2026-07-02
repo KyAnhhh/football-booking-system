@@ -40,6 +40,15 @@ public class BookingExtraService {
 
     private BigDecimal totalPrice;
 
+    @Builder.Default
+    private BigDecimal unitCost = BigDecimal.ZERO;
+
+    @Builder.Default
+    private BigDecimal totalCost = BigDecimal.ZERO;
+
+    @Builder.Default
+    private BigDecimal grossProfit = BigDecimal.ZERO;
+
     private Boolean stockDeducted;
 
     private Boolean stockReserved;

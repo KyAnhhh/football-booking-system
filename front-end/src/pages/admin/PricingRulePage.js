@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
+import swal from "sweetalert";
 import { getFields } from "../../services/fieldService";
 import {
   createPricingRule,
@@ -83,7 +84,7 @@ export default function PricingRulePage() {
     };
 
     if (!Number.isFinite(payload.pricePerSlot) || payload.pricePerSlot <= 0) {
-      window.alert("Price per slot must be greater than 0");
+      swal("Giá không hợp lệ", "Giá mỗi slot phải lớn hơn 0.", "warning");
       return;
     }
 
@@ -98,7 +99,14 @@ export default function PricingRulePage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this pricing rule?")) return;
+    const confirmed = await swal({
+      title: "Xóa bảng giá sân?",
+      text: "Dữ liệu đã xóa sẽ không thể khôi phục.",
+      icon: "warning",
+      buttons: ["Giữ lại", "Xóa"],
+      dangerMode: true,
+    });
+    if (!confirmed) return;
     await deletePricingRule(id);
     await loadRules();
   };

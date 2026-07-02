@@ -64,4 +64,19 @@ public class UserBookingController {
         this.bookingService.cancelBooking(bookingId, userId);
         return response;
     }
+
+    @PatchMapping("/{bookingId}/payment-submitted")
+    public ApiResponse<BookingResponse> markPaymentSubmitted(
+            @PathVariable Long bookingId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        ApiResponse<BookingResponse> response = new ApiResponse<>();
+        response.setData(
+                bookingService.markPaymentSubmitted(
+                        bookingId,
+                        jwt.getClaim("id")
+                )
+        );
+        return response;
+    }
 }

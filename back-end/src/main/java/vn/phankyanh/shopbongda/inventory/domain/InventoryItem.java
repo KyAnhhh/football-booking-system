@@ -41,6 +41,11 @@ public class InventoryItem {
     @Column(nullable = false)
     private InventoryItemType itemType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private InventoryBehavior inventoryBehavior = InventoryBehavior.CONSUMABLE;
+
     private Long referenceId;
 
     private String unit;
@@ -67,6 +72,10 @@ public class InventoryItem {
 
         if (lowStockThreshold == null) {
             lowStockThreshold = 0;
+        }
+
+        if (inventoryBehavior == null) {
+            inventoryBehavior = InventoryBehavior.CONSUMABLE;
         }
     }
 

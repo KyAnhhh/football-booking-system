@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
+import swal from "sweetalert";
 import {
   createExtraService,
   deleteExtraService,
   getAdminExtraServices,
   updateExtraService,
+  checkExtraServicePublication,
+  publishExtraService,
+  unpublishExtraService,
 } from "../../services/extraService";
 import { getInventoryItems } from "../../services/inventoryService";
 import "../../assets/styles/AdminCrudPage.css";
@@ -75,10 +79,8 @@ export default function ExtraServicePage() {
     const payload = {
       ...form,
       price: Number(form.price),
-      stockQuantity: form.trackStock ? Number(form.stockQuantity || 0) : 0,
-      remainingQuantity: form.trackStock
-        ? Number(form.remainingQuantity || 0)
-        : 0,
+      stockQuantity: 0,
+      remainingQuantity: 0,
       unit: form.unit?.trim() || null,
       inventoryItemId:
         form.trackStock && form.inventoryItemId
@@ -97,8 +99,33 @@ export default function ExtraServicePage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa dịch vụ thêm này?")) return;
+    const confirmed = await swal({
+      title: "Xóa dịch vụ thêm?",
+      text: "Dữ liệu đã xóa sẽ không thể khôi phục.",
+      icon: "warning",
+      buttons: ["Giữ lại", "Xóa"],
+      dangerMode: true,
+    });
+    if (!confirmed) return;
     await deleteExtraService(id);
+    await loadItems();
+  };
+
+  const handlePublication = async (item) => {
+    if (item.publicationStatus === "ACTIVE") {
+      await unpublishExtraService(item.id);
+    } else {
+      const check = await checkExtraServicePublication(item.id);
+      if (!check.publishable) {
+        swal(
+          "Chưa thể lên kệ",
+          (check.reasons || []).join("\n"),
+          "warning"
+        );
+        return;
+      }
+      await publishExtraService(item.id);
+    }
     await loadItems();
   };
 
@@ -122,6 +149,7 @@ export default function ExtraServicePage() {
               <th>Tồn kho</th>
               <th>Mã kho</th>
               <th>Trạng thái</th>
+              <th>Đăng bán</th>
               <th>Thao tác</th>
             </tr>
           </thead>
@@ -162,8 +190,16 @@ export default function ExtraServicePage() {
                       {item.isActive ? "Đang bật" : "Đã tắt"}
                     </span>
                   </td>
+                  <td>{item.publicationStatus || "DRAFT"}</td>
                   <td>
                     <div className="admin-crud-row-actions">
+                      <Button
+                        size="sm"
+                        variant={item.publicationStatus === "ACTIVE" ? "outline-danger" : "success"}
+                        onClick={() => handlePublication(item)}
+                      >
+                        {item.publicationStatus === "ACTIVE" ? "Gỡ kệ" : "Lên kệ"}
+                      </Button>
                       <Button
                         size="sm"
                         variant="warning"
@@ -278,38 +314,9 @@ export default function ExtraServicePage() {
                   </Form.Select>
                 </Form.Group>
 
-                <div className="admin-crud-form-grid">
-                  <Form.Group className="mb-3">
-                    <Form.Label>Tổng tồn</Form.Label>
-                    <Form.Control
-                      type="number"
-                      min="0"
-                      value={form.stockQuantity}
-                      onChange={(event) =>
-                        setForm({
-                          ...form,
-                          stockQuantity: event.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label>Còn lại</Form.Label>
-                    <Form.Control
-                      type="number"
-                      min="0"
-                      value={form.remainingQuantity}
-                      onChange={(event) =>
-                        setForm({
-                          ...form,
-                          remainingQuantity: event.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </Form.Group>
+                <div className="alert alert-info">
+                  Tồn ban đầu bằng 0. Hãy tạo và ghi sổ phiếu nhập kho
+                  trước khi đưa dịch vụ lên kệ.
                 </div>
               </>
             )}

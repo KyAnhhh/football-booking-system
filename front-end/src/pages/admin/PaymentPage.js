@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 
 import {
   getPayment,
-  deletePaymentById,
+  confirmOrderPayment,
 } from "../../services/paymentService";
 
 import "../../assets/styles/PaymentPage.css";
@@ -56,41 +56,35 @@ export default function PaymentPage() {
     }
   };
 
-  const handleDeletePayment = async (payment) => {
+  const handleConfirmPayment = async (payment) => {
     const result = await Swal.fire({
-      title: "Xác nhận xoá?",
-      text: `Bạn có chắc muốn xoá payment #${payment.paymentId} không?`,
-      icon: "warning",
+      title: "Xác nhận giao dịch?",
+      text: `Xác nhận đã nhận tiền cho đơn #${payment.orderId}?`,
+      icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Xoá",
-      cancelButtonText: "Huỷ",
-      confirmButtonColor: "#d33",
+      confirmButtonText: "Xác nhận",
+      cancelButtonText: "Giữ lại",
     });
 
     if (!result.isConfirmed) return;
 
     try {
-      await deletePaymentById(payment.id);
+      await confirmOrderPayment(payment.orderId);
 
       Swal.fire({
         icon: "success",
-        title: "Đã xoá",
-        text: "Payment đã được xoá thành công",
+        title: "Đã xác nhận",
+        text: "Thanh toán VietQR đã được ghi nhận",
         timer: 1500,
         showConfirmButton: false,
       });
 
-      // Nếu xoá item cuối trang → lùi page
-      if (payments.length === 1 && pageNo > 0) {
-        setPageNo(pageNo - 1);
-      } else {
-        loadPayments();
-      }
+      loadPayments();
     } catch (err) {
       Swal.fire({
         icon: "error",
         title: "Lỗi",
-        text: err.message || "Xoá payment thất bại",
+        text: err.message || "Xác nhận payment thất bại",
       });
     }
   };
@@ -141,16 +135,19 @@ export default function PaymentPage() {
                 <td>{p.totalAmount.toLocaleString()}</td>
                 <td>{p.paymentStatus}</td>
                 <td>
-                  <Button size="sm" variant="warning">
-                    Sửa
-                  </Button>{" "}
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => handleDeletePayment(p)}
-                  >
-                    Xóa
-                  </Button>
+                  {p.orderId
+                    && p.paymentMethod === "VIETQR"
+                    && p.paymentStatus === "PENDING" ? (
+                    <Button
+                      size="sm"
+                      variant="success"
+                      onClick={() => handleConfirmPayment(p)}
+                    >
+                      Xác nhận tiền
+                    </Button>
+                  ) : (
+                    <span>-</span>
+                  )}
                 </td>
               </tr>
             ))

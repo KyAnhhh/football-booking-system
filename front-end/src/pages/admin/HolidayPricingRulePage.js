@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
+import swal from "sweetalert";
 import { getFields } from "../../services/fieldService";
 import { getHolidays } from "../../services/holidayService";
 import {
@@ -95,12 +96,12 @@ export default function HolidayPricingRulePage() {
     };
 
     if (!payload.fieldId || !payload.holidayId) {
-      window.alert("Vui lòng chọn sân và ngày lễ.");
+      swal("Thiếu thông tin", "Vui lòng chọn sân và ngày lễ.", "warning");
       return;
     }
 
     if (!Number.isFinite(payload.pricePerSlot) || payload.pricePerSlot <= 0) {
-      window.alert("Giá mỗi slot phải lớn hơn 0.");
+      swal("Giá không hợp lệ", "Giá mỗi slot phải lớn hơn 0.", "warning");
       return;
     }
 
@@ -115,7 +116,14 @@ export default function HolidayPricingRulePage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa giá ngày lễ này?")) return;
+    const confirmed = await swal({
+      title: "Xóa giá ngày lễ?",
+      text: "Dữ liệu đã xóa sẽ không thể khôi phục.",
+      icon: "warning",
+      buttons: ["Giữ lại", "Xóa"],
+      dangerMode: true,
+    });
+    if (!confirmed) return;
     await deleteHolidayPricingRule(id);
     await loadRules();
   };

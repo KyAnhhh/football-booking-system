@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryItemType;
+import vn.phankyanh.shopbongda.inventory.domain.InventoryBehavior;
 
 @Data
 public class InventoryItemRequest {
@@ -16,6 +17,8 @@ public class InventoryItemRequest {
 
     @NotNull(message = "Loại item không được để trống")
     private InventoryItemType itemType;
+
+    private InventoryBehavior inventoryBehavior;
 
     private Long referenceId;
 

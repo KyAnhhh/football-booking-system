@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { getMyBookings } from "../../services/bookingService";
+import {
+  getMyBookings,
+  markBookingPaymentSubmitted,
+} from "../../services/bookingService";
 import "../../assets/styles/PaymentFootballField.css";
 import { getQrCodeForBooking } from "../../services/qrCodeService";
 import { useNavigate, useParams } from "react-router-dom";
@@ -45,7 +48,13 @@ export default function PaymentFootballField() {
 
   useEffect(() => {
     const loadQrCode = async () => {
-      if (!booking) return;
+      if (!booking
+        || booking.status !== "PENDING"
+        || booking.paymentMethod !== "VIETQR"
+        || booking.paymentStatus === "PAID") {
+        setQrCodeUrl("");
+        return;
+      }
 
       try {
         const url = await getQrCodeForBooking(id);
@@ -76,21 +85,38 @@ export default function PaymentFootballField() {
     return `${start} - ${end}`;
   }, [booking]);
 
+  const canSubmitPayment =
+    booking?.status === "PENDING"
+    && booking?.paymentMethod === "VIETQR"
+    && booking?.paymentStatus === "UNPAID";
+
+  const paymentAlreadySubmitted =
+    booking?.status === "PENDING"
+    && booking?.paymentMethod === "VIETQR"
+    && booking?.paymentStatus === "PENDING";
+
   const confirmPayment = () => {
     swal({
       title: "Xác nhận thanh toán",
       text: "Bạn đã thực hiện chuyển khoản cho lịch đặt sân này chưa?",
       icon: "warning",
       buttons: ["Chưa", "Đã thanh toán"],
-    }).then((willConfirm) => {
+    }).then(async (willConfirm) => {
       if (willConfirm) {
-        swal(
-          "Cảm ơn bạn đã thanh toán. Admin sẽ kiểm tra giao dịch và xử lý lịch đặt sân.",
-          {
-            icon: "success",
-          }
-        );
-        navigate("/");
+        try {
+          await markBookingPaymentSubmitted(booking.id);
+          await swal(
+            "Đã gửi yêu cầu xác nhận thanh toán cho admin.",
+            { icon: "success" }
+          );
+          navigate("/my-bookings");
+        } catch (error) {
+          swal(
+            "Không thể ghi nhận",
+            error.message || "Vui lòng thử lại.",
+            "error"
+          );
+        }
       }
     });
   };
@@ -151,14 +177,28 @@ export default function PaymentFootballField() {
               <strong>{formatCurrency(booking.totalPrice || booking.finalPrice)}</strong>
             </div>
 
-            <button
-              type="button"
-              className="booking-payment-confirm"
-              onClick={confirmPayment}
-            >
-              <CheckCircle2 size={19} />
-              Tôi đã thanh toán
-            </button>
+            {canSubmitPayment && (
+              <button
+                type="button"
+                className="booking-payment-confirm"
+                onClick={confirmPayment}
+              >
+                <CheckCircle2 size={19} />
+                Tôi đã thanh toán
+              </button>
+            )}
+
+            {paymentAlreadySubmitted && (
+              <div className="booking-payment-state">
+                Đã gửi yêu cầu. Vui lòng chờ admin xác nhận giao dịch.
+              </div>
+            )}
+
+            {!canSubmitPayment && !paymentAlreadySubmitted && (
+              <div className="booking-payment-state">
+                Booking này hiện không thể thanh toán bằng VietQR.
+              </div>
+            )}
           </article>
 
           <aside className="booking-payment-qr-card">
@@ -173,7 +213,11 @@ export default function PaymentFootballField() {
             {qrCodeUrl ? (
               <img src={qrCodeUrl} alt="QR thanh toán sân" />
             ) : (
-              <div className="booking-payment-qr-loading">Đang tạo mã QR...</div>
+              <div className="booking-payment-qr-loading">
+                {canSubmitPayment || paymentAlreadySubmitted
+                  ? "Đang tạo mã QR..."
+                  : "Không có mã QR cho booking này."}
+              </div>
             )}
           </aside>
         </div>

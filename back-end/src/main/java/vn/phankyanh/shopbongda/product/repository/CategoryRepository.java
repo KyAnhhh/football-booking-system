@@ -10,6 +10,7 @@ import vn.phankyanh.shopbongda.product.domain.Category;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     boolean existsByName(String name);
+    boolean existsByNameIgnoreCase(String name);
     
     Page<Category> findByNameContaining(String name, Pageable pageable);
 }

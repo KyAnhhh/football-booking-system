@@ -1,5 +1,7 @@
 # Project Context — Football Booking System
 
+> Cập nhật gần nhất: 2026-07-01. Đọc phần **CẬP NHẬT ƯU TIÊN** ở cuối file trước; phần đó thay thế các trạng thái cũ nếu có khác biệt.
+
 ## Mục đích
 
 Đây là bản đồ đọc nhanh của repository tại thời điểm 2026-06-29. Source được chia thành:
@@ -88,4 +90,34 @@
 - Thư mục backend `combo` đang trống; entity `WishList` chưa có repository/service/controller.
 - Test tự động hiện chỉ có một context-load test và test mặc định CRA.
 - Module inventory đang có thay đổi local chưa commit tại thời điểm tạo tài liệu; xem `NEXT_STEPS.md`.
+# CẬP NHẬT ƯU TIÊN — 2026-07-01
 
+Phần này là trạng thái hiện tại và được ưu tiên khi khác với mô tả cũ bên dưới.
+
+- Kho dùng `InventoryItem`/`InventoryStock` làm nguồn tồn chuẩn cho ProductVariant và ExtraService có `trackStock=true`.
+- Đã bổ sung giá vốn bình quân, giá trị tồn, hành vi kho (`SELLABLE`, `CONSUMABLE`, `RENTAL`, `SERVICE`), lợi nhuận gộp và lifecycle xuất bản catalog.
+- Product/ExtraService mới không được tạo tồn trực tiếp; tồn chỉ tăng khi phiếu nhập được ghi sổ. CSV ProductVariant yêu cầu `stock=0`.
+- Import CSV hiện hỗ trợ Category, Brand, Size, Product, ProductVariant, ảnh sản phẩm, sân, ảnh sân, bảng giá, ngày lễ, giá ngày lễ, ExtraService, Supplier, InventoryItem và StockImport.
+- Giờ sân là `07:00–23:45`, slot 90 phút; slot cuối `22:00–23:30`. Khoảng `23:30–23:45` là thời gian đệm và không hiển thị thành slot.
+- Lịch sân admin đã sửa điều kiện sinh slot để loại bỏ slot lẻ `23:30–23:45`.
+- Backend `mvn test` và frontend production build đã thành công sau thay đổi.
+
+## Snapshot database đã kiểm tra
+
+- 5 Category, 7 Brand, 11 Size, 15 Product, 49 ProductVariant, 15 ảnh sản phẩm.
+- 15 Product đều `ACTIVE`, có ảnh primary, biến thể, tồn và giá vốn; 15 URL ảnh sản phẩm là duy nhất.
+- 15 ExtraService: 13 theo dõi tồn, 2 dịch vụ không theo dõi tồn.
+- 62 InventoryItem và 62 InventoryStock; không có liên kết mồ côi, tồn âm, lệch tồn khả dụng, lệch giá trị tồn hoặc tồn dương có giá vốn bằng 0.
+- 5 Supplier; 7 phiếu nhập đã ghi sổ, 62 dòng, tổng giá trị `392.860.000`.
+- 10 sân và 10 ảnh sân; hiện các sân dùng chung một URL ảnh tham khảo.
+- 280 bảng giá thường, 10 ngày lễ, 400 bảng giá ngày lễ; không có gap/overlap.
+- Còn 58 item có ngưỡng cảnh báo bằng 0: 49 ProductVariant và 9 ExtraService tiêu hao.
+# FLOW BOOKING/CHECKOUT ỔN ĐỊNH — 2026-07-01
+
+- Checkout giỏ hàng tính discount tại backend từ giá snapshot trong cart và discount hiện tại; OrderItem lưu `unitPrice`, `discountAmount`, `finalPrice`, `total`.
+- Order chỉ hỗ trợ `COD` và `VIETQR`; booking chỉ hỗ trợ `CASH` và `VIETQR`. VNPay tạm tắt cho đến khi có callback và chữ ký.
+- VietQR dùng trạng thái `UNPAID -> PENDING -> PAID`; khách gửi xác nhận, admin xác nhận tiền riêng rồi mới confirm booking/order.
+- Booking pending tự hết hạn sau 15 phút; order VietQR pending tự hủy sau 30 phút. Scheduler hoàn reservation và cập nhật payment.
+- Xóa booking/order từ admin đã chuyển thành cancel an toàn, không hard-delete dữ liệu nghiệp vụ.
+- Booking API chỉ nhận slot đúng 90 phút trên lưới bắt đầu từ `07:00`; slot cuối `22:00–23:30`.
+- Backend có test mới cho slot policy và order price calculator.

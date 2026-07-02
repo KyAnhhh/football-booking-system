@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
 import vn.phankyanh.shopbongda.booking.dto.request.AdminBookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.request.UpdateBookingStatusRequest;
@@ -55,7 +56,7 @@ public class AdminBookingController {
 
     @PostMapping
     public ApiResponse<BookingResponse> createBookingForAdmin(
-            @RequestBody AdminBookingRequest request,
+            @Valid @RequestBody AdminBookingRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
         Long adminId = jwt.getClaim("id");

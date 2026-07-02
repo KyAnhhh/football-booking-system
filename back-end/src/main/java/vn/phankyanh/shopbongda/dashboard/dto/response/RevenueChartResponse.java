@@ -11,5 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RevenueChartResponse  {
     private String month;
+    private BigDecimal bookingRevenue;
+    private BigDecimal orderRevenue;
     private BigDecimal revenue;
 }

@@ -10,5 +10,6 @@ import vn.phankyanh.shopbongda.product.domain.Brand;
 @Repository
 public interface BrandRepository extends JpaRepository<Brand, Long> {
     boolean existsByName(String name);
+    boolean existsByNameIgnoreCase(String name);
     Page<Brand> findByNameContaining(String name, Pageable pageable);
 }

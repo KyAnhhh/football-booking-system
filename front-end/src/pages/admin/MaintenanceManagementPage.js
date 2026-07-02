@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { BsSearch, BsPlus, BsPencil, BsTrash } from "react-icons/bs";
+import swal from "sweetalert";
 import "../../assets/styles/MaintenanceManagementPage.css";
 
 import {
@@ -10,6 +11,26 @@ import {
   deleteMaintenance,
   getFields,
 } from "../../services/fieldService";
+
+const toLocalDateTimeInput = (date) => {
+  const pad = (value) => String(value).padStart(2, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-") + `T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const getDefaultMaintenanceTimes = () => {
+  const start = new Date();
+  start.setSeconds(0, 0);
+  start.setMinutes(Math.ceil((start.getMinutes() + 1) / 15) * 15);
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  return {
+    startTime: toLocalDateTimeInput(start),
+    endTime: toLocalDateTimeInput(end),
+  };
+};
 
 export default function MaintenanceManagementPage() {
   const [maintenances, setMaintenances] = useState([]);
@@ -72,7 +93,7 @@ export default function MaintenanceManagementPage() {
 
   const formatDateTimeForInput = (dateTimeStr) => {
     if (!dateTimeStr) return "";
-    return new Date(dateTimeStr).toISOString().slice(0, 16);
+    return String(dateTimeStr).slice(0, 16);
   };
 
   const formatDateTime = (dateTimeStr) => {
@@ -113,11 +134,11 @@ export default function MaintenanceManagementPage() {
         description: maintenance.description || "",
       });
     } else {
+      const defaultTimes = getDefaultMaintenanceTimes();
       setEditingMaintenance(null);
       setForm({
         fieldId: "",
-        startTime: "",
-        endTime: "",
+        ...defaultTimes,
         reason: "",
         description: "",
       });
@@ -127,6 +148,28 @@ export default function MaintenanceManagementPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const start = new Date(form.startTime);
+    const end = new Date(form.endTime);
+    const currentMinute = new Date();
+    currentMinute.setSeconds(0, 0);
+
+    if (!editingMaintenance && start < currentMinute) {
+      swal(
+        "Thời gian không hợp lệ",
+        "Thời gian bắt đầu bảo trì không được ở trong quá khứ.",
+        "warning"
+      );
+      return;
+    }
+    if (end <= start) {
+      swal(
+        "Thời gian không hợp lệ",
+        "Thời gian kết thúc phải sau thời gian bắt đầu.",
+        "warning"
+      );
+      return;
+    }
+
     try {
       if (editingMaintenance) {
         await updateMaintenance(editingMaintenance.id, form);
@@ -138,11 +181,23 @@ export default function MaintenanceManagementPage() {
       setShowModal(false);
     } catch (err) {
       console.error("Save maintenance failed:", err);
+      swal(
+        "Không thể lưu lịch bảo trì",
+        err.message || "Vui lòng kiểm tra lại thông tin.",
+        "error"
+      );
     }
   };
 
   const confirmDelete = async (id) => {
-    if (!window.confirm("Delete this maintenance schedule?")) return;
+    const confirmed = await swal({
+      title: "Xóa lịch bảo trì?",
+      text: "Dữ liệu đã xóa sẽ không thể khôi phục.",
+      icon: "warning",
+      buttons: ["Giữ lại", "Xóa"],
+      dangerMode: true,
+    });
+    if (!confirmed) return;
     try {
       await deleteMaintenance(id);
       await loadMaintenances();
@@ -272,6 +327,7 @@ export default function MaintenanceManagementPage() {
               <Form.Control
                 type="datetime-local"
                 value={form.startTime}
+                min={editingMaintenance ? undefined : toLocalDateTimeInput(new Date())}
                 onChange={(event) => setForm({ ...form, startTime: event.target.value })}
                 required
               />

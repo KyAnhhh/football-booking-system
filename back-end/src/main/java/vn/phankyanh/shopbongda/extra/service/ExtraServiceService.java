@@ -11,10 +11,13 @@ public interface ExtraServiceService {
     );
 
     List<ExtraServiceResponse> getAll();
+    List<ExtraServiceResponse> getPublicServices();
 
     ExtraServiceResponse getById(
             Long id
     );
+
+    ExtraServiceResponse getPublicById(Long id);
 
     ExtraServiceResponse update(
             Long id,

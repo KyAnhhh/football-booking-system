@@ -15,6 +15,7 @@ public interface ProductMapper {
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "review", ignore = true)
     @Mapping(target = "wishLists", ignore = true)
+    @Mapping(target = "publicationStatus", ignore = true)
     Product toProduct(ProductRequest request);
 
     @Mapping(source = "category.id", target = "categoryId")
@@ -27,5 +28,6 @@ public interface ProductMapper {
 
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "brand", ignore = true)
+    @Mapping(target = "publicationStatus", ignore = true)
     void updateProduct(@MappingTarget Product product, ProductRequest request);
 }

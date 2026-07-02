@@ -90,6 +90,12 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public String getTemplate(ImportType type) {
         return switch (type) {
+            case CATEGORIES -> "name,description\n"
+                    + "Giay bong da,Cac dong giay danh cho san co tu nhien va co nhan tao\n"
+                    + "Phu kien bong da,Bong gang tay bang keo va phu kien thi dau\n";
+            case BRANDS -> "name,description,logoUrl\n"
+                    + "Nike,Thuong hieu the thao Nike,https://example.com/brands/nike.png\n"
+                    + "Kamito,Thuong hieu the thao Kamito,https://example.com/brands/kamito.png\n";
             case SIZES -> "code,name,description\n"
                     + "S,Size S,Ao size S\n"
                     + "M,Size M,Ao size M\n";
@@ -97,8 +103,8 @@ public class ImportServiceImpl implements ImportService {
                     + "Ao Real Madrid,Ao san nha mua moi,10,1,1\n"
                     + "Giay Nike Mercurial,Giay san co nhan tao,15,2,1\n";
             case PRODUCT_VARIANTS -> "productId,sizeId,price,stock\n"
-                    + "1,1,250000,20\n"
-                    + "1,2,250000,15\n";
+                    + "1,1,250000,0\n"
+                    + "1,2,250000,0\n";
             case FOOTBALL_FIELDS -> "name,type,imageUrl,pricePerHour,status,address,description\n"
                     + "San bong Mini A,FIVE_A_SIDE,https://example.com/fields/san-a.jpg,250000,AVAILABLE,Quan 1 TP HCM,San co nhan tao 5 nguoi\n"
                     + "San bong 7 nguoi B,SEVEN_A_SIDE,https://example.com/fields/san-b.jpg,400000,AVAILABLE,Quan 7 TP HCM,San 7 nguoi co den chieu sang\n";
@@ -118,8 +124,8 @@ public class ImportServiceImpl implements ImportService {
                     + "1,1,07:00,17:00,400000,90,true\n"
                     + "1,1,17:00,23:45,600000,90,true\n";
             case EXTRA_SERVICES -> "name,description,price,isActive,trackStock,stockQuantity,remainingQuantity,unit\n"
-                    + "Nuoc suoi Lavie,Chai nuoc 500ml,10000,true,true,100,100,chai\n"
-                    + "Thue bong da,Bong da tieu chuan thi dau,50000,true,true,20,20,qua\n";
+                    + "Nuoc suoi Lavie,Chai nuoc 500ml,10000,true,true,0,0,chai\n"
+                    + "Thue trong tai,Dich vu trong tai,200000,true,false,0,0,tran\n";
             case SUPPLIERS -> "name,phone,email,address,active\n"
                     + "Nha cung cap the thao,0909000001,supplier@example.com,TP HCM,true\n";
             case INVENTORY_ITEMS -> "itemCode,name,itemType,unit,lowStockThreshold,active\n"
@@ -200,6 +206,8 @@ public class ImportServiceImpl implements ImportService {
             Long actorId
     ) {
         return switch (type) {
+            case CATEGORIES -> importCategory(record, rowNumber, result);
+            case BRANDS -> importBrand(record, rowNumber, result);
             case SIZES -> importSize(record, rowNumber, result);
             case PRODUCTS -> importProduct(record, rowNumber, result);
             case PRODUCT_VARIANTS -> importProductVariant(record, rowNumber, result);
@@ -216,6 +224,78 @@ public class ImportServiceImpl implements ImportService {
                     "Phiáº¿u nháº­p kho pháº£i Ä‘Æ°á»£c xá»­ lÃ½ theo nhÃ³m"
             );
         };
+    }
+
+    private Long importCategory(
+            CSVRecord record,
+            int rowNumber,
+            ImportResultResponse result
+    ) {
+        String name = value(record, "name");
+        String description = value(record, "description");
+
+        if (isBlank(name)) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "name",
+                    name,
+                    "Tên danh mục không được để trống"
+            ));
+            return null;
+        }
+        String normalizedName = name.trim();
+        if (categoryRepository.existsByNameIgnoreCase(normalizedName)) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "name",
+                    normalizedName,
+                    "Tên danh mục đã tồn tại"
+            ));
+            return null;
+        }
+
+        Category category = Category.builder()
+                .name(normalizedName)
+                .description(description)
+                .build();
+        return categoryRepository.save(category).getId();
+    }
+
+    private Long importBrand(
+            CSVRecord record,
+            int rowNumber,
+            ImportResultResponse result
+    ) {
+        String name = value(record, "name");
+        String description = value(record, "description");
+        String logoUrl = value(record, "logoUrl");
+
+        if (isBlank(name)) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "name",
+                    name,
+                    "Tên thương hiệu không được để trống"
+            ));
+            return null;
+        }
+        String normalizedName = name.trim();
+        if (brandRepository.existsByNameIgnoreCase(normalizedName)) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "name",
+                    normalizedName,
+                    "Tên thương hiệu đã tồn tại"
+            ));
+            return null;
+        }
+
+        Brand brand = Brand.builder()
+                .name(normalizedName)
+                .description(description)
+                .logoUrl(isBlank(logoUrl) ? null : logoUrl.trim())
+                .build();
+        return brandRepository.save(brand).getId();
     }
 
     private Long importSize(CSVRecord record, int rowNumber, ImportResultResponse result) {
@@ -314,8 +394,13 @@ public class ImportServiceImpl implements ImportService {
             result.getErrors().add(issue(rowNumber, "price", priceValue, "Giá bán phải lớn hơn 0"));
             return null;
         }
-        if (stock < 0) {
-            result.getErrors().add(issue(rowNumber, "stock", stockValue, "Tồn kho không được âm"));
+        if (stock != 0) {
+            result.getErrors().add(issue(
+                    rowNumber,
+                    "stock",
+                    stockValue,
+                    "Tồn ban đầu phải bằng 0; hãy dùng phiếu nhập kho"
+            ));
             return null;
         }
 

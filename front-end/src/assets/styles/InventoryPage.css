@@ -15,6 +15,32 @@
   margin: 18px 0;
 }
 
+.inventory-profit-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-profit-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.inventory-profit-summary span {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.inventory-profit-summary strong {
+  font-size: 1.2rem;
+}
+
 .inventory-toolbar .form-control {
   max-width: 260px;
 }
@@ -42,6 +68,12 @@
 .inventory-badge.danger {
   color: #842029;
   background: #f8d7da;
+}
+
+@media (max-width: 768px) {
+  .inventory-profit-summary {
+    grid-template-columns: 1fr;
+  }
 }
 
 .inventory-badge.warning {

@@ -16,7 +16,6 @@ import "../../assets/styles/Checkout.css";
 import { getQrCode } from "../../services/qrCodeService";
 import {
   CheckCircle2,
-  CreditCard,
   MapPin,
   Package,
   QrCode,
@@ -216,7 +215,6 @@ function CheckoutAddress({
       <div className="checkout-payment-methods">
         {[
           { value: "COD", label: "COD", icon: Truck },
-          { value: "VNPAY", label: "VNPay", icon: CreditCard },
           { value: "VIETQR", label: "VietQR", icon: QrCode },
         ].map((method) => {
           const Icon = method.icon;

@@ -26,10 +26,18 @@ public interface InventoryStockRepository extends JpaRepository<InventoryStock, 
                 or lower(i.itemCode) like lower(concat('%', :search, '%'))
             )
             and (:itemType is null or i.itemType = :itemType)
+            and (
+                :lowStockOnly = false
+                or (
+                    i.lowStockThreshold > 0
+                    and s.availableQuantity <= i.lowStockThreshold
+                )
+            )
             """)
     Page<InventoryStock> search(
             @Param("search") String search,
             @Param("itemType") InventoryItemType itemType,
+            @Param("lowStockOnly") boolean lowStockOnly,
             Pageable pageable
     );
 

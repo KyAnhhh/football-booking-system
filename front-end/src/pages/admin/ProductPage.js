@@ -3,10 +3,13 @@ import swal from "sweetalert";
 import { Button, Modal, Form, Table } from "react-bootstrap";
 
 import {
-  getProducts,
+  getAdminProducts,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  checkProductPublication,
+  publishProduct,
+  unpublishProduct,
 } from "../../services/productService";
 
 import { getAllBrandsForDropdown } from "../../services/brandService";
@@ -69,7 +72,7 @@ export default function ProductPage() {
 const loadData = useCallback(async () => {
   try {
     const [pRes, bRes, cRes] = await Promise.all([
-      getProducts(pageNo, pageSize, sortBy, sortDir, search),
+      getAdminProducts(pageNo, pageSize, sortBy, sortDir, search),
       getAllBrandsForDropdown(),
       getAllCategoriesForDropdown()
     ]);
@@ -116,8 +119,8 @@ const loadData = useCallback(async () => {
       name: p.name,
       description: p.description,
       discount: p.discount,
-      brandId: p.brand?.id || "",
-      categoryId: p.category?.id || ""
+      brandId: p.brandId || "",
+      categoryId: p.categoryId || ""
     });
     setShowModal(true);
   };
@@ -162,6 +165,28 @@ const loadData = useCallback(async () => {
     loadData();
   };
 
+  const handlePublication = async (product) => {
+    try {
+      if (product.publicationStatus === "ACTIVE") {
+        await unpublishProduct(product.id);
+      } else {
+        const check = await checkProductPublication(product.id);
+        if (!check.publishable) {
+          await swal(
+            "Chưa thể lên kệ",
+            (check.reasons || []).join("\n"),
+            "warning"
+          );
+          return;
+        }
+        await publishProduct(product.id);
+      }
+      await loadData();
+    } catch (error) {
+      swal("Lỗi", error.message, "error");
+    }
+  };
+
   return (
     <div className="container mt-4">
  <div className="product-header d-flex justify-content-between align-items-center">
@@ -194,6 +219,7 @@ const loadData = useCallback(async () => {
             <th>Discount</th>
             <th>Thương hiệu</th>
             <th>Danh mục</th>
+            <th>Đăng bán</th>
             <th width="320">Thao tác</th>
           </tr>
         </thead>
@@ -205,7 +231,15 @@ const loadData = useCallback(async () => {
               <td>{p.discount}</td>
               <td>{p.brandName}</td>
               <td>{p.categoryName}</td>
+              <td>{p.publicationStatus || "DRAFT"}</td>
               <td>
+                <Button
+                  size="sm"
+                  variant={p.publicationStatus === "ACTIVE" ? "outline-danger" : "success"}
+                  onClick={() => handlePublication(p)}
+                >
+                  {p.publicationStatus === "ACTIVE" ? "Gỡ kệ" : "Lên kệ"}
+                </Button>{" "}
                 <Button size="sm" onClick={() => openEdit(p)}>
                   Sửa
                 </Button>{" "}

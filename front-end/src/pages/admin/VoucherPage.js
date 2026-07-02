@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
+import swal from "sweetalert";
 import {
   createVoucher,
   deleteVoucher,
@@ -59,7 +60,11 @@ export default function VoucherPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (form.startDate && form.endDate && form.endDate <= form.startDate) {
-      window.alert("Ngày kết thúc phải sau ngày bắt đầu.");
+      swal(
+        "Thời gian không hợp lệ",
+        "Ngày kết thúc phải sau ngày bắt đầu.",
+        "warning"
+      );
       return;
     }
 
@@ -82,7 +87,14 @@ export default function VoucherPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa voucher này?")) return;
+    const confirmed = await swal({
+      title: "Xóa voucher?",
+      text: "Dữ liệu đã xóa sẽ không thể khôi phục.",
+      icon: "warning",
+      buttons: ["Giữ lại", "Xóa"],
+      dangerMode: true,
+    });
+    if (!confirmed) return;
     await deleteVoucher(id);
     await loadVouchers();
   };

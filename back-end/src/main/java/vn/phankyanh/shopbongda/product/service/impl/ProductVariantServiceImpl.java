@@ -72,15 +72,12 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                     product.getName() + " - " + size.getCode(),
                     InventoryItemType.PRODUCT_VARIANT,
                     saved.getId(),
-                    "cái",
-                    request.getStock()
+                    "cái"
             );
         }
 
         saved.setInventoryItemId(inventoryItemId);
-        if (request.getInventoryItemId() != null) {
-            syncInventoryStock(saved, request.getStock());
-        }
+        refreshStockFromInventory(saved);
 
         productVariantRepository.save(saved);
 
@@ -119,16 +116,11 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                     product.getName() + " - " + size.getCode(),
                     InventoryItemType.PRODUCT_VARIANT,
                     updatedProductVariant.getId(),
-                    "cái",
-                    request.getStock()
+                    "cái"
             );
             updatedProductVariant.setInventoryItemId(inventoryItemId);
-        } else {
-            syncInventoryStock(
-                    updatedProductVariant,
-                    request.getStock()
-            );
         }
+        refreshStockFromInventory(updatedProductVariant);
 
         return variantMapper.toResponse(
                 productVariantRepository.save(updatedProductVariant)
@@ -163,53 +155,11 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         productVariantRepository.deleteById(id);
     }
 
-    private void syncInventoryStock(
-            ProductVariant variant,
-            Integer targetStock
-    ) {
+    private void refreshStockFromInventory(ProductVariant variant) {
         InventoryStockResponse stock =
                 inventoryService.getStockByItemId(
                         variant.getInventoryItemId()
                 );
-
-        int currentStock = stock.getQuantityOnHand();
-        int nextStock = targetStock == null ? 0 : targetStock;
-        int delta = nextStock - currentStock;
-
-        if (delta > 0) {
-            inventoryService.adjustStock(
-                    buildAdjustment(
-                            variant.getInventoryItemId(),
-                            "ADJUSTMENT_INCREASE",
-                            delta
-                    ),
-                    null
-            );
-        } else if (delta < 0) {
-            inventoryService.adjustStock(
-                    buildAdjustment(
-                            variant.getInventoryItemId(),
-                            "ADJUSTMENT_DECREASE",
-                            Math.abs(delta)
-                    ),
-                    null
-            );
-        }
-    }
-
-    private vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest buildAdjustment(
-            Long inventoryItemId,
-            String type,
-            int quantity
-    ) {
-        vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest request =
-                new vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest();
-        request.setInventoryItemId(inventoryItemId);
-        request.setTransactionType(
-                vn.phankyanh.shopbongda.inventory.domain.InventoryTransactionType.valueOf(type)
-        );
-        request.setQuantity(quantity);
-        request.setNote("Đồng bộ tồn kho từ biến thể sản phẩm");
-        return request;
+        variant.setStock(stock.getAvailableQuantity());
     }
 }

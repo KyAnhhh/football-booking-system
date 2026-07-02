@@ -4,6 +4,16 @@ const API_URL = "http://localhost:8080/api/admin/imports";
 
 export const IMPORT_TYPES = [
   {
+    value: "categories",
+    label: "Danh mục",
+    description: "Import tên và mô tả danh mục sản phẩm.",
+  },
+  {
+    value: "brands",
+    label: "Thương hiệu",
+    description: "Import tên, mô tả và URL logo thương hiệu.",
+  },
+  {
     value: "sizes",
     label: "Size",
     description: "Import mã size, tên size và mô tả.",

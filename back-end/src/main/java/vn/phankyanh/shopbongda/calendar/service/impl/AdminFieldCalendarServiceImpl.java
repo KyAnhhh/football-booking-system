@@ -253,7 +253,7 @@ public class AdminFieldCalendarServiceImpl
 
         for (
                 int currentMinute = firstSlotMinute;
-                currentMinute < lastSlotEndMinute;
+                currentMinute + SLOT_MINUTES <= lastSlotEndMinute;
                 currentMinute += SLOT_MINUTES
         ) {
             slots.add(

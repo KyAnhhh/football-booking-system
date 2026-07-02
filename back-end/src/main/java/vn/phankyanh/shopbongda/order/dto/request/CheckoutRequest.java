@@ -15,5 +15,6 @@ public class CheckoutRequest {
     @NotNull(message = "Địa chỉ giao hàng không được để trống")
     private Long shippingAddressId;
     
+    @NotNull(message = "Phương thức thanh toán không được để trống")
     private PaymentMethod paymentMethod;
 }

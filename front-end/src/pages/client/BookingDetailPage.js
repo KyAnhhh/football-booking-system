@@ -17,6 +17,7 @@ import "../../assets/styles/BookingDetailPage.css";
 const statusLabel = {
   PENDING: "Đang chờ",
   CONFIRMED: "Đã xác nhận",
+  IN_PROGRESS: "Đang diễn ra",
   CANCELLED: "Đã hủy",
   COMPLETED: "Hoàn tất",
   EXPIRED: "Đã hết hạn",
@@ -24,12 +25,13 @@ const statusLabel = {
 
 const paymentStatusLabel = {
   UNPAID: "Chưa thanh toán",
+  PENDING: "Chờ admin xác nhận",
   PAID: "Đã thanh toán",
   FAILED: "Thanh toán lỗi",
   REFUNDED: "Đã hoàn tiền",
 };
 
-const timelineSteps = ["PENDING", "CONFIRMED", "COMPLETED"];
+const timelineSteps = ["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED"];
 const fallbackFieldImage =
   "https://placehold.co/900x520/f1f5f9/0f172a?text=Football+Field";
 
@@ -85,7 +87,9 @@ export default function BookingDetailPage() {
   }, [booking]);
 
   const canPayAgain =
-    booking?.status === "PENDING" && booking?.paymentStatus !== "PAID";
+    booking?.status === "PENDING"
+    && booking?.paymentMethod === "VIETQR"
+    && booking?.paymentStatus === "UNPAID";
 
   const handleCancel = async () => {
     const result = await swal.fire({

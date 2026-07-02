@@ -242,13 +242,6 @@ export default function FootballFieldDetail() {
       const booking = await createBooking(bookingData);
 
       switch (paymentMethod) {
-        case "VNPAY":
-          if (booking.paymentUrl) {
-            window.location.href = booking.paymentUrl;
-          } else {
-            navigate(`/football-fields/${booking.id}/payment`);
-          }
-          break;
         case "VIETQR":
           navigate(`/football-fields/${booking.id}/payment`);
           break;
@@ -483,7 +476,7 @@ export default function FootballFieldDetail() {
               <div className="payment-method-section">
                 <h3>Thanh toán</h3>
                 <div className="payment-methods">
-                  {["VNPAY", "VIETQR", "CASH"].map((method) => (
+                  {["VIETQR", "CASH"].map((method) => (
                     <button
                       key={method}
                       type="button"

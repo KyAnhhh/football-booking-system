@@ -11,15 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import vn.phankyanh.shopbongda.booking.domain.Booking;
-import vn.phankyanh.shopbongda.booking.repository.BookingRepository;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
-import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.payment.dto.response.PaymentResponse;
 import vn.phankyanh.shopbongda.payment.service.PaymentService;
-import vn.phankyanh.shopbongda.payment.service.VNPayService;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
@@ -28,34 +23,15 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final BookingRepository bookingRepository;
-    private final VNPayService vnPayService;
 
     @PostMapping("/user/payments/bookings/{bookingId}/vnpay")
     public ApiResponse<String> createPayment(
-            @PathVariable Long bookingId,
-            HttpServletRequest request
+            @PathVariable Long bookingId
     ) {
-
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() ->
-                        new RuntimeException("Booking not found"));
-
-        if (booking.getPayment().getPaymentStatus() == PaymentStatus.PAID) {
-            throw new RuntimeException("Booking already paid");
-        }
-
-        String paymentUrl = vnPayService.createPaymentUrl(
-                booking.getId(),
-                booking.getTotalPrice(),
-                request
+        throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_IMPLEMENTED,
+                "VNPay tạm ngưng cho đến khi hoàn thiện callback và chữ ký"
         );
-
-        ApiResponse<String> response = new ApiResponse<>();
-
-        response.setData(paymentUrl);
-
-        return response;
     }
 
     @GetMapping("/admin/payments")
@@ -87,6 +63,15 @@ public class PaymentController {
     public ResponseEntity<?> confirmPayment(@PathVariable Long orderId) {
         Payment payment = paymentService.confirmPayment(orderId);
         return ResponseEntity.ok(payment);
+    }
+
+    @PutMapping("/admin/payments/bookings/{bookingId}/confirm")
+    public ResponseEntity<?> confirmBookingPayment(
+            @PathVariable Long bookingId
+    ) {
+        return ResponseEntity.ok(
+                paymentService.confirmBookingPayment(bookingId)
+        );
     }
 
     @DeleteMapping("/admin/payments/{id}")

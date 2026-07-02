@@ -45,6 +45,42 @@ const params = new URLSearchParams({
   return handleResponse(response);
 };
 
+export const getAdminProducts = async (
+  pageNo,
+  pageSize,
+  sortBy = "id",
+  sortDir = "asc",
+  search = ""
+) => {
+  const params = new URLSearchParams({ pageNo, pageSize, sortBy, sortDir });
+  if (search) params.append("search", search);
+  const response = await fetchWithAuth(
+    `${API_URL_ADMIN}?${params.toString()}`
+  );
+  return handleResponse(response);
+};
+
+export const checkProductPublication = async (id) => {
+  const response = await fetchWithAuth(
+    `${API_URL_ADMIN}/${id}/publication-check`
+  );
+  return handleResponse(response);
+};
+
+export const publishProduct = async (id) => {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}/publish`, {
+    method: "POST",
+  });
+  return handleResponse(response);
+};
+
+export const unpublishProduct = async (id) => {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}/unpublish`, {
+    method: "POST",
+  });
+  return handleResponse(response);
+};
+
 export const getTop4PopularProducts = async () => {
   const response = await fetch(`${API_URL_PUBLIC}/top4-popular`);
   return handleResponse(response);

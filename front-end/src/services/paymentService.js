@@ -28,9 +28,18 @@ export const getPayment = async (pageNo, pageSize, sortBy, sortDir, search) => {
   return handleResponse(response);
 }
 
-export const deletePaymentById = async (id) => {
-  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}`, {
-    method: "DELETE",
-  });
+export const confirmBookingPayment = async (bookingId) => {
+  const response = await fetchWithAuth(
+    `${API_URL_ADMIN}/bookings/${bookingId}/confirm`,
+    { method: "PUT" }
+  );
+  return handleResponse(response);
+}
+
+export const confirmOrderPayment = async (orderId) => {
+  const response = await fetchWithAuth(
+    `${API_URL_ADMIN}/orders/${orderId}/confirm`,
+    { method: "PUT" }
+  );
   return handleResponse(response);
 }

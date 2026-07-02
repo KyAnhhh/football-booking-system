@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import vn.phankyanh.shopbongda.order.dto.request.CheckoutRequest;
 import vn.phankyanh.shopbongda.order.dto.request.OrderRequest;
 import vn.phankyanh.shopbongda.order.dto.response.OrderResponse;
@@ -28,7 +29,7 @@ public class UserOrderController {
 
     @PostMapping
     public ApiResponse<OrderResponse> createOrder(
-            @RequestBody OrderRequest request,
+            @Valid @RequestBody OrderRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
 
@@ -82,7 +83,7 @@ public class UserOrderController {
     @PostMapping("/checkout-cart")
     public ApiResponse<OrderResponse> checkout(
             @AuthenticationPrincipal Jwt jwt,
-            @RequestBody CheckoutRequest request
+            @Valid @RequestBody CheckoutRequest request
     ) {
 
         Long userId = jwt.getClaim("id");

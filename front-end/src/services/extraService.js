@@ -51,3 +51,24 @@ export const deleteExtraService = async (id) => {
   if (response.status === 204 || response.ok) return true;
   return handleResponse(response);
 };
+
+export const checkExtraServicePublication = async (id) => {
+  const response = await fetchWithAuth(
+    `${API_URL_ADMIN}/${id}/publication-check`
+  );
+  return handleResponse(response);
+};
+
+export const publishExtraService = async (id) => {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}/publish`, {
+    method: "POST",
+  });
+  return handleResponse(response);
+};
+
+export const unpublishExtraService = async (id) => {
+  const response = await fetchWithAuth(`${API_URL_ADMIN}/${id}/unpublish`, {
+    method: "POST",
+  });
+  return handleResponse(response);
+};

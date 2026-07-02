@@ -133,7 +133,9 @@
 }
 
 .order-review-btn,
-.order-receive-btn {
+.order-receive-btn,
+.order-payment-btn,
+.order-cancel-btn {
   border: none;
   border-radius: 14px;
   min-height: 40px;
@@ -190,6 +192,22 @@
   background: #16a34a;
   color: #fff;
   box-shadow: 0 14px 26px rgba(22, 163, 74, 0.22);
+}
+
+.order-card-footer-actions {
+  display: flex !important;
+  grid-auto-flow: column;
+  gap: 10px !important;
+}
+
+.order-payment-btn {
+  background: #2563eb;
+  color: #fff;
+}
+
+.order-cancel-btn {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 @media (max-width: 760px) {

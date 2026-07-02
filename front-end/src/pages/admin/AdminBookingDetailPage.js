@@ -20,6 +20,7 @@ import {
   updateBookingStatus,
 } from "../../services/bookingService";
 import "../../assets/styles/AdminBookingDetailPage.css";
+import { confirmBookingPayment } from "../../services/paymentService";
 
 const statusLabels = {
   PENDING: "Chờ xác nhận",
@@ -31,6 +32,7 @@ const statusLabels = {
 };
 
 const paymentStatusLabels = {
+  PENDING: "Chờ xác nhận",
   UNPAID: "Chưa thanh toán",
   PAID: "Đã thanh toán",
   FAILED: "Thanh toán lỗi",
@@ -49,7 +51,6 @@ const statusActions = {
   ],
   IN_PROGRESS: [
     { status: "COMPLETED", label: "Check-out", variant: "success", mode: "check-out" },
-    { status: "CANCELLED", label: "Hủy lịch", variant: "warning" },
   ],
 };
 
@@ -112,7 +113,11 @@ export default function AdminBookingDetailPage() {
     return `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`;
   }, [booking]);
 
-  const availableActions = statusActions[booking?.status] || [];
+  const availableActions = (statusActions[booking?.status] || []).filter(
+    (action) => action.status !== "CONFIRMED"
+      || booking?.paymentMethod !== "VIETQR"
+      || booking?.paymentStatus === "PAID"
+  );
   const terminalStatus = ["CANCELLED", "EXPIRED"].includes(booking?.status);
 
   const handleConfirmStatus = async () => {
@@ -133,6 +138,27 @@ export default function AdminBookingDetailPage() {
     } catch (error) {
       console.error(error);
       swal.fire("Lỗi", error.message || "Không thể cập nhật trạng thái.", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    try {
+      setSaving(true);
+      await confirmBookingPayment(booking.id);
+      await loadBooking();
+      swal.fire(
+        "Đã xác nhận",
+        "Thanh toán VietQR đã được xác nhận.",
+        "success"
+      );
+    } catch (error) {
+      swal.fire(
+        "Lỗi",
+        error.message || "Không thể xác nhận thanh toán.",
+        "error"
+      );
     } finally {
       setSaving(false);
     }
@@ -298,6 +324,17 @@ export default function AdminBookingDetailPage() {
               <strong>{formatMoney(booking.finalPrice || booking.totalPrice)}</strong>
               <small>{booking.paymentMethod || "Chưa chọn phương thức"}</small>
             </div>
+
+            {booking.paymentMethod === "VIETQR"
+              && booking.paymentStatus === "PENDING" && (
+              <Button
+                variant="success"
+                onClick={handleConfirmPayment}
+                disabled={saving}
+              >
+                Xác nhận đã nhận tiền
+              </Button>
+            )}
 
             <div className="admin-booking-breakdown">
               <div>

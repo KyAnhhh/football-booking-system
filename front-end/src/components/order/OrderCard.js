@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../assets/styles/OrderCard.css";
-import { confirmReceived, getOrderById } from "../../services/orderService";
+import {
+  cancelOrder,
+  confirmReceived,
+  getOrderById,
+} from "../../services/orderService";
 import { checkCanReview } from "../../services/reviewService";
 import Swal from "sweetalert2";
-import { CheckCircle2, Package, Star } from "lucide-react";
+import { CheckCircle2, CreditCard, Package, RotateCcw, Star } from "lucide-react";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {
@@ -15,6 +19,7 @@ const formatCurrency = (value) =>
 const statusConfig = {
   PENDING: { label: "Đang xử lý", className: "pending" },
   CONFIRMED: { label: "Đã xác nhận", className: "confirmed" },
+  SHIPPING: { label: "Đang giao", className: "confirmed" },
   DELIVERED: { label: "Đã giao", className: "delivered" },
   COMPLETED: { label: "Hoàn tất", className: "completed" },
   CANCELLED: { label: "Đã hủy", className: "cancelled" },
@@ -96,6 +101,30 @@ export default function OrderCard({ order }) {
     } catch (err) {
       console.error("Confirm order error:", err);
       Swal.fire("Lỗi", "Không thể xác nhận đơn hàng lúc này.", "error");
+    }
+  };
+
+  const handleCancel = async () => {
+    const result = await Swal.fire({
+      title: "Hủy đơn hàng?",
+      text: "Sản phẩm đang giữ trong kho sẽ được hoàn lại.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Hủy đơn",
+      cancelButtonText: "Giữ lại",
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await cancelOrder(order.id);
+      setStatus("CANCELLED");
+      Swal.fire("Đã hủy", "Đơn hàng đã được hủy.", "success");
+    } catch (error) {
+      Swal.fire(
+        "Không thể hủy",
+        error.message || "Đơn hàng không còn ở trạng thái cho phép hủy.",
+        "error"
+      );
     }
   };
 
@@ -186,6 +215,31 @@ export default function OrderCard({ order }) {
             <CheckCircle2 size={18} />
             Xác nhận đã nhận hàng
           </button>
+        )}
+
+        {status === "PENDING" && (
+          <div className="order-card-footer-actions">
+            {order.paymentMethod === "VIETQR"
+              && order.paymentStatus === "UNPAID" && (
+              <button
+                type="button"
+                className="order-payment-btn"
+                onClick={() => navigate(`/orders/${order.id}/payment`)}
+              >
+                <CreditCard size={18} />
+                Thanh toán VietQR
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="order-cancel-btn"
+              onClick={handleCancel}
+            >
+              <RotateCcw size={18} />
+              Hủy đơn
+            </button>
+          </div>
         )}
       </footer>
     </article>

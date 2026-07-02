@@ -78,7 +78,7 @@ public class AdminOrderController {
                 new ApiResponse<>();
 
         apiResponse.setMessage(
-                "Deleted order with id: " + id
+                "Cancelled order with id: " + id
         );
 
         return apiResponse;

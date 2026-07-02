@@ -14,6 +14,7 @@ import vn.phankyanh.shopbongda.maintenance.dto.response.MaintenanceResponse;
 import vn.phankyanh.shopbongda.maintenance.dto.response.MaintenanceScheduleResponse;
 import vn.phankyanh.shopbongda.maintenance.repository.MaintenanceRepository;
 import vn.phankyanh.shopbongda.maintenance.service.MaintenanceService;
+import vn.phankyanh.shopbongda.maintenance.service.MaintenanceTimePolicy;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,7 +29,11 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     @Override
     @Transactional
     public MaintenanceResponse createMaintenance(MaintenanceRequest request) {
-        validateTimeRange(request.getStartTime(), request.getEndTime());
+        MaintenanceTimePolicy.validateForCreate(
+                request.getStartTime(),
+                request.getEndTime(),
+                LocalDateTime.now()
+        );
 
         FootballField field = footballFieldRepository.findById(request.getFieldId())
                 .orElseThrow(() -> new RuntimeException("Field not found"));
@@ -87,7 +92,10 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         Maintenance maintenance = maintenanceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Maintenance not found"));
 
-        validateTimeRange(request.getStartTime(), request.getEndTime());
+        MaintenanceTimePolicy.validateRange(
+                request.getStartTime(),
+                request.getEndTime()
+        );
 
         List<Maintenance> conflicts = maintenanceRepository.findConflictingMaintenances(
                 request.getFieldId(), request.getStartTime(), request.getEndTime());
@@ -151,16 +159,6 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                 .map(m -> mapToResponse(m, footballFieldRepository.findById(fieldId)
                         .map(FootballField::getName).orElse("Unknown")))
                 .toList();
-    }
-
-    private void validateTimeRange(LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime == null || endTime == null) {
-            throw new IllegalArgumentException("Start time and end time are required");
-        }
-
-        if (!endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException("Start time must be before end time");
-        }
     }
 
     private MaintenanceResponse mapToResponse(Maintenance maintenance, String fieldName) {

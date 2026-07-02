@@ -11,6 +11,7 @@ import {
   createSupplier,
   getInventoryItems,
   getInventoryReservations,
+  getInventoryProfitSummary,
   getInventoryStocks,
   getInventoryTransactions,
   getStockImportById,
@@ -20,7 +21,8 @@ import {
   importStock,
   postStockImport,
   syncProductVariantsToInventory,
-  updateInventoryItem,
+  updateLowStockThreshold,
+  updateInventoryBehavior,
   updateSupplier,
 } from "../../services/inventoryService";
 import "../../assets/styles/AdminCrudPage.css";
@@ -32,6 +34,12 @@ const itemTypes = [
   "FIELD_ASSET",
   "CONSUMABLE",
   "OTHER",
+];
+
+const inventoryBehaviors = [
+  ["SELLABLE", "Hàng bán"],
+  ["CONSUMABLE", "Hàng tiêu hao"],
+  ["RENTAL", "Hàng cho thuê"],
 ];
 
 const adjustmentTypes = [
@@ -46,6 +54,7 @@ const emptyItemForm = {
   itemCode: "",
   name: "",
   itemType: "OTHER",
+  inventoryBehavior: "CONSUMABLE",
   referenceId: "",
   unit: "cái",
   lowStockThreshold: 0,
@@ -77,6 +86,7 @@ export default function InventoryPage() {
   const [reservations, setReservations] = useState([]);
   const [stockImports, setStockImports] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [profitSummary, setProfitSummary] = useState(null);
   const [itemPage, setItemPage] = useState(null);
   const [stockPage, setStockPage] = useState(null);
   const [transactionPage, setTransactionPage] = useState(null);
@@ -85,6 +95,7 @@ export default function InventoryPage() {
   const [pageNo, setPageNo] = useState(0);
   const [search, setSearch] = useState("");
   const [itemType, setItemType] = useState("");
+  const [lowStockOnly, setLowStockOnly] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [showItemModal, setShowItemModal] = useState(false);
@@ -150,10 +161,11 @@ export default function InventoryPage() {
       size: 20,
       search,
       itemType,
+      lowStockOnly,
     });
     setStocks(data.content || []);
     setStockPage(data);
-  }, [pageNo, search, itemType]);
+  }, [pageNo, search, itemType, lowStockOnly]);
 
   const loadTransactions = useCallback(async () => {
     const data = await getInventoryTransactions({ page: pageNo, size: 20 });
@@ -182,6 +194,11 @@ export default function InventoryPage() {
     setSuppliers(data.content || []);
   }, []);
 
+  const loadProfitSummary = useCallback(async () => {
+    const data = await getInventoryProfitSummary();
+    setProfitSummary(data);
+  }, []);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
@@ -191,6 +208,7 @@ export default function InventoryPage() {
         activeTab === "transactions" ? loadTransactions() : Promise.resolve(),
         activeTab === "reservations" ? loadReservations() : Promise.resolve(),
         activeTab === "imports" ? loadStockImports() : Promise.resolve(),
+        activeTab === "stocks" ? loadProfitSummary() : Promise.resolve(),
         loadSuppliers(),
       ]);
     } catch (error) {
@@ -205,6 +223,7 @@ export default function InventoryPage() {
     loadTransactions,
     loadReservations,
     loadStockImports,
+    loadProfitSummary,
     loadSuppliers,
   ]);
 
@@ -233,11 +252,12 @@ export default function InventoryPage() {
   };
 
   const openEditItemThreshold = (item) => {
-    setEditingItemId(item.id);
+    setEditingItemId(item.inventoryItemId || item.id);
     setItemForm({
       itemCode: item.itemCode,
-      name: item.name,
+      name: item.name || item.itemName,
       itemType: item.itemType,
+      inventoryBehavior: item.inventoryBehavior || "CONSUMABLE",
       referenceId: item.referenceId || "",
       unit: item.unit || "cái",
       lowStockThreshold: item.lowStockThreshold || 0,
@@ -249,18 +269,21 @@ export default function InventoryPage() {
   const handleUpdateItemThreshold = async (event) => {
     event.preventDefault();
     try {
-      await updateInventoryItem(editingItemId, {
-        ...itemForm,
-        referenceId: itemForm.referenceId
-          ? Number(itemForm.referenceId)
-          : null,
-        lowStockThreshold: Number(itemForm.lowStockThreshold || 0),
-      });
+      await Promise.all([
+        updateLowStockThreshold(
+          editingItemId,
+          Number(itemForm.lowStockThreshold || 0)
+        ),
+        updateInventoryBehavior(
+          editingItemId,
+          itemForm.inventoryBehavior
+        ),
+      ]);
       setShowItemModal(false);
       setEditingItemId(null);
       setItemForm(emptyItemForm);
       await loadData();
-      swal("Thành công", "Đã cập nhật ngưỡng cảnh báo.", "success");
+      swal("Thành công", "Đã cập nhật cấu hình item kho.", "success");
     } catch (error) {
       swal(
         "Lỗi",
@@ -276,6 +299,7 @@ export default function InventoryPage() {
       await createInventoryItem({
         ...itemForm,
         referenceId: itemForm.referenceId ? Number(itemForm.referenceId) : null,
+        inventoryBehavior: itemForm.inventoryBehavior,
         lowStockThreshold: Number(itemForm.lowStockThreshold || 0),
       });
       setShowItemModal(false);
@@ -591,19 +615,53 @@ export default function InventoryPage() {
             </option>
           ))}
         </Form.Select>
+
+        {activeTab === "stocks" && (
+          <Form.Check
+            type="switch"
+            id="low-stock-only"
+            label="Chỉ sắp hết"
+            checked={lowStockOnly}
+            onChange={(event) => {
+              setLowStockOnly(event.target.checked);
+              setPageNo(0);
+            }}
+          />
+        )}
       </div>
 
       {activeTab === "stocks" && (
+        <>
+        {profitSummary && (
+          <div className="inventory-profit-summary">
+            <div>
+              <span>Doanh thu ghi nhận</span>
+              <strong>{formatCurrency(profitSummary.totalRevenue)}</strong>
+            </div>
+            <div>
+              <span>Giá vốn</span>
+              <strong>{formatCurrency(profitSummary.totalCost)}</strong>
+            </div>
+            <div>
+              <span>Lợi nhuận gộp</span>
+              <strong>{formatCurrency(profitSummary.totalGrossProfit)}</strong>
+            </div>
+          </div>
+        )}
         <Table responsive hover className="admin-crud-table">
           <thead>
             <tr>
               <th>Mã</th>
               <th>Tên item</th>
               <th>Loại</th>
+              <th>Hành vi</th>
               <th>Tồn</th>
               <th>Đang giữ</th>
               <th>Có thể dùng</th>
               <th>Cảnh báo</th>
+              <th>Giá vốn TB</th>
+              <th>Giá trị tồn</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -612,6 +670,7 @@ export default function InventoryPage() {
                 <td>{stock.itemCode}</td>
                 <td>{stock.itemName}</td>
                 <td>{stock.itemType}</td>
+                <td>{stock.inventoryBehavior}</td>
                 <td>{stock.quantityOnHand} {stock.unit}</td>
                 <td>{stock.reservedQuantity}</td>
                 <td>{stock.availableQuantity}</td>
@@ -620,10 +679,22 @@ export default function InventoryPage() {
                     {stock.lowStock ? "Sắp hết" : "Ổn"}
                   </span>
                 </td>
+                <td>{formatCurrency(stock.averageUnitCost)}</td>
+                <td>{formatCurrency(stock.inventoryValue)}</td>
+                <td>
+                  <Button
+                    size="sm"
+                    variant="outline-warning"
+                    onClick={() => openEditItemThreshold(stock)}
+                  >
+                    Cấu hình
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
         </Table>
+        </>
       )}
 
       {activeTab === "items" && (
@@ -633,6 +704,7 @@ export default function InventoryPage() {
               <th>Mã</th>
               <th>Tên</th>
               <th>Loại</th>
+              <th>Hành vi</th>
               <th>Reference</th>
               <th>Đơn vị</th>
               <th>Ngưỡng cảnh báo</th>
@@ -646,6 +718,7 @@ export default function InventoryPage() {
                 <td>{item.itemCode}</td>
                 <td>{item.name}</td>
                 <td>{item.itemType}</td>
+                <td>{item.inventoryBehavior}</td>
                 <td>{item.referenceId || "-"}</td>
                 <td>{item.unit}</td>
                 <td>{item.lowStockThreshold}</td>
@@ -656,7 +729,7 @@ export default function InventoryPage() {
                     variant="outline-warning"
                     onClick={() => openEditItemThreshold(item)}
                   >
-                    Sửa ngưỡng
+                    Cấu hình
                   </Button>
                 </td>
               </tr>
@@ -917,7 +990,7 @@ export default function InventoryPage() {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingItemId ? "Cập nhật ngưỡng cảnh báo" : "Tạo item kho"}
+            {editingItemId ? "Cấu hình item kho" : "Tạo item kho"}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -928,13 +1001,25 @@ export default function InventoryPage() {
                 : handleCreateItem
             }
           >
-            <Form.Control className="mb-2" placeholder="Mã kho" value={itemForm.itemCode} onChange={(e) => setItemForm({ ...itemForm, itemCode: e.target.value })} required />
-            <Form.Control className="mb-2" placeholder="Tên item" value={itemForm.name} onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })} required />
-            <Form.Select className="mb-2" value={itemForm.itemType} onChange={(e) => setItemForm({ ...itemForm, itemType: e.target.value })}>
-              {itemTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-            </Form.Select>
-            <Form.Control className="mb-2" placeholder="Reference ID nếu có" value={itemForm.referenceId} onChange={(e) => setItemForm({ ...itemForm, referenceId: e.target.value })} />
-            <Form.Control className="mb-2" placeholder="Đơn vị" value={itemForm.unit} onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })} />
+            {!editingItemId && (
+              <>
+                <Form.Control className="mb-2" placeholder="Mã kho" value={itemForm.itemCode} onChange={(e) => setItemForm({ ...itemForm, itemCode: e.target.value })} required />
+                <Form.Control className="mb-2" placeholder="Tên item" value={itemForm.name} onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })} required />
+                <Form.Select className="mb-2" value={itemForm.itemType} onChange={(e) => setItemForm({ ...itemForm, itemType: e.target.value })}>
+                  {itemTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+                </Form.Select>
+                <Form.Select className="mb-2" value={itemForm.inventoryBehavior} onChange={(e) => setItemForm({ ...itemForm, inventoryBehavior: e.target.value })}>
+                  {inventoryBehaviors.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </Form.Select>
+                <Form.Control className="mb-2" placeholder="Reference ID nếu có" value={itemForm.referenceId} onChange={(e) => setItemForm({ ...itemForm, referenceId: e.target.value })} />
+                <Form.Control className="mb-2" placeholder="Đơn vị" value={itemForm.unit} onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })} />
+              </>
+            )}
+            {editingItemId && (
+              <Form.Select className="mb-2" value={itemForm.inventoryBehavior} onChange={(e) => setItemForm({ ...itemForm, inventoryBehavior: e.target.value })}>
+                {inventoryBehaviors.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </Form.Select>
+            )}
             <Form.Control className="mb-3" type="number" min="0" placeholder="Ngưỡng cảnh báo" value={itemForm.lowStockThreshold} onChange={(e) => setItemForm({ ...itemForm, lowStockThreshold: e.target.value })} />
             <Button type="submit">Lưu</Button>
           </Form>

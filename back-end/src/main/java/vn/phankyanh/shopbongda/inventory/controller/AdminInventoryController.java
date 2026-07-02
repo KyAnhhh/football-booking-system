@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,12 +18,15 @@ import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryItemType;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryReservationStatus;
 import vn.phankyanh.shopbongda.inventory.domain.StockImportStatus;
+import vn.phankyanh.shopbongda.inventory.dto.request.InventoryBehaviorRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.InventoryItemRequest;
+import vn.phankyanh.shopbongda.inventory.dto.request.LowStockThresholdRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockImportRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.SupplierRequest;
-import vn.phankyanh.shopbongda.inventory.dto.response.InventoryItemResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryConsistencyResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryItemResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryProfitSummaryResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryTransactionResponse;
@@ -63,6 +67,28 @@ public class AdminInventoryController {
         );
     }
 
+    @PatchMapping("/items/{id}/low-stock-threshold")
+    public ApiResponse<InventoryItemResponse> updateLowStockThreshold(
+            @PathVariable Long id,
+            @Valid @RequestBody LowStockThresholdRequest request
+    ) {
+        return response(
+                "Cập nhật ngưỡng cảnh báo thành công",
+                inventoryService.updateLowStockThreshold(id, request)
+        );
+    }
+
+    @PatchMapping("/items/{id}/inventory-behavior")
+    public ApiResponse<InventoryItemResponse> updateInventoryBehavior(
+            @PathVariable Long id,
+            @Valid @RequestBody InventoryBehaviorRequest request
+    ) {
+        return response(
+                "Cập nhật hành vi tồn kho thành công",
+                inventoryService.updateInventoryBehavior(id, request)
+        );
+    }
+
     @GetMapping("/items")
     public ApiResponse<Page<InventoryItemResponse>> getItems(
             @RequestParam(defaultValue = "0") int page,
@@ -81,11 +107,18 @@ public class AdminInventoryController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) InventoryItemType itemType
+            @RequestParam(required = false) InventoryItemType itemType,
+            @RequestParam(defaultValue = "false") boolean lowStockOnly
     ) {
         return response(
                 "Lấy tồn kho thành công",
-                inventoryService.getStocks(page, size, search, itemType)
+                inventoryService.getStocks(
+                        page,
+                        size,
+                        search,
+                        itemType,
+                        lowStockOnly
+                )
         );
     }
 
@@ -212,6 +245,14 @@ public class AdminInventoryController {
         return response(
                 "Kiểm tra dữ liệu kho hoàn tất",
                 inventoryService.checkConsistency()
+        );
+    }
+
+    @GetMapping("/profit-summary")
+    public ApiResponse<InventoryProfitSummaryResponse> getProfitSummary() {
+        return response(
+                "Lấy tổng hợp giá vốn và lợi nhuận thành công",
+                inventoryService.getProfitSummary()
         );
     }
 

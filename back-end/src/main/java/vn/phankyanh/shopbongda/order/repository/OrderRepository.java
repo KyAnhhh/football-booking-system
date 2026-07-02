@@ -9,10 +9,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 
 import org.springframework.data.repository.query.Param;
 import vn.phankyanh.shopbongda.order.domain.Order;
 import vn.phankyanh.shopbongda.order.domain.OrderStatus;
+import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
+import java.time.LocalDateTime;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -20,6 +24,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
        List<Order> findByUserId(Long userId);
 
        long countByOrderStatus(OrderStatus orderStatus);
+
+       boolean existsByPaymentId(Long paymentId);
 
        @Query("SELECT DISTINCT o FROM Order o " +
               "LEFT JOIN FETCH o.orderItems oi " +
@@ -34,6 +40,27 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
        WHERE o.id = :id
        """)
        Optional<Order> findByIdWithPayment(@Param("id") Long id);
+
+       @Lock(LockModeType.PESSIMISTIC_WRITE)
+       @Query("""
+       SELECT DISTINCT o FROM Order o
+       LEFT JOIN FETCH o.payment p
+       LEFT JOIN FETCH o.orderItems oi
+       LEFT JOIN FETCH oi.productVariant pv
+       WHERE o.id = :id
+       """)
+       Optional<Order> findByIdForUpdate(@Param("id") Long id);
+
+       @Query("""
+       SELECT o.id FROM Order o
+       WHERE o.orderStatus = 'PENDING'
+       AND o.paymentMethod = :paymentMethod
+       AND o.createdAt < :cutoff
+       """)
+       List<Long> findPendingIdsCreatedBefore(
+              @Param("paymentMethod") PaymentMethod paymentMethod,
+              @Param("cutoff") LocalDateTime cutoff
+       );
 
        @Query("SELECT DISTINCT o FROM Order o " +
               "LEFT JOIN FETCH o.orderItems oi " +
@@ -72,6 +99,19 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
        WHERE o.orderStatus = 'COMPLETED'
        """)
        BigDecimal sumRevenue();
+
+       @Query("""
+       SELECT YEAR(COALESCE(o.updatedAt, o.orderDate)),
+              MONTH(COALESCE(o.updatedAt, o.orderDate)),
+              SUM(o.totalAmount)
+       FROM Order o
+       WHERE o.orderStatus = 'COMPLETED'
+       GROUP BY YEAR(COALESCE(o.updatedAt, o.orderDate)),
+                MONTH(COALESCE(o.updatedAt, o.orderDate))
+       ORDER BY YEAR(COALESCE(o.updatedAt, o.orderDate)),
+                MONTH(COALESCE(o.updatedAt, o.orderDate))
+       """)
+       List<Object[]> getMonthlyRevenue();
 
        @Query("""
        SELECT o FROM Order o

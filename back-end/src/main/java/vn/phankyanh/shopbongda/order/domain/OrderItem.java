@@ -91,6 +91,18 @@ public class OrderItem {
     @Column(nullable = false)
     private BigDecimal total;
 
+    @Column(nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    private BigDecimal unitCost = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    private BigDecimal totalCost = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    private BigDecimal grossProfit = BigDecimal.ZERO;
+
     @NotNull
     @Min(1)
     private Integer quantity;

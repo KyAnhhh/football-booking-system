@@ -1,5 +1,6 @@
 package vn.phankyanh.shopbongda.inventory.domain;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -45,6 +46,14 @@ public class InventoryStock {
     @Column(nullable = false)
     private Integer availableQuantity;
 
+    @Column(nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    private BigDecimal averageUnitCost = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    private BigDecimal inventoryValue = BigDecimal.ZERO;
+
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -59,6 +68,12 @@ public class InventoryStock {
         }
 
         availableQuantity = Math.max(quantityOnHand - reservedQuantity, 0);
+        if (averageUnitCost == null) {
+            averageUnitCost = BigDecimal.ZERO;
+        }
+        if (inventoryValue == null) {
+            inventoryValue = BigDecimal.ZERO;
+        }
         updatedAt = LocalDateTime.now();
     }
 }

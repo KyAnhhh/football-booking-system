@@ -55,6 +55,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     boolean existsByFieldId(Long fieldId);
 
+    boolean existsByPaymentId(Long paymentId);
+
     long countByStartTimeGreaterThanEqualAndStartTimeLessThan(
             LocalDateTime startTime,
             LocalDateTime endTime
@@ -67,6 +69,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     Optional<Booking> findByIdForUpdate(
             @Param("bookingId") Long bookingId
+    );
+
+    @Query("""
+    SELECT b.id FROM Booking b
+    WHERE b.status = 'PENDING'
+    AND b.createdAt < :cutoff
+    """)
+    List<Long> findPendingIdsCreatedBefore(
+            @Param("cutoff") LocalDateTime cutoff
     );
 
     @Query("""
@@ -150,12 +161,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     );
 
     @Query("""
-    SELECT MONTH(b.createdAt),
-    SUM(b.totalPrice)
+    SELECT YEAR(b.createdAt),
+           MONTH(b.createdAt),
+           SUM(b.totalPrice)
     FROM Booking b
     WHERE b.status = 'COMPLETED'
-    GROUP BY MONTH(b.createdAt)
-    ORDER BY MONTH(b.createdAt)
+    GROUP BY YEAR(b.createdAt), MONTH(b.createdAt)
+    ORDER BY YEAR(b.createdAt), MONTH(b.createdAt)
     """)
     List<Object[]> getMonthlyRevenue();
 

@@ -53,15 +53,43 @@ export const updateInventoryItem = async (id, payload) => {
   return handleResponse(response);
 };
 
+export const updateLowStockThreshold = async (id, lowStockThreshold) => {
+  const response = await fetchWithAuth(
+    `${API_URL}/items/${id}/low-stock-threshold`,
+    {
+      method: "PATCH",
+      headers: getJsonHeaders(),
+      body: JSON.stringify({ lowStockThreshold }),
+    }
+  );
+
+  return handleResponse(response);
+};
+
+export const updateInventoryBehavior = async (id, inventoryBehavior) => {
+  const response = await fetchWithAuth(
+    `${API_URL}/items/${id}/inventory-behavior`,
+    {
+      method: "PATCH",
+      headers: getJsonHeaders(),
+      body: JSON.stringify({ inventoryBehavior }),
+    }
+  );
+
+  return handleResponse(response);
+};
+
 export const getInventoryStocks = async ({
   page = 0,
   size = 20,
   search = "",
   itemType = "",
+  lowStockOnly = false,
 } = {}) => {
   const params = new URLSearchParams({ page, size });
   if (search) params.append("search", search);
   if (itemType) params.append("itemType", itemType);
+  if (lowStockOnly) params.append("lowStockOnly", "true");
 
   const response = await fetchWithAuth(`${API_URL}/stocks?${params.toString()}`, {
     headers: getJsonHeaders(),
@@ -186,6 +214,13 @@ export const cancelStockImport = async (id) => {
 
 export const checkInventoryConsistency = async () => {
   const response = await fetchWithAuth(`${API_URL}/consistency`, {
+    headers: getJsonHeaders(),
+  });
+  return handleResponse(response);
+};
+
+export const getInventoryProfitSummary = async () => {
+  const response = await fetchWithAuth(`${API_URL}/profit-summary`, {
     headers: getJsonHeaders(),
   });
   return handleResponse(response);

@@ -16,9 +16,11 @@ public class OrderRequest {
     @NotNull
     private Long shippingAddressId;
 
+    @NotNull
     private PaymentMethod paymentMethod;
 
     @NotNull
     @Size(min = 1, message = "Order phải có ít nhất 1 sản phẩm")
+    @jakarta.validation.Valid
     private List<OrderItemRequest> items;
 }

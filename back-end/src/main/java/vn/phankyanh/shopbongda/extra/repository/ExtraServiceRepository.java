@@ -11,12 +11,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import vn.phankyanh.shopbongda.extra.domain.ExtraService;
+import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
 
 @Repository
 public interface ExtraServiceRepository
         extends JpaRepository<ExtraService, Long> {
 
     List<ExtraService> findByIsActiveTrue();
+    List<ExtraService> findByIsActiveTrueAndPublicationStatus(
+            PublicationStatus publicationStatus
+    );
+
+    Optional<ExtraService> findByIdAndPublicationStatus(
+            Long id,
+            PublicationStatus publicationStatus
+    );
 
     boolean existsByName(String name);
 

@@ -13,7 +13,7 @@ import { getInventoryItems } from "../../services/inventoryService";
 const emptyForm = {
   sizeId: "",
   price: "",
-  stock: "",
+  stock: 0,
   inventoryItemId: "",
 };
 
@@ -54,10 +54,6 @@ export default function ProductVariantPage({ product, onClose }) {
       newErrors.price = "Giá phải lớn hơn 0";
     }
 
-    if (form.stock === "" || Number(form.stock) < 0) {
-      newErrors.stock = "Tồn kho phải lớn hơn hoặc bằng 0";
-    }
-
     const duplicated = variants.find(
       (variant) =>
         variant.sizeId === Number(form.sizeId) &&
@@ -83,7 +79,7 @@ export default function ProductVariantPage({ product, onClose }) {
     setForm({
       sizeId: variant.sizeId,
       price: variant.price,
-      stock: variant.stock,
+      stock: 0,
       inventoryItemId: variant.inventoryItemId || "",
     });
     setErrors({});
@@ -97,7 +93,7 @@ export default function ProductVariantPage({ product, onClose }) {
       productId: product.id,
       sizeId: Number(form.sizeId),
       price: Number(form.price),
-      stock: Number(form.stock),
+      stock: 0,
       inventoryItemId: form.inventoryItemId
         ? Number(form.inventoryItemId)
         : null,
@@ -167,21 +163,6 @@ export default function ProductVariantPage({ product, onClose }) {
               </Form.Control.Feedback>
             </Form.Group>
 
-            <Form.Group>
-              <Form.Control
-                type="number"
-                placeholder="Tồn kho"
-                value={form.stock}
-                isInvalid={!!errors.stock}
-                onChange={(event) =>
-                  setForm({ ...form, stock: event.target.value })
-                }
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.stock}
-              </Form.Control.Feedback>
-            </Form.Group>
-
             <Form.Group style={{ minWidth: 220 }}>
               <Form.Select
                 value={form.inventoryItemId}
@@ -201,6 +182,10 @@ export default function ProductVariantPage({ product, onClose }) {
             <Button type="submit">{editing ? "Cập nhật" : "Thêm"}</Button>
           </div>
         </Form>
+        <div className="alert alert-info">
+          Biến thể mới có tồn bằng 0. Tồn kho chỉ tăng sau khi phiếu nhập
+          được ghi sổ.
+        </div>
 
         <Table bordered hover responsive>
           <thead>

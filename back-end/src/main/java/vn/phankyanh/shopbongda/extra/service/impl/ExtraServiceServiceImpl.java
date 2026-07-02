@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import vn.phankyanh.shopbongda.inventory.domain.InventoryItemType;
-import vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.service.InventoryService;
 import vn.phankyanh.shopbongda.extra.domain.ExtraService;
@@ -16,6 +15,8 @@ import vn.phankyanh.shopbongda.extra.dto.response.ExtraServiceResponse;
 import vn.phankyanh.shopbongda.extra.mapper.ExtraServiceMapper;
 import vn.phankyanh.shopbongda.extra.repository.ExtraServiceRepository;
 import vn.phankyanh.shopbongda.extra.service.ExtraServiceService;
+import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
+import vn.phankyanh.shopbongda.catalog.service.CatalogPublicationService;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,7 @@ public class ExtraServiceServiceImpl
     private final ExtraServiceMapper extraServiceMapper;
 
     private final InventoryService inventoryService;
+    private final CatalogPublicationService publicationService;
 
     @Override
     public ExtraServiceResponse create(
@@ -63,8 +65,11 @@ public class ExtraServiceServiceImpl
                 extraServiceRepository.save(service);
 
         ensureInventoryForExtraService(saved);
+        publicationService.refreshExtraServiceReadiness(saved.getId());
 
-        return extraServiceMapper.toResponse(saved);
+        return extraServiceMapper.toResponse(
+                extraServiceRepository.findById(saved.getId()).orElseThrow()
+        );
     }
 
     @Override
@@ -72,6 +77,18 @@ public class ExtraServiceServiceImpl
 
         return extraServiceRepository.findAll()
                 .stream()
+                .map(extraServiceMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public List<ExtraServiceResponse> getPublicServices() {
+        return extraServiceRepository
+                .findByIsActiveTrueAndPublicationStatus(
+                        PublicationStatus.ACTIVE
+                )
+                .stream()
+                .filter(this::isPubliclyAvailable)
                 .map(extraServiceMapper::toResponse)
                 .toList();
     }
@@ -88,6 +105,30 @@ public class ExtraServiceServiceImpl
                                         "Extra service not found"));
 
         return extraServiceMapper.toResponse(service);
+    }
+
+    @Override
+    public ExtraServiceResponse getPublicById(Long id) {
+        ExtraService service = extraServiceRepository
+                .findByIdAndPublicationStatus(id, PublicationStatus.ACTIVE)
+                .filter(item -> Boolean.TRUE.equals(item.getIsActive()))
+                .filter(this::isPubliclyAvailable)
+                .orElseThrow(() -> new RuntimeException(
+                        "Extra service is not available"
+                ));
+        return extraServiceMapper.toResponse(service);
+    }
+
+    private boolean isPubliclyAvailable(ExtraService service) {
+        if (!Boolean.TRUE.equals(service.getTrackStock())) {
+            return true;
+        }
+        if (service.getInventoryItemId() == null) {
+            return false;
+        }
+        return inventoryService.getStockByItemId(
+                service.getInventoryItemId()
+        ).getAvailableQuantity() > 0;
     }
 
     @Override
@@ -218,40 +259,19 @@ public class ExtraServiceServiceImpl
                             service.getName(),
                             InventoryItemType.EXTRA_SERVICE,
                             service.getId(),
-                            service.getUnit(),
-                            service.getRemainingQuantity()
+                            service.getUnit()
                     );
 
             service.setInventoryItemId(inventoryItemId);
             extraServiceRepository.save(service);
-            return;
         }
 
         InventoryStockResponse stock =
                 inventoryService.getStockByItemId(
                         service.getInventoryItemId()
                 );
-
-        int target = service.getRemainingQuantity() == null
-                ? 0
-                : service.getRemainingQuantity();
-        int delta = target - stock.getQuantityOnHand();
-
-        if (delta == 0) {
-            return;
-        }
-
-        StockAdjustmentRequest request =
-                new StockAdjustmentRequest();
-        request.setInventoryItemId(service.getInventoryItemId());
-        request.setTransactionType(
-                delta > 0
-                        ? vn.phankyanh.shopbongda.inventory.domain.InventoryTransactionType.ADJUSTMENT_INCREASE
-                        : vn.phankyanh.shopbongda.inventory.domain.InventoryTransactionType.ADJUSTMENT_DECREASE
-        );
-        request.setQuantity(Math.abs(delta));
-        request.setNote("Đồng bộ tồn kho từ dịch vụ thêm");
-
-        inventoryService.adjustStock(request, null);
+        service.setStockQuantity(stock.getQuantityOnHand());
+        service.setRemainingQuantity(stock.getAvailableQuantity());
+        extraServiceRepository.save(service);
     }
 }

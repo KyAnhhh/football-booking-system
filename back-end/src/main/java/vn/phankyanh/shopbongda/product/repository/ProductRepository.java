@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import vn.phankyanh.shopbongda.product.domain.Product;
+import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
 
 @Repository
 public interface  ProductRepository extends JpaRepository<Product, Long>{
@@ -24,6 +25,8 @@ public interface  ProductRepository extends JpaRepository<Product, Long>{
     SELECT DISTINCT p FROM Product p
     LEFT JOIN p.variants v
     WHERE
+    p.publicationStatus = :publicationStatus
+    AND
     (:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')))
     AND (:category IS NULL OR p.category.name = :category)
     AND (:brand IS NULL OR p.brand.name = :brand)
@@ -31,6 +34,26 @@ public interface  ProductRepository extends JpaRepository<Product, Long>{
     AND (:maxPrice IS NULL OR v.price <= :maxPrice)
     """)
     Page<Product> filterProducts(
+            @Param("publicationStatus") PublicationStatus publicationStatus,
+            @Param("search") String search,
+            @Param("category") String category,
+            @Param("brand") String brand,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT DISTINCT p FROM Product p
+    LEFT JOIN p.variants v
+    WHERE
+    (:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')))
+    AND (:category IS NULL OR p.category.name = :category)
+    AND (:brand IS NULL OR p.brand.name = :brand)
+    AND (:minPrice IS NULL OR v.price >= :minPrice)
+    AND (:maxPrice IS NULL OR v.price <= :maxPrice)
+    """)
+    Page<Product> filterAdminProducts(
             @Param("search") String search,
             @Param("category") String category,
             @Param("brand") String brand,
@@ -44,6 +67,7 @@ public interface  ProductRepository extends JpaRepository<Product, Long>{
         SELECT p.* 
         FROM products p
         LEFT JOIN product_variants pv ON p.id = pv.product_id
+        WHERE p.publication_status = 'ACTIVE'
         GROUP BY p.id
         ORDER BY COALESCE(SUM(pv.sold_quantity), 0) DESC, p.id DESC
         LIMIT 4

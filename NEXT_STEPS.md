@@ -1,5 +1,7 @@
 # Next Steps
 
+> Cập nhật gần nhất: 2026-07-01. Đọc phần **CẬP NHẬT NEXT STEPS** ở cuối file trước.
+
 ## Ưu tiên rất cao
 
 1. **Rotate và externalize secrets.** `application.yaml` đang chứa Gmail app password và JWT secret; chuyển sang environment/secret manager, thu hồi credential hiện tại. Cloudinary config cũng cần kiểm tra nguồn secret.
@@ -73,4 +75,22 @@
 - Staff có được xem/đổi extra services và payment hay chỉ manager?
 - Xóa booking/order/payment là hard delete hay cần audit/soft delete?
 - Inventory là source of truth cho mọi product variant và extra service từ thời điểm nào?
+# CẬP NHẬT NEXT STEPS — 2026-07-01
 
+1. Đặt ngưỡng cảnh báo cho 58 item: 49 ProductVariant và 9 ExtraService tiêu hao. Bốn Extra `RENTAL` đã có threshold.
+2. Quyết định ranh giới giá cuối ngày: slot cuối bắt đầu `22:00`, nhưng rule cuối hiện bắt đầu `22:30`. Nếu cần giá riêng cho slot cuối, đổi rule trước kết thúc `22:00` và rule cuối thành `22:00–23:45`.
+3. Thay 10 ảnh sân tham khảo đang dùng chung URL bằng ảnh riêng.
+4. Tạo Voucher và MembershipTier nếu cần kiểm thử; database hiện chưa có dữ liệu hai module này.
+5. Viết test cho nhiều lô giá nhập, reserve/commit/release, hủy/return, Extra tiêu hao/cho thuê và phân bổ voucher vào lợi nhuận.
+6. Thiết kế khấu hao/chi phí theo lượt thuê cho `RENTAL`; hiện giá vốn mỗi lượt là 0.
+7. Chốt schema management: project có migration đến V22 nhưng chưa cấu hình Flyway và vẫn dùng `ddl-auto: update`.
+8. Commit các thay đổi local inventory/catalog/import/calendar hiện còn modified hoặc untracked; không rollback nhầm.
+# SAU KHI ỔN ĐỊNH FLOW — 2026-07-01
+
+- VNPay vẫn chủ động tắt; chỉ bật lại sau khi có secure hash, callback/return verification, ownership và idempotency.
+- Cần thêm integration test dùng database test cho hai request đồng thời đặt cùng slot/mua cùng tồn cuối.
+- Cần test scheduler bằng clock giả thay vì chờ thời gian thật.
+- `REFUNDED` hiện là trạng thái nghiệp vụ nội bộ; chưa kết nối API hoàn tiền ngân hàng.
+- Sau khi push nên chạy smoke test thủ công: booking CASH, booking VietQR, order COD, order VietQR, cancel và expiration.
+- Cần integration test database cho VietQR: submit → admin xác nhận tiền → xác nhận booking/order → commit kho; timeout không được hủy payment `PAID`.
+- Nên bổ sung `completedAt` riêng cho Booking/Order nếu cần báo cáo kế toán chính xác tuyệt đối theo thời điểm hoàn tất; hiện order dùng `updatedAt`, booking dùng `createdAt` làm mốc nhóm tháng.

@@ -24,6 +24,14 @@ public interface ProductService {
             BigDecimal maxPrice
     );
 
+    Page<ProductResponse> getAdminProducts(
+            int pageNo,
+            int pageSize,
+            String sortBy,
+            String sortDir,
+            String search
+    );
+
     List<ProductResponse> getTop4PopularProducts();
 
     ProductResponse getProductById(Long id);

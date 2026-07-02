@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
 
 @Data
 @NoArgsConstructor
@@ -14,6 +15,7 @@ public class ProductResponse {
     private String name;
     private String description;
     private Integer discount;
+    private PublicationStatus publicationStatus;
 
     private Long categoryId;
     private String categoryName;

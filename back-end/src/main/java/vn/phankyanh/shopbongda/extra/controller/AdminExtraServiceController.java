@@ -8,6 +8,8 @@ import java.util.List;
 import vn.phankyanh.shopbongda.extra.dto.request.ExtraServiceRequest;
 import vn.phankyanh.shopbongda.extra.dto.response.ExtraServiceResponse;
 import vn.phankyanh.shopbongda.extra.service.ExtraServiceService;
+import vn.phankyanh.shopbongda.catalog.dto.PublicationCheckResponse;
+import vn.phankyanh.shopbongda.catalog.service.CatalogPublicationService;
 
 @RestController
 @RequestMapping("/api/admin/extra-services")
@@ -15,6 +17,7 @@ import vn.phankyanh.shopbongda.extra.service.ExtraServiceService;
 public class AdminExtraServiceController {
 
     private final ExtraServiceService extraServiceService;
+    private final CatalogPublicationService publicationService;
 
     @PostMapping
     public ExtraServiceResponse create(
@@ -56,5 +59,20 @@ public class AdminExtraServiceController {
     ) {
 
         extraServiceService.delete(id);
+    }
+
+    @GetMapping("/{id}/publication-check")
+    public PublicationCheckResponse checkPublication(@PathVariable Long id) {
+        return publicationService.checkExtraService(id);
+    }
+
+    @PostMapping("/{id}/publish")
+    public ExtraServiceResponse publish(@PathVariable Long id) {
+        return publicationService.publishExtraService(id);
+    }
+
+    @PostMapping("/{id}/unpublish")
+    public ExtraServiceResponse unpublish(@PathVariable Long id) {
+        return publicationService.unpublishExtraService(id);
     }
 }

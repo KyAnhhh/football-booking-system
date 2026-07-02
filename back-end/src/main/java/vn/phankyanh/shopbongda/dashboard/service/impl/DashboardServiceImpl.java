@@ -19,6 +19,7 @@ import vn.phankyanh.shopbongda.dashboard.dto.response.AdminOverviewResponse;
 import vn.phankyanh.shopbongda.dashboard.dto.response.DashboardSummaryResponse;
 import vn.phankyanh.shopbongda.dashboard.dto.response.RevenueChartResponse;
 import vn.phankyanh.shopbongda.dashboard.service.DashboardService;
+import vn.phankyanh.shopbongda.dashboard.service.MonthlyRevenueAggregator;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
 import vn.phankyanh.shopbongda.maintenance.domain.Maintenance;
@@ -79,14 +80,10 @@ public class DashboardServiceImpl implements DashboardService  {
     @Transactional(readOnly = true)
     public List<RevenueChartResponse> getMonthlyRevenue() {
 
-        return bookingRepository
-                .getMonthlyRevenue()
-                .stream()
-                .map(obj -> new RevenueChartResponse(
-                        "Month " + obj[0],
-                        (BigDecimal) obj[1]
-                ))
-                .toList();
+        return MonthlyRevenueAggregator.aggregate(
+                bookingRepository.getMonthlyRevenue(),
+                orderRepository.getMonthlyRevenue()
+        );
     }
 
     @Override

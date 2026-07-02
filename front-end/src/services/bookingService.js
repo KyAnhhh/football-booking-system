@@ -113,3 +113,11 @@ export const deleteBooking = async (bookingId) => {
     });
     return handleResponse(response);
 }
+
+export const markBookingPaymentSubmitted = async (bookingId) => {
+    const response = await fetchWithAuth(
+        `${API_URL_USER}/${bookingId}/payment-submitted`,
+        { method: "PATCH" }
+    );
+    return handleResponse(response);
+}

@@ -1,5 +1,7 @@
 # Project Context — Frontend
 
+> Cập nhật gần nhất: 2026-07-01. Đọc phần **CẬP NHẬT FRONTEND** ở cuối file trước.
+
 ## Bootstrap và hạ tầng
 
 - `src/index.js` mount `App`; `App.js` nạp router và global CSS.
@@ -89,4 +91,31 @@ Các page admin dùng service theo module để CRUD và render table/form. Dash
 - `refresh()` trong `authService` có `console.log` refresh token và `console.log(refresh.status)` (tham chiếu chính function), cần sửa.
 - Không thấy error boundary, query/cache library hoặc test nghiệp vụ.
 - CRA test hiện chủ yếu là file mặc định `App.test.js`; có khả năng không còn khớp UI hiện tại.
+# CẬP NHẬT FRONTEND — 2026-07-01
 
+- `InventoryPage` có tìm kiếm/lọc item, sửa ngưỡng cảnh báo, hành vi kho, giá vốn bình quân, giá trị tồn và tổng hợp lợi nhuận.
+- `inventoryService.js` có API profit summary, threshold, behavior, consistency, stock-import lifecycle và ProductVariant sync.
+- `ProductPage` và `ExtraServicePage` hỗ trợ publication check/publish/unpublish.
+- Public chỉ nhận Product/ExtraService có trạng thái `ACTIVE`.
+- `ImportPage`/`importService.js` hỗ trợ Category và Brand cùng các loại import catalog/kho.
+- Luồng đặt sân dùng slot backend; slot cuối là `22:00–23:30`.
+- `AdminFieldCalendarPage` chỉ render API calendar; lỗi hiển thị `23:30–23:45` đã được sửa tại backend.
+- Frontend production build đã compile thành công.
+# CẬP NHẬT UI PAYMENT — 2026-07-01
+
+- Đã ẩn VNPay khỏi checkout sản phẩm, booking client và form booking admin.
+- Checkout chỉ hiện COD/VietQR; booking chỉ hiện CASH/VietQR.
+- Trang thanh toán booking gọi API `payment-submitted` thay vì chỉ hiển thị thông báo.
+- Admin Booking Detail có nút xác nhận tiền cho VietQR đang `PENDING`.
+- Admin Payment Page có nút xác nhận VietQR của order và không còn nút sửa/xóa payment.
+- Frontend production build đã thành công sau thay đổi.
+
+## AUDIT FLOW BOOKING/ORDER — 2026-07-01
+
+- UI admin chỉ hiển thị transition mà backend cho phép; VietQR phải xác nhận payment trước khi xác nhận booking/order.
+- Booking `IN_PROGRESS` chỉ được check-out sang `COMPLETED`, không còn thao tác hủy.
+- Client có thể mở lại `/orders/:id/payment` để thanh toán đơn VietQR `UNPAID`, gửi yêu cầu xác nhận hoặc hủy đơn `PENDING`.
+- Trang payment booking chỉ tạo QR cho `PENDING + VIETQR`; payment `PENDING` hiển thị chờ admin và không gửi lặp.
+- Timeline booking, order card và lịch sân đã nhận biết `IN_PROGRESS/SHIPPING`.
+- RevenueChart dùng stacked bar (đặt sân/sản phẩm) kết hợp đường tổng doanh thu, tooltip chi tiết, bộ lọc 6/12 tháng/toàn bộ, tổng kỳ và tăng trưởng tháng gần nhất.
+- Maintenance form giữ nguyên giờ local khi edit, mặc định lịch mới ở mốc 15 phút tiếp theo trong 2 giờ và chặn start quá khứ/end không hợp lệ trước API.

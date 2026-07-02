@@ -22,4 +22,6 @@ public interface PaymentService {
     Payment getPaymentByOrderId(Long orderId);
 
     Payment confirmPayment(Long orderId);
+
+    Payment confirmBookingPayment(Long bookingId);
 }

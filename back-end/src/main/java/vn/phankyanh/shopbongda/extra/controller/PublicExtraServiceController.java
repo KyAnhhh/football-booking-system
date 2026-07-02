@@ -18,7 +18,7 @@ public class PublicExtraServiceController {
     @GetMapping
     public List<ExtraServiceResponse> getAll() {
 
-        return extraServiceService.getAll();
+        return extraServiceService.getPublicServices();
     }
 
     @GetMapping("/{id}")
@@ -26,6 +26,6 @@ public class PublicExtraServiceController {
             @PathVariable Long id
     ) {
 
-        return extraServiceService.getById(id);
+        return extraServiceService.getPublicById(id);
     }
 }

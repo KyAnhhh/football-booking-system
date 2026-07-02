@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import vn.phankyanh.shopbongda.order.dto.request.CartItemRequest;
 import vn.phankyanh.shopbongda.order.dto.response.CartResponse;
 import vn.phankyanh.shopbongda.order.service.CartService;
@@ -24,7 +25,7 @@ public class CartController {
     private final CartService cartService;
 
     @PostMapping("/user/carts/items")
-    public ApiResponse<CartResponse> addItemToCart(@RequestBody CartItemRequest request, @AuthenticationPrincipal Jwt jwt) {
+    public ApiResponse<CartResponse> addItemToCart(@Valid @RequestBody CartItemRequest request, @AuthenticationPrincipal Jwt jwt) {
         Long userId = jwt.getClaim("id");
         ApiResponse<CartResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.cartService.addItemToCart(userId, request));

@@ -7,11 +7,14 @@ import vn.phankyanh.shopbongda.inventory.domain.InventoryReferenceType;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryReservationStatus;
 import vn.phankyanh.shopbongda.inventory.domain.StockImportStatus;
 import vn.phankyanh.shopbongda.inventory.dto.request.InventoryItemRequest;
+import vn.phankyanh.shopbongda.inventory.dto.request.InventoryBehaviorRequest;
+import vn.phankyanh.shopbongda.inventory.dto.request.LowStockThresholdRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockAdjustmentRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.StockImportRequest;
 import vn.phankyanh.shopbongda.inventory.dto.request.SupplierRequest;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryItemResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryConsistencyResponse;
+import vn.phankyanh.shopbongda.inventory.dto.response.InventoryProfitSummaryResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryTransactionResponse;
@@ -24,6 +27,16 @@ public interface InventoryService {
 
     InventoryItemResponse updateItem(Long id, InventoryItemRequest request);
 
+    InventoryItemResponse updateLowStockThreshold(
+            Long id,
+            LowStockThresholdRequest request
+    );
+
+    InventoryItemResponse updateInventoryBehavior(
+            Long id,
+            InventoryBehaviorRequest request
+    );
+
     Page<InventoryItemResponse> getItems(
             int page,
             int size,
@@ -35,7 +48,8 @@ public interface InventoryService {
             int page,
             int size,
             String search,
-            InventoryItemType itemType
+            InventoryItemType itemType,
+            boolean lowStockOnly
     );
 
     Page<InventoryTransactionResponse> getTransactions(
@@ -68,6 +82,8 @@ public interface InventoryService {
 
     InventoryConsistencyResponse checkConsistency();
 
+    InventoryProfitSummaryResponse getProfitSummary();
+
     InventoryTransactionResponse adjustStock(
             StockAdjustmentRequest request,
             Long actorId
@@ -78,8 +94,7 @@ public interface InventoryService {
             String name,
             InventoryItemType itemType,
             Long referenceId,
-            String unit,
-            Integer initialQuantity
+            String unit
     );
 
     InventoryTransactionResponse deductForOrder(

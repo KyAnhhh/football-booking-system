@@ -1,5 +1,7 @@
 # Project Context — API
 
+> Cập nhật gần nhất: 2026-07-01. Đọc phần **CẬP NHẬT API** ở cuối file trước.
+
 Base URL frontend đang dùng: `http://localhost:8080`.
 
 Quyền: `PUB` không cần token; `USER` là client/admin/manager/staff; `STAFF+`; `MANAGER+`; `ADMIN`.
@@ -150,4 +152,36 @@ Quyền: `PUB` không cần token; `USER` là client/admin/manager/staff; `STAFF
 | POST | `/api/admin/imports/{type}` | MANAGER+ | Import CSV |
 | GET/POST/PUT/DELETE | `/api/admin/membership-tiers[/{id}]` | ADMIN | Tier |
 | POST | `/api/public/images/upload` | PUB | Upload Cloudinary; cần audit |
+# CẬP NHẬT API — 2026-07-01
 
+| Method | Endpoint | Mục đích |
+|---|---|---|
+| PATCH | `/api/admin/inventory/items/{id}/low-stock-threshold` | Đặt ngưỡng cảnh báo |
+| PATCH | `/api/admin/inventory/items/{id}/inventory-behavior` | Đặt hành vi kho |
+| GET | `/api/admin/inventory/profit-summary` | Tổng hợp doanh thu, giá vốn, lợi nhuận |
+| GET | `/api/admin/products/{id}/publication-check` | Kiểm tra Product có thể publish |
+| POST | `/api/admin/products/{id}/publish` | Mở bán Product |
+| POST | `/api/admin/products/{id}/unpublish` | Ngừng public Product |
+| GET | `/api/admin/extra-services/{id}/publication-check` | Kiểm tra Extra có thể publish |
+| POST | `/api/admin/extra-services/{id}/publish` | Mở bán Extra |
+| POST | `/api/admin/extra-services/{id}/unpublish` | Ngừng public Extra |
+
+- `/api/public/products` và `/api/public/extra-services` chỉ trả dữ liệu `ACTIVE`.
+- API slot public và calendar admin cùng dùng slot 90 phút trong `07:00–23:45`; slot cuối `22:00–23:30`.
+- Import type có thêm `CATEGORIES` và `BRANDS`.
+# CẬP NHẬT API FLOW — 2026-07-01
+
+| Method | Endpoint | Mục đích |
+|---|---|---|
+| PATCH | `/api/user/bookings/{id}/payment-submitted` | Khách báo đã chuyển khoản booking |
+| PUT | `/api/user/orders/{id}/payment-submitted` | Khách báo đã chuyển khoản order |
+| PUT | `/api/admin/payments/bookings/{id}/confirm` | Admin xác nhận tiền booking |
+| PUT | `/api/admin/payments/orders/{id}/confirm` | Admin xác nhận tiền order |
+
+- Endpoint VNPay booking trả `501 Not Implemented` cho đến khi hoàn thiện callback/chữ ký.
+- DELETE booking/order vẫn giữ URL tương thích UI nhưng semantics là cancel an toàn, không hard-delete.
+
+## ORDER ITEM SAU CHECKOUT
+
+- `GET /api/user/order-items/order/{orderId}` yêu cầu đăng nhập và kiểm tra chủ sở hữu.
+- PUT/DELETE từng order item bị từ chối sau checkout; khách phải hủy đơn `PENDING` và đặt lại để reservation, payment và tồn kho không lệch.

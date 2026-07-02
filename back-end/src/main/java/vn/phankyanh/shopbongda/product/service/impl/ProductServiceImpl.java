@@ -23,6 +23,7 @@ import vn.phankyanh.shopbongda.product.repository.BrandRepository;
 import vn.phankyanh.shopbongda.product.repository.CategoryRepository;
 import vn.phankyanh.shopbongda.product.repository.ProductRepository;
 import vn.phankyanh.shopbongda.product.service.ProductService;
+import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -78,6 +79,7 @@ public class ProductServiceImpl implements ProductService {
         Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
 
         Page<Product> productsPage = productRepository.filterProducts(
+                PublicationStatus.ACTIVE,
                 (search == null || search.isBlank()) ? null : search,
                 (category == null || category.isBlank()) ? null : category,
                 (brand == null || brand.isBlank()) ? null : brand,
@@ -87,6 +89,28 @@ public class ProductServiceImpl implements ProductService {
         );
 
         return productsPage.map(productMapper::toResponse);
+    }
+
+    @Override
+    public Page<ProductResponse> getAdminProducts(
+            int pageNo,
+            int pageSize,
+            String sortBy,
+            String sortDir,
+            String search
+    ) {
+        Sort sort = "asc".equalsIgnoreCase(sortDir)
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+        return productRepository.filterAdminProducts(
+                search == null || search.isBlank() ? null : search,
+                null,
+                null,
+                null,
+                null,
+                pageable
+        ).map(productMapper::toResponse);
     }
 
     @Override
@@ -103,6 +127,8 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getProductById(Long id) {
 
         Product product = productRepository.findById(id)
+                .filter(item -> item.getPublicationStatus()
+                        == PublicationStatus.ACTIVE)
                 .orElseThrow(() -> new ProductNotFoundException(id));
 
         return productMapper.toResponse(product);

@@ -50,20 +50,16 @@ public class ProductVariantInventorySyncWorker {
             return SyncOutcome.linkedExisting(variant, existingItem.getId());
         }
 
-        int initialStock = variant.getStock() == null
-                ? 0
-                : Math.max(variant.getStock(), 0);
         Long inventoryItemId = inventoryService.createLinkedItem(
                 itemCode,
                 variant.getProduct().getName() + " - " + variant.getSize().getCode(),
                 InventoryItemType.PRODUCT_VARIANT,
                 variant.getId(),
-                "sản phẩm",
-                initialStock
+                "sản phẩm"
         );
 
         variant.setInventoryItemId(inventoryItemId);
-        variant.setStock(initialStock);
+        variant.setStock(0);
         variantRepository.save(variant);
 
         return SyncOutcome.created(variant, inventoryItemId);

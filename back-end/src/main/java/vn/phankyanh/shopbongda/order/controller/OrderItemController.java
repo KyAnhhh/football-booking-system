@@ -20,7 +20,7 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/public/orderItems")
+@RequestMapping("/api/user/order-items")
 public class OrderItemController {
     private final OrderItemService orderItemService;
 

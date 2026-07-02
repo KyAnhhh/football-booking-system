@@ -19,6 +19,8 @@ import vn.phankyanh.shopbongda.product.dto.request.ProductRequest;
 import vn.phankyanh.shopbongda.product.dto.response.ProductResponse;
 import vn.phankyanh.shopbongda.product.service.ProductService;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
+import vn.phankyanh.shopbongda.catalog.dto.PublicationCheckResponse;
+import vn.phankyanh.shopbongda.catalog.service.CatalogPublicationService;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 public class ProductController {
 
     private final ProductService productService;
+    private final CatalogPublicationService publicationService;
 
     @PostMapping("/admin/products")
     public ApiResponse<ProductResponse> createProduct(@RequestBody ProductRequest request) {
@@ -51,6 +54,44 @@ public class ProductController {
         apiResponse.setData(this.productService.getAllProducts(pageNo, pageSize, sortBy, sortDir, search, category, brand, minPrice, maxPrice));
         apiResponse.setMessage("Get all products successfully");
         return apiResponse;
+    }
+
+    @GetMapping("/admin/products")
+    public ApiResponse<Page<ProductResponse>> getAdminProducts(
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search
+    ) {
+        ApiResponse<Page<ProductResponse>> response = new ApiResponse<>();
+        response.setData(productService.getAdminProducts(
+                pageNo, pageSize, sortBy, sortDir, search
+        ));
+        return response;
+    }
+
+    @GetMapping("/admin/products/{id}/publication-check")
+    public ApiResponse<PublicationCheckResponse> checkPublication(
+            @PathVariable Long id
+    ) {
+        ApiResponse<PublicationCheckResponse> response = new ApiResponse<>();
+        response.setData(publicationService.checkProduct(id));
+        return response;
+    }
+
+    @PostMapping("/admin/products/{id}/publish")
+    public ApiResponse<ProductResponse> publish(@PathVariable Long id) {
+        ApiResponse<ProductResponse> response = new ApiResponse<>();
+        response.setData(publicationService.publishProduct(id));
+        return response;
+    }
+
+    @PostMapping("/admin/products/{id}/unpublish")
+    public ApiResponse<ProductResponse> unpublish(@PathVariable Long id) {
+        ApiResponse<ProductResponse> response = new ApiResponse<>();
+        response.setData(publicationService.unpublishProduct(id));
+        return response;
     }
 
     @GetMapping("/public/products/top4-popular")

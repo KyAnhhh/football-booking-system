@@ -12,6 +12,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,6 +33,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import vn.phankyanh.shopbongda.review.domain.Review;
 import vn.phankyanh.shopbongda.review.domain.WishList;
+import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
 
 @Entity
 @Table(name = "products")
@@ -57,6 +60,11 @@ public class Product {
     @Min(value = 0, message = "Giảm giá không được âm")
     @Max(value = 100, message = "Giảm giá tối đa là 100%")
     private Integer discount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private PublicationStatus publicationStatus = PublicationStatus.DRAFT;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -87,6 +95,9 @@ public class Product {
     @PrePersist
     protected void onCreate() {
         createdAt = updatedAt = LocalDateTime.now();
+        if (publicationStatus == null) {
+            publicationStatus = PublicationStatus.DRAFT;
+        }
     }
 
     @PreUpdate // update timestamp

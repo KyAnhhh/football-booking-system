@@ -53,6 +53,11 @@ public interface BookingService {
                 Long bookingId
         );
 
+        BookingResponse markPaymentSubmitted(
+                Long bookingId,
+                Long userId
+        );
+
         void confirmBooking(
                 Long bookingId
         );

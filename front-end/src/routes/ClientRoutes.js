@@ -19,6 +19,7 @@ import Review from "../pages/client/Review";
 import FootballField from "../pages/client/FootballField";
 import FootballFieldDetail from "../pages/client/FootballFieldDetail";
 import PaymentFootballField from "../pages/client/PaymentFootballField";
+import OrderPaymentPage from "../pages/client/OrderPaymentPage";
 
 import ReviewSection from "../components/review/ReviewSection";
 
@@ -185,6 +186,16 @@ const ClientRoutes = (
         </ClientLayout>
       }
     />
+
+    <Route
+      path="/orders/:id/payment"
+      element={
+        <ClientLayout>
+          <OrderPaymentPage />
+        </ClientLayout>
+      }
+    />
+
   </>
 );
 

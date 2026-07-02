@@ -1,13 +1,230 @@
 .revenue-chart {
-    background: white;
-    border-radius: 18px;
-    padding: 18px;
-    box-shadow: none;
+  --revenue-ink: #12243a;
+  --revenue-muted: #64748b;
+  --revenue-field: #16a36a;
+  --revenue-shop: #f59e42;
+  --revenue-line: #173f5f;
+  background:
+    linear-gradient(135deg, rgba(22, 163, 106, 0.055), transparent 36%),
+    #fff;
+  border-radius: 20px;
+  padding: 22px;
 }
 
-.revenue-chart-title {
-    color: #122033;
-    font-size: 20px;
-    font-weight: 950;
-    margin: 0 0 18px;
+.revenue-chart-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.revenue-chart-eyebrow {
+  color: var(--revenue-field);
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.revenue-chart-head h2 {
+  color: var(--revenue-ink);
+  font-size: 22px;
+  font-weight: 950;
+  margin: 0;
+}
+
+.revenue-chart-head p {
+  color: var(--revenue-muted);
+  font-size: 13px;
+  margin: 5px 0 0;
+}
+
+.revenue-period {
+  display: grid;
+  gap: 5px;
+  min-width: 145px;
+}
+
+.revenue-period span {
+  color: var(--revenue-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.revenue-period select {
+  appearance: none;
+  background: #f8fafc;
+  border: 1px solid #dce5ed;
+  border-radius: 11px;
+  color: var(--revenue-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 40px;
+  padding: 0 34px 0 12px;
+}
+
+.revenue-period select:focus-visible {
+  border-color: var(--revenue-field);
+  box-shadow: 0 0 0 3px rgba(22, 163, 106, 0.14);
+  outline: none;
+}
+
+.revenue-scoreboard {
+  border-bottom: 1px solid #e7edf3;
+  border-top: 1px solid #e7edf3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.5fr);
+  margin-top: 20px;
+}
+
+.revenue-scoreboard > div {
+  display: grid;
+  gap: 4px;
+  padding: 16px 0;
+}
+
+.revenue-scoreboard > div + div {
+  border-left: 1px solid #e7edf3;
+  padding-left: 22px;
+}
+
+.revenue-scoreboard span {
+  color: var(--revenue-muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.revenue-scoreboard strong {
+  color: var(--revenue-ink);
+  font-size: clamp(20px, 2.2vw, 29px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 950;
+}
+
+.revenue-scoreboard .up strong {
+  color: #07864e;
+}
+
+.revenue-scoreboard .down strong {
+  color: #dc2626;
+}
+
+.revenue-scoreboard .neutral strong {
+  color: var(--revenue-muted);
+  font-size: 16px;
+}
+
+.revenue-chart-canvas {
+  margin: 12px -8px -8px;
+}
+
+.revenue-legend-label {
+  color: #526174;
+  font-size: 12px;
+  font-weight: 750;
+  margin-right: 12px;
+}
+
+.revenue-tooltip {
+  background: rgba(15, 35, 55, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(15, 35, 55, 0.24);
+  color: #fff;
+  min-width: 230px;
+  padding: 14px;
+}
+
+.revenue-tooltip > span {
+  color: #b9c8d6;
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.revenue-tooltip > div {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 8px 1fr auto;
+  padding: 5px 0;
+}
+
+.revenue-tooltip i {
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+
+.revenue-tooltip i.field {
+  background: var(--revenue-field);
+}
+
+.revenue-tooltip i.shop {
+  background: var(--revenue-shop);
+}
+
+.revenue-tooltip p,
+.revenue-tooltip strong {
+  font-size: 12px;
+  margin: 0;
+}
+
+.revenue-tooltip .total {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  grid-template-columns: 1fr auto;
+  margin-top: 6px;
+  padding-top: 10px;
+}
+
+.revenue-chart-empty {
+  align-items: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  color: var(--revenue-muted);
+  display: flex;
+  font-size: 13px;
+  font-weight: 750;
+  justify-content: center;
+  margin-top: 20px;
+  min-height: 260px;
+  padding: 24px;
+  text-align: center;
+}
+
+@media (max-width: 680px) {
+  .revenue-chart {
+    padding: 18px 14px;
+  }
+
+  .revenue-chart-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .revenue-period {
+    width: 100%;
+  }
+
+  .revenue-scoreboard {
+    grid-template-columns: 1fr;
+  }
+
+  .revenue-scoreboard > div + div {
+    border-left: 0;
+    border-top: 1px solid #e7edf3;
+    padding-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revenue-chart * {
+    animation-duration: 0.01ms !important;
+  }
 }

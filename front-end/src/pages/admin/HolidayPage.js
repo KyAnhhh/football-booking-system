@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
+import swal from "sweetalert";
 import {
   createHoliday,
   deleteHoliday,
@@ -57,7 +58,14 @@ export default function HolidayPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa ngày lễ này?")) return;
+    const confirmed = await swal({
+      title: "Xóa ngày lễ?",
+      text: "Dữ liệu đã xóa sẽ không thể khôi phục.",
+      icon: "warning",
+      buttons: ["Giữ lại", "Xóa"],
+      dangerMode: true,
+    });
+    if (!confirmed) return;
     await deleteHoliday(id);
     await loadHolidays();
   };

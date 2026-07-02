@@ -10,8 +10,10 @@ import {
 } from "../../services/bookingService";
 import { getFields } from "../../services/fieldService";
 import { getUsers } from "../../services/userService";
+import { confirmBookingPayment } from "../../services/paymentService";
 
 import { Button, Form, Modal } from "react-bootstrap";
+import swal from "sweetalert";
 import "../../assets/styles/BookingPage.css";
 
 export default function BookingPage() {
@@ -96,6 +98,30 @@ export default function BookingPage() {
       await loadBookings();
     } catch (err) {
       console.error("Update status failed:", err);
+      swal(
+        "Không thể cập nhật",
+        err.message || "Không thể cập nhật trạng thái booking.",
+        "error"
+      );
+    }
+  };
+
+  const handleConfirmPayment = async (id) => {
+    try {
+      await confirmBookingPayment(id);
+      await loadBookings();
+      swal(
+        "Đã xác nhận thanh toán",
+        "Đã nhận tiền VietQR. Bây giờ có thể xác nhận booking.",
+        "success"
+      );
+    } catch (err) {
+      console.error("Confirm booking payment failed:", err);
+      swal(
+        "Không thể xác nhận",
+        err.message || "Không thể xác nhận thanh toán VietQR.",
+        "error"
+      );
     }
   };
 
@@ -149,7 +175,11 @@ export default function BookingPage() {
       await loadBookings();
     } catch (err) {
       console.error("Create booking failed:", err);
-      window.alert(err.message || "Không thể tạo booking hộ khách.");
+      swal(
+        "Không thể tạo booking",
+        err.message || "Không thể tạo booking hộ khách.",
+        "error"
+      );
     }
   };
 
@@ -270,15 +300,36 @@ export default function BookingPage() {
                 {/* PENDING */}
                 {b.status === "PENDING" && (
                   <>
-                    <Button
-                      size="sm"
-                      variant="success"
-                      onClick={() =>
-                        handleUpdateStatus(b.id, "CONFIRMED")
-                      }
-                    >
-                      Xác nhận
-                    </Button>
+                    {b.paymentMethod === "VIETQR"
+                      && b.paymentStatus === "PENDING" && (
+                      <Button
+                        size="sm"
+                        variant="success"
+                        onClick={() => handleConfirmPayment(b.id)}
+                      >
+                        Xác nhận đã nhận tiền
+                      </Button>
+                    )}
+
+                    {(b.paymentMethod !== "VIETQR"
+                      || b.paymentStatus === "PAID") && (
+                      <Button
+                        size="sm"
+                        variant="success"
+                        onClick={() =>
+                          handleUpdateStatus(b.id, "CONFIRMED")
+                        }
+                      >
+                        Xác nhận
+                      </Button>
+                    )}
+
+                    {b.paymentMethod === "VIETQR"
+                      && b.paymentStatus === "UNPAID" && (
+                      <Button size="sm" variant="outline-secondary" disabled>
+                        Chờ khách chuyển khoản
+                      </Button>
+                    )}
 
                     <Button
                       size="sm"
@@ -326,35 +377,25 @@ export default function BookingPage() {
                 )}
 
                 {b.status === "IN_PROGRESS" && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="success"
-                      onClick={() => handleCheckOut(b.id)}
-                    >
-                      Check-out
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="warning"
-                      onClick={() =>
-                        handleUpdateStatus(b.id, "CANCELLED")
-                      }
-                    >
-                      Hủy
-                    </Button>
-                  </>
+                  <Button
+                    size="sm"
+                    variant="success"
+                    onClick={() => handleCheckOut(b.id)}
+                  >
+                    Check-out
+                  </Button>
                 )}
 
                 {/* DELETE */}
-                <Button
-                  size="sm"
-                  variant="danger"
-                  onClick={() => setConfirmDeleteModal(b)}
-                >
-                  Xóa
-                </Button>
+                {["PENDING", "CONFIRMED"].includes(b.status) && (
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => setConfirmDeleteModal(b)}
+                  >
+                    Hủy booking
+                  </Button>
+                )}
 
               </td>
               </tr>
@@ -393,11 +434,11 @@ export default function BookingPage() {
         onHide={() => setConfirmDeleteModal(null)}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Xác nhận xóa</Modal.Title>
+          <Modal.Title>Xác nhận hủy booking</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
-          Bạn có chắc muốn xóa lượt đặt sân <b>{confirmDeleteModal?.id}</b> không?
+          Booking <b>#{confirmDeleteModal?.id}</b> sẽ được chuyển sang trạng thái đã hủy và hoàn lại dữ liệu liên quan.
         </Modal.Body>
 
         <Modal.Footer>
@@ -405,7 +446,7 @@ export default function BookingPage() {
             Hủy
           </Button>
           <Button variant="danger" onClick={handleDelete}>
-            Xóa
+            Hủy booking
           </Button>
         </Modal.Footer>
       </Modal>
@@ -500,11 +541,19 @@ export default function BookingPage() {
               <Form.Label>Thanh toán</Form.Label>
               <Form.Select
                 value={createForm.paymentMethod}
-                onChange={(event) => setCreateForm({ ...createForm, paymentMethod: event.target.value })}
+                onChange={(event) => {
+                  const paymentMethod = event.target.value;
+                  setCreateForm({
+                    ...createForm,
+                    paymentMethod,
+                    confirmImmediately: paymentMethod === "VIETQR"
+                      ? false
+                      : createForm.confirmImmediately,
+                  });
+                }}
               >
                 <option value="CASH">Tiền mặt</option>
                 <option value="VIETQR">VIETQR</option>
-                <option value="VNPAY">VNPAY</option>
               </Form.Select>
             </Form.Group>
 
@@ -514,6 +563,7 @@ export default function BookingPage() {
                 label="Tạo xong xác nhận luôn"
                 checked={createForm.confirmImmediately}
                 onChange={(event) => setCreateForm({ ...createForm, confirmImmediately: event.target.checked })}
+                disabled={createForm.paymentMethod === "VIETQR"}
               />
             </Form.Group>
 

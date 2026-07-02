@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import vn.phankyanh.shopbongda.field.domain.FootballFieldImage;
 
@@ -17,6 +18,7 @@ public interface FootballFieldImageRepository extends JpaRepository<FootballFiel
     boolean existsByFieldIdAndImageUrl(Long fieldId, String imageUrl);
 
     @Modifying
+    @Transactional
     @Query("UPDATE FootballFieldImage i SET i.isPrimary = false WHERE i.field.id = :fieldId")
     void resetPrimary(Long fieldId);
 }

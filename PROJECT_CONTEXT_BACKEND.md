@@ -1,5 +1,7 @@
 # Project Context — Backend
 
+> Cập nhật gần nhất: 2026-07-01. Đọc phần **CẬP NHẬT BACKEND** ở cuối file trước.
+
 ## Khởi chạy và cấu hình
 
 - Entry point: `ShopbongdaApplication`.
@@ -161,4 +163,53 @@
 
 - Chỉ thấy `ShopbongdaApplicationTests` (context load); không có unit/service/repository/controller/integration tests theo module.
 - Không thấy test concurrency cho double-booking, inventory reservation, voucher limit hay state transitions.
+# CẬP NHẬT BACKEND — 2026-07-01
 
+## Inventory, giá vốn và phiếu nhập
+
+- Migration mới: `V20__stabilize_inventory_imports.sql`, `V21__inventory_cost_profit_and_behavior.sql`, `V22__add_catalog_publication_lifecycle.sql`.
+- `InventoryStock` lưu tồn thực tế, tồn giữ chỗ, tồn khả dụng, giá vốn bình quân và giá trị tồn.
+- Khi ghi sổ: `averageUnitCost mới = (giá trị tồn cũ + unitCost * quantity nhập) / tồn mới`; `inventoryValue = averageUnitCost * quantityOnHand`.
+- Phiếu nhập có lifecycle `DRAFT -> POSTED` hoặc `CANCELLED`; chỉ `POSTED` tăng kho. Một phiếu có nhiều dòng nhưng dùng chung Supplier và `importCode`.
+- ProductVariant đồng bộ `stock` từ `availableQuantity`; ExtraService đồng bộ `stockQuantity`/`remainingQuantity`.
+- Product và Extra tiêu hao chốt giá vốn lúc commit reservation. `grossProfit = thành tiền bán - totalCost`.
+- Extra `RENTAL` được trả lại kho khi booking hoàn tất và hiện tính giá vốn mỗi lượt bằng 0; chưa có khấu hao.
+- Đã có endpoint cập nhật ngưỡng cảnh báo, hành vi kho, consistency và profit summary.
+
+## Catalog và import
+
+- `PublicationStatus`: `DRAFT`, `READY_TO_PUBLISH`, `ACTIVE`, `INACTIVE`.
+- Product/ExtraService chỉ public khi `ACTIVE`; có publication check, publish và unpublish.
+- Tạo/import ProductVariant yêu cầu tồn ban đầu bằng 0; phải nhập qua StockImport.
+- Importer hỗ trợ thêm Category và Brand, kiểm tra trùng tên.
+- Import ảnh sản phẩm/ảnh sân hỗ trợ primary; repository reset primary có transaction.
+
+## Slot và lịch sân
+
+- `BookingServiceImpl` và `FootballFieldServiceImpl`: mở `07:00`, đóng `23:45`, slot 90 phút.
+- Có 11 slot: đầu `07:00–08:30`, cuối `22:00–23:30`.
+- `AdminFieldCalendarServiceImpl.generateSlotStarts()` chỉ thêm slot khi `currentMinute + 90 <= 23:45`, nên không còn slot lẻ `23:30–23:45`.
+- Database không còn bảng giá kết thúc `00:00`; dải cuối hiện trở lại `22:30–23:45`.
+# CẬP NHẬT FLOW GIAO DỊCH — 2026-07-01
+
+- `BookingSlotPolicy` là policy chuẩn cho slot 90 phút, giờ `07:00–23:45`.
+- `OrderPriceCalculator` là công thức chuẩn cho discount và line total.
+- Bật `@EnableScheduling`; booking pending hết hạn 15 phút, order VietQR pending hết hạn 30 phút.
+- Reservation booking có `expiresAt` 15 phút; reservation order không gắn hạn chung vì COD không tự hết hạn. Scheduler dùng `createdAt` của order để hủy riêng VietQR pending sau 30 phút và luôn rollback nghiệp vụ thay vì chỉ sửa số tồn.
+- Payment VietQR:
+  - user booking/order gửi `payment-submitted`;
+  - admin xác nhận payment;
+  - booking/order VietQR chỉ được confirm khi payment `PAID`.
+- Booking CASH được đánh dấu `PAID` khi hoàn tất.
+- Cancel cập nhật payment thành `FAILED` nếu chưa trả và `REFUNDED` nếu đã trả.
+- Admin delete booking/order không xóa row; chỉ cancel nếu trạng thái còn an toàn.
+- Payment đã liên kết booking/order bị chặn xóa.
+
+## AUDIT FLOW BỔ SUNG — 2026-07-01
+
+- Scheduler chỉ hết hạn payment `UNPAID/PENDING`; booking/order đã `PAID` được giữ lại để admin hoàn tất xác nhận trạng thái.
+- Order item là snapshot bất biến sau checkout. API cũ sửa/xóa từng dòng đã bị khóa vì không tương thích reservation, payment total và kho mới.
+- Endpoint đọc order item đã chuyển từ `/api/public/orderItems` sang `/api/user/order-items`.
+- Dashboard monthly revenue cộng cả booking `COMPLETED` và order `COMPLETED`, nhóm theo `MM/YYYY`; không còn chỉ lấy booking hoặc trộn cùng tháng giữa nhiều năm.
+- Response monthly revenue gồm `bookingRevenue`, `orderRevenue` và tổng `revenue`; các tháng trống giữa kỳ được trả về với giá trị 0.
+- Maintenance create kiểm tra thời gian theo độ chính xác phút để tương thích `datetime-local`; update lịch đang/đã bắt đầu vẫn được phép nếu khoảng thời gian hợp lệ.

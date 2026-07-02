@@ -1,6 +1,8 @@
 package vn.phankyanh.shopbongda.importer.domain;
 
 public enum ImportType {
+    CATEGORIES("categories"),
+    BRANDS("brands"),
     SIZES("sizes"),
     PRODUCTS("products"),
     PRODUCT_VARIANTS("product-variants"),

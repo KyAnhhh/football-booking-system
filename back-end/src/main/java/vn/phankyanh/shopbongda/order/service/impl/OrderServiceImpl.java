@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
@@ -33,10 +36,12 @@ import vn.phankyanh.shopbongda.order.repository.CartItemRepository;
 import vn.phankyanh.shopbongda.order.repository.CartRepository;
 import vn.phankyanh.shopbongda.order.repository.OrderRepository;
 import vn.phankyanh.shopbongda.order.service.OrderService;
+import vn.phankyanh.shopbongda.order.service.OrderPriceCalculator;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
+import vn.phankyanh.shopbongda.payment.service.PendingPaymentExpirationPolicy;
 import vn.phankyanh.shopbongda.product.domain.ProductVariant;
 import vn.phankyanh.shopbongda.product.repository.ProductVariantRepository;
 import vn.phankyanh.shopbongda.shared.service.email.EmailService;
@@ -45,6 +50,7 @@ import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.repository.ShippingAddressRepository;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
 import vn.phankyanh.shopbongda.user.service.ShippingService;
+import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -192,6 +198,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse createOrder(OrderRequest request, Long userId) {
+        validateOrderPaymentMethod(request.getPaymentMethod());
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -307,15 +314,24 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void deleteOrder(Long id) {
 
-        if (!orderRepository.existsById(id)) {
-            throw new RuntimeException("Not found with id: " + id);
+        Order order = orderRepository.findByIdForUpdate(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Not found with id: " + id));
+        if (order.getOrderStatus() != OrderStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Không thể xóa đơn đã xử lý; hãy giữ lịch sử"
+            );
         }
 
-        orderRepository.deleteById(id);
+        returnStockForOrder(order, null);
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        Payment payment = order.getPayment();
+        updatePaymentForCancellation(payment);
     }
 
     @Override
     public OrderResponse checkout(Long userId, CheckoutRequest request) {
+        validateOrderPaymentMethod(request.getPaymentMethod());
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -323,12 +339,22 @@ public class OrderServiceImpl implements OrderService {
         Cart cart = cartRepository.findByUserId(userId)
             .orElseThrow(() -> new RuntimeException("Cart not found"));
 
+        Set<Long> requestedItemIds =
+                new HashSet<>(request.getCartItemIds());
+        if (requestedItemIds.size() != request.getCartItemIds().size()) {
+            throw new IllegalArgumentException(
+                    "Danh sách sản phẩm checkout bị trùng"
+            );
+        }
+
         List<CartItem> selectedItems = cart.getItems().stream()
-            .filter(item -> request.getCartItemIds().contains(item.getId()))
+            .filter(item -> requestedItemIds.contains(item.getId()))
             .toList();
 
-        if (selectedItems.isEmpty()) {
-            throw new RuntimeException("No cart items selected for checkout");
+        if (selectedItems.size() != requestedItemIds.size()) {
+            throw new IllegalArgumentException(
+                    "Có sản phẩm không thuộc giỏ hàng hiện tại"
+            );
         }
 
         ShippingAddress shippingAddress = shippingAddressRepository
@@ -361,8 +387,16 @@ public class OrderServiceImpl implements OrderService {
                 );
             }
 
-            BigDecimal itemTotal = cartItem.getPriceAtAddedTime()
-                .multiply(BigDecimal.valueOf(cartItem.getTotalQuantity()));
+            int discountPercent = variant.getProduct().getDiscount() == null
+                    ? 0
+                    : variant.getProduct().getDiscount();
+            OrderPriceCalculator.Price price =
+                    OrderPriceCalculator.calculate(
+                            cartItem.getPriceAtAddedTime(),
+                            discountPercent,
+                            cartItem.getTotalQuantity()
+                    );
+            BigDecimal itemTotal = price.total();
 
             OrderItem orderItem = OrderItem.builder()
                 .order(order)
@@ -371,9 +405,9 @@ public class OrderServiceImpl implements OrderService {
                 .productName(cartItem.getProductName())
                 .sizeName(variant.getSize().getName())
                 .quantity(cartItem.getTotalQuantity())
-                .unitPrice(cartItem.getPriceAtAddedTime())
-                .discountAmount(BigDecimal.ZERO)
-                .finalPrice(cartItem.getPriceAtAddedTime())
+                .unitPrice(price.unitPrice())
+                .discountAmount(price.discountAmount())
+                .finalPrice(price.finalPrice())
                 .total(itemTotal)
                 .stockDeducted(false)
                 .stockReserved(false)
@@ -438,15 +472,15 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderResponse updateOrderStatus(Long orderId, OrderStatus newStatus) {
 
-        Order order = orderRepository.findByIdWithPayment(orderId)
+        Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (!isValidStatusTransition(order.getOrderStatus(), newStatus)) {
-            throw new RuntimeException("Invalid order status transition");
-        }
 
         if (order.getOrderStatus() == newStatus) {
             return orderMapper.toOrderResponse(order);
+        }
+
+        if (!isValidStatusTransition(order.getOrderStatus(), newStatus)) {
+            throw new RuntimeException("Invalid order status transition");
         }
 
         OrderStatus previousStatus = order.getOrderStatus();
@@ -455,6 +489,14 @@ public class OrderServiceImpl implements OrderService {
         boolean shouldSendEmail = false;
 
         if (newStatus == OrderStatus.CONFIRMED) {
+            Payment payment = order.getPayment();
+            if (order.getPaymentMethod() == PaymentMethod.VIETQR
+                    && (payment == null
+                    || payment.getPaymentStatus() != PaymentStatus.PAID)) {
+                throw new IllegalStateException(
+                        "Thanh toán VietQR chưa được xác nhận"
+                );
+            }
 
             commitStockForOrder(order, null);
 
@@ -484,14 +526,7 @@ public class OrderServiceImpl implements OrderService {
 
             Payment payment = order.getPayment();
 
-            if (payment != null
-                    && (payment.getPaymentStatus() == PaymentStatus.UNPAID
-                        || payment.getPaymentStatus() == PaymentStatus.PENDING)) {
-
-                payment.setPaymentStatus(PaymentStatus.FAILED);
-
-                payment.setPaymentDate(LocalDateTime.now());
-            }
+            updatePaymentForCancellation(payment);
 
             shouldSendEmail = true;
         }
@@ -513,7 +548,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void cancelOrder(Long orderId, Long userId) {
 
-        Order order = orderRepository.findByIdWithOrderItems(orderId)
+        Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Order not found with id: " + orderId
@@ -536,14 +571,43 @@ public class OrderServiceImpl implements OrderService {
         returnStockForOrder(order, userId);
 
         Payment payment = order.getPayment();
-        if (payment != null
-                && (payment.getPaymentStatus() == PaymentStatus.UNPAID
-                    || payment.getPaymentStatus() == PaymentStatus.PENDING)) {
-            payment.setPaymentStatus(PaymentStatus.FAILED);
-        }
+        updatePaymentForCancellation(payment);
 
         orderRepository.save(order);
         notificationService.notifyUserOrderStatusChanged(order, previousStatus);
+    }
+
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    public void expirePendingVietQrOrders() {
+        List<Long> orderIds = orderRepository.findPendingIdsCreatedBefore(
+                PaymentMethod.VIETQR,
+                LocalDateTime.now().minusMinutes(30)
+        );
+
+        for (Long orderId : orderIds) {
+            Order order = orderRepository.findByIdForUpdate(orderId)
+                    .orElse(null);
+            if (order == null
+                    || order.getOrderStatus() != OrderStatus.PENDING) {
+                continue;
+            }
+            Payment payment = order.getPayment();
+            if (payment == null
+                    || !PendingPaymentExpirationPolicy.shouldExpire(
+                            payment.getPaymentStatus()
+                    )) {
+                continue;
+            }
+            OrderStatus previousStatus = order.getOrderStatus();
+            returnStockForOrder(order, null);
+            order.setOrderStatus(OrderStatus.CANCELLED);
+            updatePaymentForCancellation(payment);
+            notificationService.notifyUserOrderStatusChanged(
+                    order,
+                    previousStatus
+            );
+        }
     }
 
     @Override
@@ -589,7 +653,8 @@ public class OrderServiceImpl implements OrderService {
 
         } else if (current == OrderStatus.CONFIRMED) {
 
-            return newStatus == OrderStatus.SHIPPING;
+            return newStatus == OrderStatus.SHIPPING
+                    || newStatus == OrderStatus.CANCELLED;
 
         } else if (current == OrderStatus.SHIPPING) {
 
@@ -614,6 +679,12 @@ public class OrderServiceImpl implements OrderService {
             }
 
             ProductVariant variant = item.getProductVariant();
+            if (variant.getProduct().getPublicationStatus()
+                    != PublicationStatus.ACTIVE) {
+                throw new IllegalStateException(
+                        "Sản phẩm chưa được mở bán: " + item.getProductName()
+                );
+            }
 
             if (variant.getInventoryItemId() != null) {
                 InventoryReservationResponse reservation =
@@ -660,10 +731,21 @@ public class OrderServiceImpl implements OrderService {
                 continue;
             }
 
+            InventoryStockResponse costStock =
+                    inventoryService.getStockByItemId(
+                            item.getProductVariant().getInventoryItemId()
+                    );
             inventoryService.commitReservation(
                     item.getInventoryReservationId(),
                     actorId
             );
+            BigDecimal unitCost = costStock.getAverageUnitCost();
+            BigDecimal totalCost = unitCost.multiply(
+                    BigDecimal.valueOf(item.getQuantity())
+            );
+            item.setUnitCost(unitCost);
+            item.setTotalCost(totalCost);
+            item.setGrossProfit(item.getTotal().subtract(totalCost));
 
             ProductVariant variant = item.getProductVariant();
             syncVariantStockFromInventory(variant);
@@ -740,5 +822,27 @@ public class OrderServiceImpl implements OrderService {
 
     private int safeNumber(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    private void updatePaymentForCancellation(Payment payment) {
+        if (payment == null) {
+            return;
+        }
+        if (payment.getPaymentStatus() == PaymentStatus.PAID) {
+            payment.setPaymentStatus(PaymentStatus.REFUNDED);
+        } else if (payment.getPaymentStatus() == PaymentStatus.UNPAID
+                || payment.getPaymentStatus() == PaymentStatus.PENDING) {
+            payment.setPaymentStatus(PaymentStatus.FAILED);
+        }
+        payment.setPaymentDate(LocalDateTime.now());
+    }
+
+    private void validateOrderPaymentMethod(PaymentMethod paymentMethod) {
+        if (paymentMethod != PaymentMethod.COD
+                && paymentMethod != PaymentMethod.VIETQR) {
+            throw new IllegalArgumentException(
+                    "Đơn hàng hiện chỉ hỗ trợ COD hoặc VIETQR"
+            );
+        }
     }
 }

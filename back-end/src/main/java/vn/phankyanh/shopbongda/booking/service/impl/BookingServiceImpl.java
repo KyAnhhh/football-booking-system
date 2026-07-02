@@ -11,10 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.booking.domain.Booking;
 import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
+import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
 import vn.phankyanh.shopbongda.booking.dto.request.AdminBookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.request.BookingRequest;
 import vn.phankyanh.shopbongda.booking.dto.request.UpdateBookingStatusRequest;
@@ -23,6 +25,7 @@ import vn.phankyanh.shopbongda.booking.mapper.BookingMapper;
 import vn.phankyanh.shopbongda.booking.projection.BookingTimeView;
 import vn.phankyanh.shopbongda.booking.repository.BookingRepository;
 import vn.phankyanh.shopbongda.booking.service.BookingService;
+import vn.phankyanh.shopbongda.booking.service.BookingSlotPolicy;
 import vn.phankyanh.shopbongda.booking.service.BookingStatusHistoryService;
 import vn.phankyanh.shopbongda.extra.domain.BookingExtraService;
 import vn.phankyanh.shopbongda.extra.domain.ExtraService;
@@ -32,6 +35,7 @@ import vn.phankyanh.shopbongda.extra.repository.BookingExtraServiceRepository;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryStockResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryReservationResponse;
 import vn.phankyanh.shopbongda.inventory.dto.response.InventoryTransactionResponse;
+import vn.phankyanh.shopbongda.inventory.domain.InventoryBehavior;
 import vn.phankyanh.shopbongda.inventory.domain.InventoryReferenceType;
 import vn.phankyanh.shopbongda.inventory.service.InventoryService;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
@@ -40,8 +44,10 @@ import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
 import vn.phankyanh.shopbongda.maintenance.service.MaintenanceService;
 import vn.phankyanh.shopbongda.notification.service.NotificationService;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
+import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
+import vn.phankyanh.shopbongda.payment.service.PendingPaymentExpirationPolicy;
 import vn.phankyanh.shopbongda.shared.service.email.EmailService;
 import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
@@ -115,6 +121,12 @@ public class BookingServiceImpl implements BookingService {
                         "Cannot book past time"
                 );
                 }
+
+                BookingSlotPolicy.validate(
+                        request.getStartTime(),
+                        request.getEndTime()
+                );
+                validateBookingPaymentMethod(request.getPaymentMethod());
 
                 User user = userRepository.findById(userId)
                         .orElseThrow(() ->
@@ -514,6 +526,42 @@ public class BookingServiceImpl implements BookingService {
 
         @Override
         @Transactional
+        public BookingResponse markPaymentSubmitted(
+                Long bookingId,
+                Long userId
+        ) {
+                Booking booking = bookingRepository
+                        .findByIdForUpdate(bookingId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Booking not found"));
+
+                if (!booking.getUser().getId().equals(userId)) {
+                        throw new RuntimeException("Unauthorized");
+                }
+                if (booking.getStatus() != BookingStatus.PENDING
+                        || booking.getPayment().getPaymentMethod()
+                        != PaymentMethod.VIETQR) {
+                        throw new IllegalStateException(
+                                "Booking không thể gửi xác nhận thanh toán"
+                        );
+                }
+
+                Payment payment = booking.getPayment();
+                if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
+                        return bookingMapper.toResponse(booking);
+                }
+                if (payment.getPaymentStatus() != PaymentStatus.UNPAID) {
+                        throw new IllegalStateException(
+                                "Trạng thái thanh toán không hợp lệ"
+                        );
+                }
+
+                payment.setPaymentStatus(PaymentStatus.PENDING);
+                return bookingMapper.toResponse(booking);
+        }
+
+        @Override
+        @Transactional
         public void confirmBooking(Long bookingId) {
 
                 Booking booking =
@@ -620,8 +668,7 @@ public class BookingServiceImpl implements BookingService {
 
                 case IN_PROGRESS -> {
 
-                if (newStatus != BookingStatus.COMPLETED
-                        && newStatus != BookingStatus.CANCELLED) {
+                if (newStatus != BookingStatus.COMPLETED) {
 
                         throw new RuntimeException(
                                 "Invalid status transition from IN_PROGRESS"
@@ -643,6 +690,26 @@ public class BookingServiceImpl implements BookingService {
                         newStatus
                 );
         } else {
+                if (newStatus == BookingStatus.COMPLETED) {
+                        Payment payment = booking.getPayment();
+                        if (payment.getPaymentMethod() == PaymentMethod.CASH
+                                && payment.getPaymentStatus()
+                                == PaymentStatus.UNPAID) {
+                                payment.setPaymentStatus(PaymentStatus.PAID);
+                                payment.setPaymentDate(LocalDateTime.now());
+                        }
+                        if (payment.getPaymentStatus()
+                                != PaymentStatus.PAID) {
+                                throw new IllegalStateException(
+                                        "Booking chưa thanh toán"
+                                );
+                        }
+                        membershipService.addPoints(
+                                booking.getUser().getId(),
+                                booking.getTotalPrice()
+                        );
+                        returnRentalExtrasForBooking(booking);
+                }
                 booking.setStatus(newStatus);
         }
 
@@ -733,20 +800,15 @@ public class BookingServiceImpl implements BookingService {
                 );
                 }
 
+                if (payment.getPaymentMethod() == PaymentMethod.VIETQR
+                        && payment.getPaymentStatus()
+                        != PaymentStatus.PAID) {
+                        throw new IllegalStateException(
+                                "Thanh toán VietQR chưa được admin xác nhận"
+                        );
+                }
+
                 commitExtraReservations(booking);
-
-                payment.setPaymentStatus(
-                        PaymentStatus.PAID
-                );
-
-                payment.setPaymentDate(
-                        LocalDateTime.now()
-                );
-
-                membershipService.addPoints(
-                        booking.getUser().getId(),
-                        booking.getTotalPrice()
-                );
 
                 booking.setStatus(
                         BookingStatus.CONFIRMED
@@ -758,25 +820,19 @@ public class BookingServiceImpl implements BookingService {
                 BookingStatus targetStatus
         ) {
 
-                if (booking.getStatus() != BookingStatus.PENDING) {
-                        restoreExtraStockForBooking(booking);
-                        booking.setStatus(targetStatus);
-                        return;
-                }
-
                 Payment payment =
                         booking.getPayment();
 
                 if (payment != null
-                        && payment.getPaymentStatus() == PaymentStatus.UNPAID) {
-
-                payment.setPaymentStatus(
-                        PaymentStatus.FAILED
-                );
-
-                payment.setPaymentDate(
-                        LocalDateTime.now()
-                );
+                        && (payment.getPaymentStatus() == PaymentStatus.UNPAID
+                        || payment.getPaymentStatus()
+                        == PaymentStatus.PENDING)) {
+                        payment.setPaymentStatus(PaymentStatus.FAILED);
+                        payment.setPaymentDate(LocalDateTime.now());
+                } else if (payment != null
+                        && payment.getPaymentStatus() == PaymentStatus.PAID) {
+                        payment.setPaymentStatus(PaymentStatus.REFUNDED);
+                        payment.setPaymentDate(LocalDateTime.now());
                 }
 
                 voucherService.refundVoucherForBooking(
@@ -846,15 +902,72 @@ public class BookingServiceImpl implements BookingService {
                 );
         }
 
+        @Scheduled(fixedDelay = 60_000)
+        @Transactional
+        public void expirePendingBookings() {
+                List<Long> bookingIds =
+                        bookingRepository.findPendingIdsCreatedBefore(
+                                LocalDateTime.now().minusMinutes(15)
+                        );
+
+                for (Long bookingId : bookingIds) {
+                        Booking booking = bookingRepository
+                                .findByIdForUpdate(bookingId)
+                                .orElse(null);
+                        if (booking == null
+                                || booking.getStatus()
+                                != BookingStatus.PENDING) {
+                                continue;
+                        }
+                        Payment payment = booking.getPayment();
+                        if (payment == null
+                                || !PendingPaymentExpirationPolicy.shouldExpire(
+                                        payment.getPaymentStatus()
+                                )) {
+                                continue;
+                        }
+                        closePendingBookingWithoutPayment(
+                                booking,
+                                BookingStatus.EXPIRED
+                        );
+                        bookingStatusHistoryService.record(
+                                booking,
+                                BookingStatus.PENDING,
+                                BookingStatus.EXPIRED,
+                                null,
+                                "Tự động hết hạn sau 15 phút"
+                        );
+                }
+        }
+
         @Override
+        @Transactional
         public void deleteBooking(Long bookingId) {
 
                 Booking booking =
-                        bookingRepository.findById(bookingId)
+                        bookingRepository.findByIdForUpdate(bookingId)
                                 .orElseThrow(() ->
                                         new RuntimeException("Booking not found"));
 
-                bookingRepository.delete(booking);
+                if (booking.getStatus() != BookingStatus.PENDING
+                        && booking.getStatus() != BookingStatus.CONFIRMED) {
+                        throw new IllegalStateException(
+                                "Không thể xóa booking đã vận hành; hãy giữ lịch sử"
+                        );
+                }
+
+                BookingStatus previousStatus = booking.getStatus();
+                closePendingBookingWithoutPayment(
+                        booking,
+                        BookingStatus.CANCELLED
+                );
+                bookingStatusHistoryService.record(
+                        booking,
+                        previousStatus,
+                        BookingStatus.CANCELLED,
+                        null,
+                        "Admin hủy booking thay cho xóa cứng"
+                );
         }
 
 
@@ -1024,6 +1137,11 @@ public class BookingServiceImpl implements BookingService {
                                 continue;
                         }
 
+                        InventoryStockResponse costStock =
+                                inventoryService.getStockByItemId(
+                                        bookingExtra.getExtraService()
+                                                .getInventoryItemId()
+                                );
                         InventoryReservationResponse reservation =
                                 inventoryService.commitReservation(
                                         bookingExtra.getInventoryReservationId(),
@@ -1037,6 +1155,54 @@ public class BookingServiceImpl implements BookingService {
                         bookingExtra.setStockReserved(false);
                         bookingExtra.setStockDeducted(true);
                         bookingExtra.setStockReturned(false);
+                        BigDecimal unitCost =
+                                costStock.getInventoryBehavior()
+                                        == InventoryBehavior.RENTAL
+                                        ? BigDecimal.ZERO
+                                        : costStock.getAverageUnitCost();
+                        BigDecimal totalCost = unitCost.multiply(
+                                BigDecimal.valueOf(bookingExtra.getQuantity())
+                        );
+                        bookingExtra.setUnitCost(unitCost);
+                        bookingExtra.setTotalCost(totalCost);
+                        bookingExtra.setGrossProfit(
+                                bookingExtra.getTotalPrice().subtract(totalCost)
+                        );
+                        bookingExtraServiceRepository.save(bookingExtra);
+                }
+        }
+
+        private void returnRentalExtrasForBooking(Booking booking) {
+                List<BookingExtraService> extraServices =
+                        bookingExtraServiceRepository.findByBookingId(
+                                booking.getId()
+                        );
+
+                for (BookingExtraService bookingExtra : extraServices) {
+                        ExtraService service = bookingExtra.getExtraService();
+                        if (!Boolean.TRUE.equals(bookingExtra.getStockDeducted())
+                                || Boolean.TRUE.equals(
+                                        bookingExtra.getStockReturned())
+                                || service.getInventoryItemId() == null) {
+                                continue;
+                        }
+
+                        InventoryStockResponse stock =
+                                inventoryService.getStockByItemId(
+                                        service.getInventoryItemId()
+                                );
+                        if (stock.getInventoryBehavior()
+                                != InventoryBehavior.RENTAL) {
+                                continue;
+                        }
+
+                        inventoryService.returnForBookingExtra(
+                                service.getInventoryItemId(),
+                                bookingExtra.getQuantity(),
+                                booking.getId(),
+                                booking.getUser().getId()
+                        );
+                        bookingExtra.setStockReturned(true);
                         bookingExtraServiceRepository.save(bookingExtra);
                 }
         }
@@ -1114,6 +1280,13 @@ public class BookingServiceImpl implements BookingService {
                 Integer quantity
         ) {
 
+                if (service.getPublicationStatus()
+                        != PublicationStatus.ACTIVE) {
+                        throw new RuntimeException(
+                                "Dịch vụ chưa được mở bán"
+                        );
+                }
+
                 if (!Boolean.TRUE.equals(
                         service.getIsActive())) {
 
@@ -1173,6 +1346,17 @@ public class BookingServiceImpl implements BookingService {
                         "Extra service quantity must be greater than 0"
                 );
         }
+        }
+
+        private void validateBookingPaymentMethod(
+                PaymentMethod paymentMethod
+        ) {
+                if (paymentMethod != PaymentMethod.CASH
+                        && paymentMethod != PaymentMethod.VIETQR) {
+                        throw new IllegalArgumentException(
+                                "Booking hiện chỉ hỗ trợ CASH hoặc VIETQR"
+                        );
+                }
         }
 
         private record SelectedExtraService(
