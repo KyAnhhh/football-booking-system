@@ -47,6 +47,16 @@ public class ProductVariantController {
         return apiResponse;
     }
 
+    @GetMapping("/public/products/{productId}/variants")
+    public ApiResponse<List<ProductVariantResponse>> getByProductId(
+            @PathVariable Long productId
+    ) {
+        ApiResponse<List<ProductVariantResponse>> response = new ApiResponse<>();
+        response.setData(productVariantService.getByProductId(productId));
+        response.setMessage("Get product variants successfully");
+        return response;
+    }
+
     @PutMapping("/admin/product-variants/{id}")
     public ApiResponse<ProductVariantResponse> updateProductVariant(@PathVariable("id") Long id,
             @RequestBody ProductVariantRequest request) {

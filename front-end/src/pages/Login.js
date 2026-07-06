@@ -1,6 +1,6 @@
 import { useState } from "react";
 import swal from "sweetalert";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "../assets/styles/Login.css";
 import { login } from "../services/authService";
 import { jwtDecode } from "jwt-decode";
@@ -15,6 +15,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -35,7 +36,12 @@ export default function Login() {
         const role = normalizeRole(decoded.role);
 
         setTimeout(() => {
-          navigate(["ADMIN", "MANAGER", "STAFF"].includes(role) ? "/admin" : "/");
+          const requestedPath = location.state?.from?.pathname;
+          navigate(
+            requestedPath ||
+              (["ADMIN", "MANAGER", "STAFF"].includes(role) ? "/admin" : "/"),
+            { replace: true }
+          );
         }, 800);
       } else {
         swal({ text: data.message || "Email hoặc mật khẩu không đúng.", icon: "error" });

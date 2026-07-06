@@ -137,6 +137,17 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     }
 
     @Override
+    public List<ProductVariantResponse> getByProductId(Long productId) {
+        if (!productRepository.existsById(productId)) {
+            throw new RuntimeException("Product not found");
+        }
+        return productVariantRepository.findByProductId(productId)
+                .stream()
+                .map(variantMapper::toResponse)
+                .toList();
+    }
+
+    @Override
     public ProductVariantResponse getProductVariantById(Long id) {
 
         ProductVariant productVariant = productVariantRepository.findById(id)

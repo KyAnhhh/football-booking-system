@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 const normalizeRole = (value) =>
@@ -8,22 +8,26 @@ const normalizeRole = (value) =>
     .toUpperCase();
 
 export default function ProtectedRoute({ role, roles, children }) {
+  const location = useLocation();
   const token = sessionStorage.getItem("accessToken");
 
   if (!token) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   let userRole = "";
 
   try {
     const decoded = jwtDecode(token);
+    if (decoded.exp && decoded.exp * 1000 <= Date.now()) {
+      throw new Error("Expired token");
+    }
     userRole = decoded.role || "";
   } catch (err) {
     console.error("Invalid token:", err);
     sessionStorage.removeItem("accessToken");
     sessionStorage.removeItem("refreshToken");
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   const allowedRoles = roles || (role ? [role] : []);
@@ -34,7 +38,7 @@ export default function ProtectedRoute({ role, roles, children }) {
 
   if (!canAccess) {
     console.log(`Access denied. Required: ${allowedRoles.join(", ")}, Got: ${userRole}`);
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

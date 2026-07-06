@@ -49,7 +49,6 @@ export default function OrderPage() {
     COD: "bg-secondary",
     VIETQR: "bg-success",
     CASH: "bg-dark",
-    VNPAY: "bg-info",
   };
 
   const allowedStatusTransitions = {

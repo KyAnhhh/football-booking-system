@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,16 +23,6 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/user/payments/bookings/{bookingId}/vnpay")
-    public ApiResponse<String> createPayment(
-            @PathVariable Long bookingId
-    ) {
-        throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_IMPLEMENTED,
-                "VNPay tạm ngưng cho đến khi hoàn thiện callback và chữ ký"
-        );
-    }
-
     @GetMapping("/admin/payments")
     public ApiResponse<Page<PaymentResponse>> getAllPayment(
             @RequestParam(defaultValue = "0") int pageNo,
@@ -47,7 +36,7 @@ public class PaymentController {
         return apiResponse;
     } 
 
-    @GetMapping("/public/payments/{id}")
+    @GetMapping("/admin/payments/{id}")
     public ResponseEntity<?> getPayment(@PathVariable Long id) {
         return ResponseEntity.ok(paymentService.getPaymentById(id));
     }

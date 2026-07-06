@@ -22,6 +22,8 @@ public interface UserRepository
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);
 
+    boolean existsByMembershipTierId(Long membershipTierId);
+
     List<User> findByRole(Role role);
 
     Page<User> findByEmailContaining(String email, Pageable pageable);

@@ -24,6 +24,7 @@ Hệ thống full-stack quản lý đặt sân bóng, bán sản phẩm thể th
 - Xem, tìm kiếm và lọc sản phẩm theo danh mục, thương hiệu, size.
 - Chọn biến thể, thêm giỏ hàng, mua ngay hoặc checkout nhiều sản phẩm.
 - Quản lý địa chỉ giao hàng và theo dõi đơn hàng.
+- Lưu và quản lý danh sách sản phẩm yêu thích.
 - Thanh toán đơn hàng bằng COD hoặc VietQR.
 - Xem sân, slot trống, giá theo ngày/khung giờ và lịch bảo trì.
 - Đặt sân kèm dịch vụ thêm, membership và voucher.
@@ -43,6 +44,7 @@ Hệ thống full-stack quản lý đặt sân bóng, bán sản phẩm thể th
 - Quản lý lịch bảo trì.
 - Quản lý đơn hàng và xác nhận thanh toán VietQR.
 - Quản lý voucher, membership tier, review và notification.
+- ADMIN có giao diện cấu hình hạng thành viên; STAFF được xem dịch vụ thêm ở chế độ chỉ đọc.
 - Import dữ liệu hàng loạt bằng CSV.
 
 ### Kho hàng
@@ -213,8 +215,6 @@ Không commit secret thật vào repository. Có thể cấu hình bằng biến
 | `SPRING_MAIL_USERNAME` | Tài khoản SMTP |
 | `SPRING_MAIL_PASSWORD` | App password SMTP |
 | `JWT_SECRET_KEY` | Khóa ký JWT đủ mạnh |
-| `VNPAY_TMN_CODE` | Mã VNPay, hiện chưa sử dụng |
-| `VNPAY_SECRET_KEY` | Secret VNPay, hiện chưa sử dụng |
 
 Ví dụ PowerShell:
 
@@ -412,7 +412,7 @@ UNPAID → PENDING → PAID
 5. Payment chuyển sang `PAID`.
 6. Admin mới xác nhận booking/order.
 
-VNPay đang chủ động tắt và endpoint liên quan trả `501 Not Implemented` cho đến khi có callback, xác minh chữ ký và xử lý idempotency đầy đủ.
+VNPay đã được loại khỏi source và cấu hình. Hệ thống chỉ công bố các phương thức thực sự đang được triển khai ở bảng trên.
 
 ### Doanh thu
 
@@ -454,7 +454,7 @@ Một số endpoint tiêu biểu:
 | `POST` | `/api/admin/inventory/imports` | Tạo phiếu nhập |
 | `POST` | `/api/admin/inventory/imports/{id}/post` | Ghi sổ phiếu nhập |
 | `GET` | `/api/admin/inventory/consistency` | Kiểm tra đồng bộ |
-| `GET` | `/api/public/dashboard/monthly-revenue` | Doanh thu tháng |
+| `GET` | `/api/admin/dashboard/monthly-revenue` | Doanh thu tháng |
 
 Danh mục đầy đủ hơn nằm tại [PROJECT_CONTEXT_API.md](PROJECT_CONTEXT_API.md).
 
@@ -520,7 +520,7 @@ Các file context phản ánh source hiện tại tốt hơn các tài liệu c�
 - Chưa bật Flyway dù có thư mục migration.
 - `application.yaml` và Cloudinary config cần được chuyển hoàn toàn sang biến môi trường.
 - API origin frontend vẫn đang hardcode `localhost:8080`.
-- VNPay chưa hoàn thiện và đang tắt.
+- Thanh toán online hiện dùng VietQR với bước quản trị xác nhận thủ công.
 - Chưa tích hợp hoàn tiền thật; `REFUNDED` hiện là trạng thái nội bộ.
 - Chưa có integration test database cho double booking và tranh chấp tồn cuối.
 - `RENTAL` chưa có mô hình khấu hao/chi phí mỗi lượt.

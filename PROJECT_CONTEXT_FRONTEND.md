@@ -87,7 +87,7 @@ Các page admin dùng service theo module để CRUD và render table/form. Dash
 ## Trạng thái frontend
 
 - Phần lớn backend API quan trọng đã có service và page tương ứng.
-- Chưa có route cho product variants/images; membership thiếu hoàn toàn phía UI.
+- Product variants/images được quản lý từ `ProductPage`; Membership Tier có route ADMIN; Wishlist có route client được bảo vệ.
 - `refresh()` trong `authService` có `console.log` refresh token và `console.log(refresh.status)` (tham chiếu chính function), cần sửa.
 - Không thấy error boundary, query/cache library hoặc test nghiệp vụ.
 - CRA test hiện chủ yếu là file mặc định `App.test.js`; có khả năng không còn khớp UI hiện tại.
@@ -103,7 +103,7 @@ Các page admin dùng service theo module để CRUD và render table/form. Dash
 - Frontend production build đã compile thành công.
 # CẬP NHẬT UI PAYMENT — 2026-07-01
 
-- Đã ẩn VNPay khỏi checkout sản phẩm, booking client và form booking admin.
+- VNPay đã được loại khỏi frontend; checkout chỉ hiển thị phương thức được backend hỗ trợ.
 - Checkout chỉ hiện COD/VietQR; booking chỉ hiện CASH/VietQR.
 - Trang thanh toán booking gọi API `payment-submitted` thay vì chỉ hiển thị thông báo.
 - Admin Booking Detail có nút xác nhận tiền cho VietQR đang `PENDING`.

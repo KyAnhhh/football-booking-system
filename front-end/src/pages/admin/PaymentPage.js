@@ -118,7 +118,7 @@ export default function PaymentPage() {
             <th onClick={() => toggleSort("orderStatus")}>Trạng thái đơn</th>
             <th onClick={() => toggleSort("createdAt")}>Ngày tạo</th>
             <th>Tổng tiền</th>
-            <th onClick={() => toggleSort("paymentStatus")}>Trạng thái thanh toán</th>
+            <th onClick={() => toggleSort("paymentStatus")}>Trạng thái</th>
             <th width="160">Thao tác</th>
           </tr>
         </thead>

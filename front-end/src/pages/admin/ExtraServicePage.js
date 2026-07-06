@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
+import { jwtDecode } from "jwt-decode";
 import swal from "sweetalert";
 import {
   createExtraService,
@@ -34,6 +35,18 @@ export default function ExtraServicePage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const canManage = useMemo(() => {
+    try {
+      const role = String(
+        jwtDecode(sessionStorage.getItem("accessToken") || "").role || ""
+      )
+        .replace("ROLE_", "")
+        .toUpperCase();
+      return role === "ADMIN" || role === "MANAGER";
+    } catch {
+      return false;
+    }
+  }, []);
 
   const loadItems = useCallback(async () => {
     const data = await getAdminExtraServices();
@@ -50,8 +63,10 @@ export default function ExtraServicePage() {
   }, []);
 
   useEffect(() => {
-    Promise.all([loadItems(), loadInventoryItems()]).catch(console.error);
-  }, [loadItems, loadInventoryItems]);
+    const requests = [loadItems()];
+    if (canManage) requests.push(loadInventoryItems());
+    Promise.all(requests).catch(console.error);
+  }, [canManage, loadItems, loadInventoryItems]);
 
   const openModal = (item = null) => {
     setEditing(item);
@@ -133,7 +148,9 @@ export default function ExtraServicePage() {
     <div className="admin-crud-page">
       <div className="admin-crud-header">
         <h2>Quản lý dịch vụ thêm</h2>
-        <Button onClick={() => openModal()}>+ Thêm dịch vụ</Button>
+        {canManage && (
+          <Button onClick={() => openModal()}>+ Thêm dịch vụ</Button>
+        )}
       </div>
 
       {items.length === 0 ? (
@@ -192,6 +209,7 @@ export default function ExtraServicePage() {
                   </td>
                   <td>{item.publicationStatus || "DRAFT"}</td>
                   <td>
+                    {canManage ? (
                     <div className="admin-crud-row-actions">
                       <Button
                         size="sm"
@@ -215,6 +233,9 @@ export default function ExtraServicePage() {
                         Xóa
                       </Button>
                     </div>
+                    ) : (
+                      <span className="text-muted">Chỉ xem</span>
+                    )}
                   </td>
                 </tr>
               );

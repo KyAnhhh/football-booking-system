@@ -1,6 +1,6 @@
 import { fetchWithAuth } from "./apiService";
 
-const API_URL = "http://localhost:8080/api/public/dashboard";
+const API_URL = "http://localhost:8080/api/admin/dashboard";
 
 const handleResponse = async (response) => {
   if (!response.ok) {

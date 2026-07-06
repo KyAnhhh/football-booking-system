@@ -33,6 +33,13 @@ public class ProductImageServiceImpl implements ProductImageService {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         boolean hasPrimary = false;
+        boolean productAlreadyHasPrimary =
+                productImageRepository.existsByProductIdAndIsPrimaryTrue(productId);
+
+        if (!productAlreadyHasPrimary
+                && requests.stream().noneMatch(ProductImageRequest::isPrimary)) {
+            requests.get(0).setPrimary(true);
+        }
 
         for (ProductImageRequest req : requests) {
 
@@ -89,12 +96,21 @@ public class ProductImageServiceImpl implements ProductImageService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
+        ProductImage image = productImageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product image not found"));
+        Long productId = image.getProduct().getId();
+        boolean wasPrimary = image.isPrimary();
 
-        if (!productImageRepository.existsById(id)) {
-            throw new RuntimeException("Product image not found");
+        productImageRepository.delete(image);
+        productImageRepository.flush();
+
+        if (wasPrimary) {
+            productImageRepository.findByProductId(productId)
+                    .stream()
+                    .findFirst()
+                    .ifPresent(next -> next.setIsPrimary(true));
         }
-
-        productImageRepository.deleteById(id);
     }
 }

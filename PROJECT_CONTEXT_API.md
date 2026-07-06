@@ -19,7 +19,7 @@ Quyền: `PUB` không cần token; `USER` là client/admin/manager/staff; `STAFF
 | POST/GET/PUT/DELETE | `/api/admin/users[/{id}]` | MANAGER+ | CRUD user |
 | PUT | `/api/admin/users/{id}/role` | MANAGER+ | Đổi role (service có guard) |
 | PUT | `/api/admin/users/{id}/status` | MANAGER+ | Đổi trạng thái |
-| GET/PUT | `/api/public/users/profile[/update]` | PUB theo matcher; code cần auth | Profile |
+| GET/PUT | `/api/user/profile` | USER | Xem/cập nhật profile từ JWT |
 | POST/GET/PUT/DELETE | `/api/user/shipping-addresses[/{id}]` | USER | Địa chỉ giao hàng |
 
 ## Field, pricing, holiday, maintenance
@@ -102,7 +102,6 @@ Quyền: `PUB` không cần token; `USER` là client/admin/manager/staff; `STAFF
 | PUT | `/api/admin/orders/{id}/status` | STAFF+ | Chuyển trạng thái |
 | DELETE | `/api/admin/orders/{id}` | STAFF+ | Xóa |
 | GET/PUT/DELETE | `/api/public/orderItems/...` | PUB matcher | Đọc/sửa/xóa order item; cần audit |
-| POST | `/api/user/payments/bookings/{bookingId}/vnpay` | USER | URL VNPay |
 | GET | `/api/admin/payments` | MANAGER+ | List payment |
 | GET | `/api/public/payments/{id}` | PUB | Chi tiết payment |
 | GET | `/api/user/payments/orders/{orderId}` | USER | Payment của order |
@@ -128,9 +127,12 @@ Quyền: `PUB` không cần token; `USER` là client/admin/manager/staff; `STAFF
 | GET | `/api/user/notifications/unread-count` | USER | Số chưa đọc |
 | PATCH | `/api/user/notifications/{id}/read` | USER | Đã đọc |
 | PATCH | `/api/user/notifications/read-all` | USER | Đọc tất cả |
-| GET | `/api/public/dashboard/summary` | STAFF+ | KPI |
-| GET | `/api/public/dashboard/monthly-revenue` | STAFF+ | Revenue chart |
-| GET | `/api/public/dashboard/admin-overview` | STAFF+ | Overview |
+| GET | `/api/admin/dashboard/summary` | STAFF+ | KPI |
+| GET | `/api/admin/dashboard/monthly-revenue` | STAFF+ | Revenue chart |
+| GET | `/api/admin/dashboard/admin-overview` | STAFF+ | Overview |
+| GET | `/api/user/wishlist` | USER | Wishlist của tôi |
+| POST/DELETE | `/api/user/wishlist/{productId}` | USER | Thêm/xóa yêu thích |
+| GET | `/api/user/wishlist/{productId}/exists` | USER | Kiểm tra yêu thích |
 
 ## Inventory, importer, membership, shared
 
@@ -151,7 +153,7 @@ Quyền: `PUB` không cần token; `USER` là client/admin/manager/staff; `STAFF
 | GET | `/api/admin/imports/templates/{type}` | MANAGER+ | CSV template |
 | POST | `/api/admin/imports/{type}` | MANAGER+ | Import CSV |
 | GET/POST/PUT/DELETE | `/api/admin/membership-tiers[/{id}]` | ADMIN | Tier |
-| POST | `/api/public/images/upload` | PUB | Upload Cloudinary; cần audit |
+| POST | `/api/admin/products/{productId}/images` | MANAGER+ | Upload ảnh sản phẩm lên Cloudinary |
 # CẬP NHẬT API — 2026-07-01
 
 | Method | Endpoint | Mục đích |
@@ -178,7 +180,7 @@ Quyền: `PUB` không cần token; `USER` là client/admin/manager/staff; `STAFF
 | PUT | `/api/admin/payments/bookings/{id}/confirm` | Admin xác nhận tiền booking |
 | PUT | `/api/admin/payments/orders/{id}/confirm` | Admin xác nhận tiền order |
 
-- Endpoint VNPay booking trả `501 Not Implemented` cho đến khi hoàn thiện callback/chữ ký.
+- VNPay đã được loại khỏi API; payment hiện hỗ trợ CASH/COD/VietQR theo từng nghiệp vụ.
 - DELETE booking/order vẫn giữ URL tương thích UI nhưng semantics là cancel an toàn, không hard-delete.
 
 ## ORDER ITEM SAU CHECKOUT

@@ -43,7 +43,7 @@ const navItems = [
   { to: "/admin/holiday-pricing-rules", label: "Giá ngày lễ", icon: BsCalendar2Plus, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin/maintenance", label: "Bảo trì", icon: BsTools, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin/vouchers", label: "Voucher", icon: BsTicketPerforated, roles: ["ADMIN", "MANAGER"] },
-  { to: "/admin/extra-services", label: "Dịch vụ thêm", icon: BsPlusSquare, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/extra-services", label: "Dịch vụ thêm", icon: BsPlusSquare, roles: ["ADMIN", "MANAGER", "STAFF"] },
   { to: "/admin/holidays", label: "Ngày lễ", icon: BsCalendarEvent, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin/products", label: "Sản phẩm", icon: BsBoxSeam, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin/brands", label: "Thương hiệu", icon: BsTags, roles: ["ADMIN", "MANAGER"] },
@@ -52,6 +52,7 @@ const navItems = [
   { to: "/admin/orders", label: "Đơn hàng", icon: BsReceipt, roles: ["ADMIN", "MANAGER", "STAFF"] },
   { to: "/admin/payments", label: "Thanh toán", icon: BsReceipt, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin/users", label: "Người dùng", icon: BsPeople, roles: ["ADMIN", "MANAGER"] },
+  { to: "/admin/membership-tiers", label: "Hạng thành viên", icon: BsPeople, roles: ["ADMIN"] },
 ];
 
 export default function AdminLayout() {

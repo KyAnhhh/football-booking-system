@@ -5,8 +5,13 @@ import { addItemToCart } from "../../services/cartService";
 import swal from "sweetalert";
 import "../../assets/styles/ProductDetail.css";
 import ReviewSection from "../../components/review/ReviewSection";
-import { ChevronLeft, Minus, Plus, ShoppingBag, Star } from "lucide-react";
+import { ChevronLeft, Heart, Minus, Plus, ShoppingBag, Star } from "lucide-react";
 import { useCart } from "../../contexts/CartContext";
+import {
+  addToWishlist,
+  isInWishlist,
+  removeFromWishlist,
+} from "../../services/wishlistService";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("vi-VN", {
@@ -24,6 +29,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -43,6 +49,30 @@ export default function ProductDetail() {
 
     loadProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (!sessionStorage.getItem("accessToken")) return;
+    isInWishlist(id).then(setFavorite).catch(console.error);
+  }, [id]);
+
+  const toggleWishlist = async () => {
+    if (!sessionStorage.getItem("accessToken")) {
+      navigate("/login", {
+        state: { from: { pathname: `/products/product-details/${id}` } },
+      });
+      return;
+    }
+    try {
+      if (favorite) {
+        await removeFromWishlist(id);
+      } else {
+        await addToWishlist(id);
+      }
+      setFavorite((current) => !current);
+    } catch (error) {
+      swal("Không thể cập nhật yêu thích", error.message, "error");
+    }
+  };
 
   const priceInfo = useMemo(() => {
     const variants = product?.variants || [];
@@ -263,6 +293,15 @@ export default function ProductDetail() {
           </div>
 
           <div className="product-detail-actions">
+            <button
+              type="button"
+              className="product-detail-cart-btn"
+              aria-pressed={favorite}
+              onClick={toggleWishlist}
+            >
+              <Heart size={19} fill={favorite ? "currentColor" : "none"} />
+              {favorite ? "Đã yêu thích" : "Yêu thích"}
+            </button>
             <button
               type="button"
               className="product-detail-cart-btn"

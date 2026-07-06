@@ -23,6 +23,9 @@ import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 @RequestMapping("/api")
 public class ProductImageController {
 
+    private static final int MAX_IMAGES_PER_UPLOAD = 10;
+    private static final long MAX_IMAGE_SIZE_BYTES = 2L * 1024 * 1024;
+
     private final ProductImageService productImageService;
 
     @PostMapping("/admin/products/{productId}/images")
@@ -31,6 +34,7 @@ public class ProductImageController {
             @RequestParam("images") List<MultipartFile> images,
             @RequestParam(value = "primaryIndex", required = false) Integer primaryIndex
     ) {
+        validateImages(images);
 
         List<ProductImageRequest> requests = images.stream()
                 .map(file -> ProductImageRequest.builder()
@@ -39,19 +43,10 @@ public class ProductImageController {
                         .build())
                 .toList();
 
-        // CASE 1: chỉ có 1 ảnh → auto primary
-        if (requests.size() == 1) {
-            requests.get(0).setPrimary(true);
-        }
-        // CASE 2: nhiều ảnh và có primaryIndex
-        else if (primaryIndex != null 
+        if (primaryIndex != null
                 && primaryIndex >= 0 
                 && primaryIndex < requests.size()) {
             requests.get(primaryIndex).setPrimary(true);
-        }
-        // CASE 3: nhiều ảnh nhưng không chọn → ảnh đầu làm primary
-        else {
-            requests.get(0).setPrimary(true);
         }
 
         productImageService.uploadImages(productId, requests);
@@ -59,6 +54,28 @@ public class ProductImageController {
         ApiResponse<String> res = new ApiResponse<>();
         res.setMessage("Upload images successfully");
         return res;
+    }
+
+    private void validateImages(List<MultipartFile> images) {
+        if (images == null || images.isEmpty()) {
+            throw new IllegalArgumentException("At least one image is required");
+        }
+        if (images.size() > MAX_IMAGES_PER_UPLOAD) {
+            throw new IllegalArgumentException("Maximum 10 images per upload");
+        }
+
+        for (MultipartFile image : images) {
+            if (image == null || image.isEmpty()) {
+                throw new IllegalArgumentException("Image must not be empty");
+            }
+            String contentType = image.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new IllegalArgumentException("Only image files are allowed");
+            }
+            if (image.getSize() > MAX_IMAGE_SIZE_BYTES) {
+                throw new IllegalArgumentException("Each image must not exceed 2 MB");
+            }
+        }
     }
 
     @GetMapping("/public/products/{productId}/images")

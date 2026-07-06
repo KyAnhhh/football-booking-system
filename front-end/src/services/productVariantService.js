@@ -78,3 +78,10 @@ export const deleteProductVariant = async (id) => {
     });
     return await handleResponse(response);
 }
+
+export const getProductVariantsByProduct = async (productId) => {
+  const response = await fetch(
+    `http://localhost:8080/api/public/products/${productId}/variants`
+  );
+  return handleResponse(response);
+};

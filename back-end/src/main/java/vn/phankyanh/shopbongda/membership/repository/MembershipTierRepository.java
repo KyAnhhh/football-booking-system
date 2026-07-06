@@ -12,6 +12,14 @@ public interface MembershipTierRepository
 
     Optional<MembershipTier> findByName(String name);
 
+    boolean existsByNameIgnoreCase(String name);
+
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
+
+    boolean existsByRequiredPoints(Integer requiredPoints);
+
+    boolean existsByRequiredPointsAndIdNot(Integer requiredPoints, Long id);
+
     List<MembershipTier> findByIsActiveTrue();
 
     MembershipTier findTopByRequiredPointsLessThanEqualAndIsActiveTrueOrderByRequiredPointsDesc(

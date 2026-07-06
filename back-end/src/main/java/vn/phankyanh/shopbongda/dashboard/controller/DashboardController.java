@@ -17,7 +17,7 @@ import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 
 @RestController
-@RequestMapping("/api/public/dashboard")
+@RequestMapping("/api/admin/dashboard")
 @RequiredArgsConstructor
 public class DashboardController {
 

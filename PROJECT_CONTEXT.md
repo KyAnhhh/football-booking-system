@@ -30,7 +30,7 @@
 - Cloudinary upload ảnh, ZXing tạo QR, Spring Mail.
 - Apache Commons CSV cho import.
 - SQL migrations nằm tại `src/main/resources/db/migration`, nhưng `application.yaml` không khai báo dependency Flyway và đang để `ddl-auto: update`.
-- VNPay sandbox cho thanh toán booking; VietQR/QR cho đơn hàng.
+- VietQR/QR cho booking và đơn hàng; VNPay đã được loại khỏi phạm vi hiện tại.
 
 ### Frontend
 
@@ -86,8 +86,8 @@
 ## Trạng thái tổng quan
 
 - Luồng cốt lõi đặt sân, quản lý booking, sản phẩm/giỏ hàng/đơn hàng, kho, voucher, giá, đánh giá và thông báo đã có cả backend và frontend.
-- Một số module chỉ có backend hoặc chưa được nối route UI: membership tier; trang `ImagePage.js` và `ProductVariant.js` tồn tại nhưng không được khai báo trong `AdminRoutes`.
-- Thư mục backend `combo` đang trống; entity `WishList` chưa có repository/service/controller.
+- Membership Tier đã có giao diện ADMIN; `ImagePage.js` và `ProductVariant.js` là màn hình con được mở từ `ProductPage`.
+- Các package trống `combo`/`common` đã được xóa; Wishlist đã có repository, service, controller và UI.
 - Test tự động hiện chỉ có một context-load test và test mặc định CRA.
 - Module inventory đang có thay đổi local chưa commit tại thời điểm tạo tài liệu; xem `NEXT_STEPS.md`.
 # CẬP NHẬT ƯU TIÊN — 2026-07-01
@@ -115,7 +115,7 @@ Phần này là trạng thái hiện tại và được ưu tiên khi khác vớ
 # FLOW BOOKING/CHECKOUT ỔN ĐỊNH — 2026-07-01
 
 - Checkout giỏ hàng tính discount tại backend từ giá snapshot trong cart và discount hiện tại; OrderItem lưu `unitPrice`, `discountAmount`, `finalPrice`, `total`.
-- Order chỉ hỗ trợ `COD` và `VIETQR`; booking chỉ hỗ trợ `CASH` và `VIETQR`. VNPay tạm tắt cho đến khi có callback và chữ ký.
+- Order chỉ hỗ trợ `COD` và `VIETQR`; booking chỉ hỗ trợ `CASH` và `VIETQR`.
 - VietQR dùng trạng thái `UNPAID -> PENDING -> PAID`; khách gửi xác nhận, admin xác nhận tiền riêng rồi mới confirm booking/order.
 - Booking pending tự hết hạn sau 15 phút; order VietQR pending tự hủy sau 30 phút. Scheduler hoàn reservation và cập nhật payment.
 - Xóa booking/order từ admin đã chuyển thành cancel an toàn, không hard-delete dữ liệu nghiệp vụ.

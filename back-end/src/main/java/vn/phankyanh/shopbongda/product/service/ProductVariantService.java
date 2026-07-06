@@ -13,6 +13,8 @@ public interface ProductVariantService {
 
     List<ProductVariantResponse> getAllProductVariant();
 
+    List<ProductVariantResponse> getByProductId(Long productId);
+
     ProductVariantResponse getProductVariantById(Long id);
 
     void deleteProductVariant(Long id);

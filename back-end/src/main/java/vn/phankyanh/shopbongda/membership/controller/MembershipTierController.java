@@ -8,6 +8,7 @@ import vn.phankyanh.shopbongda.membership.dto.response.MembershipTierResponse;
 import vn.phankyanh.shopbongda.membership.service.MembershipTierService;
 
 import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,7 +19,7 @@ public class MembershipTierController {
 
     @PostMapping
     public MembershipTierResponse create(
-            @RequestBody MembershipTierRequest request
+            @Valid @RequestBody MembershipTierRequest request
     ) {
 
         return membershipTierService.create(request);
@@ -33,7 +34,7 @@ public class MembershipTierController {
     @PutMapping("/{id}")
     public MembershipTierResponse update(
             @PathVariable Long id,
-            @RequestBody MembershipTierRequest request
+            @Valid @RequestBody MembershipTierRequest request
     ) {
 
         return membershipTierService.update(

@@ -6,9 +6,10 @@ import {
   createProductVariant,
   updateProductVariant,
   deleteProductVariant,
-  getAllProductVariant,
+  getProductVariantsByProduct,
 } from "../../services/productVariantService";
 import { getInventoryItems } from "../../services/inventoryService";
+import { getSizes } from "../../services/sizeService";
 
 const emptyForm = {
   sizeId: "",
@@ -20,13 +21,14 @@ const emptyForm = {
 export default function ProductVariantPage({ product, onClose }) {
   const [variants, setVariants] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
+  const [sizes, setSizes] = useState([]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
 
   const loadVariants = useCallback(async () => {
-    const data = await getAllProductVariant();
-    setVariants(data.filter((variant) => variant.productId === product.id));
+    const data = await getProductVariantsByProduct(product.id);
+    setVariants(data);
   }, [product.id]);
 
   const loadInventoryItems = useCallback(async () => {
@@ -41,6 +43,7 @@ export default function ProductVariantPage({ product, onClose }) {
   useEffect(() => {
     loadVariants();
     loadInventoryItems().catch(console.error);
+    getSizes().then(setSizes).catch(console.error);
   }, [loadVariants, loadInventoryItems]);
 
   const validateVariant = () => {
@@ -135,14 +138,20 @@ export default function ProductVariantPage({ product, onClose }) {
         <Form onSubmit={handleSubmit} className="mb-3">
           <div className="d-flex gap-2 align-items-start flex-wrap">
             <Form.Group>
-              <Form.Control
-                placeholder="ID kích cỡ"
+              <Form.Select
                 value={form.sizeId}
                 isInvalid={!!errors.sizeId}
                 onChange={(event) =>
                   setForm({ ...form, sizeId: event.target.value })
                 }
-              />
+              >
+                <option value="">Chọn kích cỡ</option>
+                {sizes.map((size) => (
+                  <option key={size.id} value={size.id}>
+                    {size.code}
+                  </option>
+                ))}
+              </Form.Select>
               <Form.Control.Feedback type="invalid">
                 {errors.sizeId}
               </Form.Control.Feedback>

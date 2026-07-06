@@ -1,7 +1,7 @@
 import { fetchWithAuth } from "./apiService";
 
 const API_URL_ADMIN = "http://localhost:8080/api/admin/users";
-const API_URL_PUBLIC = "http://localhost:8080/api/public/users";
+const API_URL_PROFILE = "http://localhost:8080/api/user/profile";
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -106,7 +106,7 @@ export const getProfile = async () => {
     "Content-Type": "application/json",
   };
 
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/profile`, {
+  const response = await fetchWithAuth(API_URL_PROFILE, {
     method: "GET",
     headers,
   });
@@ -119,7 +119,7 @@ export const updateProfile = async (profile) => {
     "Content-Type": "application/json",
   };
 
-  const response = await fetchWithAuth(`${API_URL_PUBLIC}/profile/update`, {
+  const response = await fetchWithAuth(API_URL_PROFILE, {
     method: "PUT",
     headers,
     body: JSON.stringify({

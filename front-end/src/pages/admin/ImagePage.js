@@ -24,9 +24,18 @@ export default function ImagePage({ product, onClose }) {
     loadImages();
   }, [loadImages]);
 
+  useEffect(
+    () => () => previews.forEach((url) => URL.revokeObjectURL(url)),
+    [previews]
+  );
+
   const validateFiles = (fileList) => {
     if (!fileList || fileList.length === 0) {
       swal("Error", "Chưa chọn ảnh", "error");
+      return false;
+    }
+    if (fileList.length > 10) {
+      swal("Error", "Mỗi lần chỉ được upload tối đa 10 ảnh", "error");
       return false;
     }
 
@@ -47,6 +56,7 @@ export default function ImagePage({ product, onClose }) {
     const selectedFiles = Array.from(e.target.files);
     if (!validateFiles(selectedFiles)) return;
 
+    previews.forEach((url) => URL.revokeObjectURL(url));
     setFiles(selectedFiles);
 
     // preview

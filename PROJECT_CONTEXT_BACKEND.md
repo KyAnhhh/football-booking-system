@@ -7,7 +7,7 @@
 - Entry point: `ShopbongdaApplication`.
 - Mặc định chạy port `8080`, MySQL database `football_booking_system`, Redis `localhost:6379`.
 - Security stateless bằng bearer JWT. `/api/auth/**` và phần lớn `/api/public/**` public; dashboard dù mang tên public chỉ dành cho staff/manager/admin.
-- `WebConfig` cấu hình CORS; `RedisConfiguration`, `JwtDecoderConfiguration`, `CloudinaryConfig`, `VNPayConfig` cung cấp integration.
+- `WebConfig` cấu hình CORS; `RedisConfiguration`, `JwtDecoderConfiguration`, `CloudinaryConfig` cung cấp integration.
 - `GlobalExceptionHandler` xử lý exception tập trung nhưng nhiều service vẫn ném `RuntimeException`.
 - Resources có migration V2–V19 cho pricing, voucher usage, booking extras, notification, holiday, inventory, reservation, shipping address và stock-import lifecycle.
 
@@ -77,10 +77,10 @@
 
 - Model: `Payment`, `PaymentMethod`, `PaymentStatus`, `PaymentType`.
 - Repository: `PaymentRepository`.
-- Service: `PaymentService/Impl`, `VNPayService`, `QrCodeService`.
+- Service: `PaymentService/Impl`, `QrCodeService`.
 - Controller: `PaymentController`, `QrCodeController`.
-- Luồng: booking tạo VNPay URL; order dùng payment record/VietQR và admin xác nhận; user lấy QR URL sau khi controller kiểm tra ownership.
-- Trạng thái: VNPay cấu hình sandbox (`DEMO`); callback/return URL được cấu hình nhưng controller hiện không liệt kê endpoint `vnpay-return`, cần xác minh end-to-end.
+- Luồng: booking/order dùng payment record và VietQR; khách báo đã chuyển khoản, quản trị xác nhận; user lấy QR URL sau khi controller kiểm tra ownership.
+- Trạng thái: VNPay đã được loại khỏi source và cấu hình.
 
 ### 8. Product catalog
 
@@ -89,7 +89,7 @@
 - Service/mapper: `Brand`, `Category`, `Product`, `ProductImage`, `ProductVariant`, `Size` service + impl + mapper.
 - Controller: `BrandController`, `CategoryController`, `ProductController`, `ProductImageController`, `ProductVariantController`, `SizeController`.
 - Luồng: public browse/filter/detail/top popular; admin CRUD catalog; upload URL ảnh và chọn ảnh primary; variant kết hợp product/size và liên kết inventory.
-- Trạng thái: catalog client/admin cơ bản hoàn thành. `ProductVariant.js` và `ImagePage.js` tồn tại nhưng chưa có route admin.
+- Trạng thái: catalog client/admin cơ bản hoàn thành. Variant và Image được quản lý như màn hình con trong `ProductPage`.
 
 ### 9. Cart, order và shipping fee
 
@@ -119,12 +119,12 @@
 
 ### 12. Review
 
-- Model: `Review` (sản phẩm), `BookingReview` (sân), `WishList`.
+- Model: `Review` (sản phẩm), `BookingReview` (sân). Wishlist là module riêng.
 - Repository: `ReviewRepository`, `BookingReviewRepository`.
 - Service: `ReviewService/Impl`, `BookingReviewService/Impl`.
 - Controller: `ReviewController`, `BookingReviewController`.
 - Luồng: chỉ order đã nhận mới review product/order item; chỉ booking completed và thuộc user mới review sân; public xem rating/list; admin xóa product review.
-- Trạng thái: review đã nối UI. `WishList` chỉ có entity, chưa có API hay UI.
+- Trạng thái: review đã nối UI; Wishlist có entity, API theo user và trang client riêng.
 
 ### 13. Notification
 
@@ -141,7 +141,7 @@
 - Service: `DashboardService/Impl`.
 - Controller: `DashboardController`.
 - Luồng: aggregate revenue/order/booking/user và chuỗi doanh thu tháng.
-- Trạng thái: đã nối dashboard/Recharts. Namespace `/public/dashboard` gây nhầm nhưng security giới hạn staff+.
+- Trạng thái: đã nối dashboard/Recharts tại namespace `/api/admin/dashboard`, giới hạn STAFF+.
 
 ### 15. Membership
 
@@ -150,13 +150,13 @@
 - Service: `MembershipTierService/Impl`, `MembershipService/Impl`.
 - Controller: `MembershipTierController`.
 - Luồng: admin CRUD tier; membership service cập nhật/xếp tier theo chi tiêu.
-- Trạng thái: backend hiện hữu nhưng không có frontend service/page/route; chỉ ADMIN được phép.
+- Trạng thái: có frontend service/page/route quản trị; chỉ ADMIN được phép.
 
 ### 16. Shared và phần trống
 
-- Shared: `ApiResponse`, `EmailService`, `ImageService`/`ImageController`, `QrCodeService`/controller.
-- Upload ảnh dùng Cloudinary; endpoint nằm dưới `/api/public/images/upload`, vì vậy hiện public có quyền upload.
-- `combo/` đang trống.
+- Shared: `ApiResponse`, `EmailService`, `ImageService`, `QrCodeService`/controller.
+- Upload ảnh dùng Cloudinary qua endpoint product admin; endpoint upload công khai đã được loại bỏ.
+- Các cây package trống `combo/` và `common/` đã được xóa.
 - `exception/` có `GlobalExceptionHandler`, `AuthException`, `UserNotFoundException`, `ProductNotFoundException`.
 
 ## Testing

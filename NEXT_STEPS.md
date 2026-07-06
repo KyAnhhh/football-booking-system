@@ -6,11 +6,11 @@
 
 1. **Rotate và externalize secrets.** `application.yaml` đang chứa Gmail app password và JWT secret; chuyển sang environment/secret manager, thu hồi credential hiện tại. Cloudinary config cũng cần kiểm tra nguồn secret.
 2. **Audit các endpoint public có mutation/data nhạy cảm.**
-   - `/api/public/images/upload` cho phép upload không xác thực.
+   - Đã xóa `/api/public/images/upload`; upload ảnh sản phẩm dùng endpoint admin.
    - `/api/public/orderItems` có GET/PUT/DELETE.
    - `/api/public/payments/{id}` có thể lộ payment.
    - profile nằm dưới `/api/public/users/...`; xác minh controller luôn yêu cầu principal.
-3. **Hoàn thiện/kiểm tra VNPay return flow.** `return-url` trỏ `/api/payments/vnpay-return` nhưng không thấy mapping tương ứng trong `PaymentController`; chưa thấy verify signature/cập nhật booking payment callback đầy đủ.
+3. **Thanh toán online.** VNPay đã được loại khỏi phạm vi; duy trì và kiểm thử flow VietQR xác nhận thủ công.
 4. **Test module inventory đang thay đổi.** Worktree lúc lập tài liệu có modified/untracked files cho stock-import lifecycle, consistency và migration V19. Không ghi đè chúng; cần review diff, compile, migration test và transactional test trước commit.
 
 ## Tính đúng đắn nghiệp vụ
@@ -44,8 +44,8 @@
 - Xóa dependency JWT trùng nếu JJWT thực sự không dùng; cập nhật MapStruct nếu cần tương thích Java/Spring hiện tại.
 - Tránh hard-code sender email trong `EmailService`.
 - Bổ sung pagination cho các list có thể lớn (notification, booking/order tùy endpoint).
-- `combo/` trống: xóa nếu không dùng hoặc triển khai và ghi rõ scope.
-- `WishList` chỉ có entity: quyết định triển khai repository/service/API/UI hoặc loại bỏ.
+- `combo/` và `common/` đã được xóa.
+- Wishlist đã có repository/service/API/UI; cần bổ sung integration test.
 - `FootballFieldImage` thiếu luồng CRUD rõ ràng: xác minh ảnh được quản lý qua field request hay cần API riêng.
 
 ## Frontend
@@ -87,7 +87,7 @@
 8. Commit các thay đổi local inventory/catalog/import/calendar hiện còn modified hoặc untracked; không rollback nhầm.
 # SAU KHI ỔN ĐỊNH FLOW — 2026-07-01
 
-- VNPay vẫn chủ động tắt; chỉ bật lại sau khi có secure hash, callback/return verification, ownership và idempotency.
+- Không còn source/config VNPay; chỉ bổ sung lại trong một thay đổi triển khai end-to-end riêng.
 - Cần thêm integration test dùng database test cho hai request đồng thời đặt cùng slot/mua cùng tồn cuối.
 - Cần test scheduler bằng clock giả thay vì chờ thời gian thật.
 - `REFUNDED` hiện là trạng thái nghiệp vụ nội bộ; chưa kết nối API hoàn tiền ngân hàng.

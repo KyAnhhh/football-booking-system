@@ -60,8 +60,8 @@ public class SecurityConfiguration {
                 .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/public/dashboard/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
                         .requestMatchers(public_list).permitAll()
+                        .requestMatchers("/api/admin/dashboard/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
                         .requestMatchers("/api/admin/users/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/admin/membership-tiers/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/imports/**").hasAnyRole("ADMIN", "MANAGER")

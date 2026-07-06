@@ -20,6 +20,7 @@ import ExtraServicePage from "../pages/admin/ExtraServicePage";
 import HolidayPage from "../pages/admin/HolidayPage";
 import ImportPage from "../pages/admin/ImportPage";
 import InventoryPage from "../pages/admin/InventoryPage";
+import MembershipTierPage from "../pages/admin/MembershipTierPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
@@ -44,6 +45,7 @@ const AdminRoutes = (
   >
     <Route index element={allow(<DashboardPage />, ADMIN_MANAGER_STAFF)} />
     <Route path="users" element={allow(<UsersPage />, ADMIN_MANAGER)} />
+    <Route path="membership-tiers" element={allow(<MembershipTierPage />, ["ADMIN"])} />
     <Route path="products" element={allow(<ProductPage />, ADMIN_MANAGER)} />
     <Route path="brands" element={allow(<BrandPage />, ADMIN_MANAGER)} />
     <Route path="categories" element={allow(<CategoryPage />, ADMIN_MANAGER)} />
@@ -58,7 +60,7 @@ const AdminRoutes = (
     <Route path="pricing-rules" element={allow(<PricingRulePage />, ADMIN_MANAGER)} />
     <Route path="holiday-pricing-rules" element={allow(<HolidayPricingRulePage />, ADMIN_MANAGER)} />
     <Route path="vouchers" element={allow(<VoucherPage />, ADMIN_MANAGER)} />
-    <Route path="extra-services" element={allow(<ExtraServicePage />, ADMIN_MANAGER)} />
+    <Route path="extra-services" element={allow(<ExtraServicePage />, ADMIN_MANAGER_STAFF)} />
     <Route path="holidays" element={allow(<HolidayPage />, ADMIN_MANAGER)} />
     <Route path="inventory" element={allow(<InventoryPage />, ADMIN_MANAGER)} />
     <Route path="imports" element={allow(<ImportPage />, ADMIN_MANAGER)} />

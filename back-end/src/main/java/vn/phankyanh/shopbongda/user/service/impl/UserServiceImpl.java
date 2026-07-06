@@ -1,6 +1,8 @@
 package vn.phankyanh.shopbongda.user.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.exception.UserNotFoundException;
+import vn.phankyanh.shopbongda.membership.domain.MembershipTier;
+import vn.phankyanh.shopbongda.membership.repository.MembershipTierRepository;
 import vn.phankyanh.shopbongda.user.domain.Role;
 import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.dto.request.UpdateRoleRequest;
@@ -30,6 +34,7 @@ import vn.phankyanh.shopbongda.user.service.UserService;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final MembershipTierRepository membershipTierRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
@@ -104,7 +109,7 @@ public class UserServiceImpl implements UserService {
 
         assertCanAccessTarget(getActor(actorId), user);
 
-        return userMapper.toUserCreateResponse(user);
+        return toUserResponse(user);
     }
 
     @Override
@@ -145,9 +150,7 @@ public class UserServiceImpl implements UserService {
             user.setPhone(request.getPhone());
         }
 
-        return userMapper.toUserCreateResponse(
-                userRepository.save(user)
-        );
+        return toUserResponse(userRepository.save(user));
     }
 
     @Override
@@ -434,6 +437,63 @@ public class UserServiceImpl implements UserService {
                 .phone(user.getPhone())
                 .role(user.getRole())
                 .status(user.getStatus())
+                .loyaltyPoints(0)
                 .build();
+    }
+
+    private UserCreateResponse toUserResponse(User user) {
+        UserCreateResponse response = userMapper.toUserCreateResponse(user);
+        int points = user.getLoyaltyPoints() == null ? 0 : user.getLoyaltyPoints();
+
+        List<MembershipTier> activeTiers = membershipTierRepository
+                .findByIsActiveTrue()
+                .stream()
+                .sorted(Comparator.comparing(MembershipTier::getRequiredPoints))
+                .toList();
+
+        MembershipTier currentTier = activeTiers.stream()
+                .filter(tier -> tier.getRequiredPoints() <= points)
+                .max(Comparator.comparing(MembershipTier::getRequiredPoints))
+                .orElse(null);
+
+        MembershipTier nextTier = activeTiers.stream()
+                .filter(tier -> tier.getRequiredPoints() > points)
+                .findFirst()
+                .orElse(null);
+
+        response.setLoyaltyPoints(points);
+        response.setMembershipTierName(
+                currentTier == null ? null : currentTier.getName()
+        );
+        response.setMembershipDiscountPercent(
+                currentTier == null ? 0 : currentTier.getDiscountPercent()
+        );
+        response.setNextMembershipTierName(
+                nextTier == null ? null : nextTier.getName()
+        );
+        response.setNextMembershipRequiredPoints(
+                nextTier == null ? null : nextTier.getRequiredPoints()
+        );
+        response.setPointsToNextTier(
+                nextTier == null ? 0 : nextTier.getRequiredPoints() - points
+        );
+
+        int lowerBound = currentTier == null ? 0 : currentTier.getRequiredPoints();
+        int upperBound = nextTier == null ? lowerBound : nextTier.getRequiredPoints();
+        int progress = nextTier == null
+                ? 100
+                : Math.min(
+                        100,
+                        Math.max(
+                                0,
+                                (int) Math.round(
+                                        ((points - lowerBound) * 100.0)
+                                                / Math.max(1, upperBound - lowerBound)
+                                )
+                        )
+                );
+        response.setMembershipProgressPercent(progress);
+
+        return response;
     }
 }

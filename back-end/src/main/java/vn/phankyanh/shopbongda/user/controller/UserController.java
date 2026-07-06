@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
 import vn.phankyanh.shopbongda.user.domain.User;
 import vn.phankyanh.shopbongda.user.domain.Role;
 import vn.phankyanh.shopbongda.user.dto.request.UpdateRoleRequest;
 import vn.phankyanh.shopbongda.user.dto.request.UpdateUserStatusRequest;
+import vn.phankyanh.shopbongda.user.dto.request.ProfileUpdateRequest;
 import vn.phankyanh.shopbongda.user.dto.request.UserCreateRequest;
 import vn.phankyanh.shopbongda.user.dto.request.UserUpdateRequest;
 import vn.phankyanh.shopbongda.user.dto.response.UserCreateResponse;
@@ -145,20 +147,27 @@ public class UserController {
         return apiResponse;
     }
 
-    @PutMapping("/api/public/users/profile/update")
-    public ApiResponse<UserCreateResponse> updateProfile(@RequestBody UserUpdateRequest request, @AuthenticationPrincipal Jwt jwt) {
+    @PutMapping("/api/user/profile")
+    public ApiResponse<UserCreateResponse> updateProfile(
+            @Valid @RequestBody ProfileUpdateRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
         Long userId = jwt.getClaim("id");
         ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(userService.updateUser(
                 userId,
-                request,
+                UserUpdateRequest.builder()
+                        .username(request.getUsername())
+                        .email(request.getEmail())
+                        .phone(request.getPhone())
+                        .build(),
                 userId
         ));
         apiResponse.setMessage("Updated user profile successfully");
         return apiResponse;
     }
 
-        @GetMapping("/api/public/users/profile")
+        @GetMapping("/api/user/profile")
         public ApiResponse<UserCreateResponse> getMe(@AuthenticationPrincipal Jwt jwt){
             Long userId = jwt.getClaim("id");
             ApiResponse<UserCreateResponse> apiResponse = new ApiResponse<>();

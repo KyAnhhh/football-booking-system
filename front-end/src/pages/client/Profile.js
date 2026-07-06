@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getProfile, updateProfile } from "../../services/userService";
 import "../../assets/styles/Profile.css";
-import { Mail, Phone, Save, UserRound } from "lucide-react";
+import { Award, Mail, Phone, Save, Sparkles, UserRound } from "lucide-react";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -102,6 +102,66 @@ export default function Profile() {
               <h2>{profile?.username || "Người dùng"}</h2>
             </div>
           </div>
+
+          <section className="profile-membership" aria-label="Hạng thành viên">
+            <div className="profile-membership-main">
+              <div className="profile-membership-icon">
+                <Award size={28} />
+              </div>
+              <div>
+                <span>Hạng thành viên</span>
+                <h3>{profile?.membershipTierName || "Chưa xếp hạng"}</h3>
+                <p>
+                  {profile?.membershipTierName
+                    ? `Ưu đãi ${profile.membershipDiscountPercent || 0}% khi đặt sân`
+                    : "Tích điểm từ booking hoàn tất để mở khóa ưu đãi."}
+                </p>
+              </div>
+            </div>
+
+            <div className="profile-membership-stats">
+              <div>
+                <span>Điểm hiện có</span>
+                <strong>{profile?.loyaltyPoints || 0}</strong>
+              </div>
+              <div>
+                <span>Ưu đãi</span>
+                <strong>{profile?.membershipDiscountPercent || 0}%</strong>
+              </div>
+            </div>
+
+            <div className="profile-membership-progress">
+              <div className="profile-membership-progress-label">
+                {profile?.nextMembershipTierName ? (
+                  <>
+                    <span>
+                      Còn <strong>{profile.pointsToNextTier}</strong> điểm tới{" "}
+                      <strong>{profile.nextMembershipTierName}</strong>
+                    </span>
+                    <span>{profile.membershipProgressPercent || 0}%</span>
+                  </>
+                ) : (
+                  <span className="profile-membership-max">
+                    <Sparkles size={16} />
+                    Bạn đang ở hạng cao nhất
+                  </span>
+                )}
+              </div>
+              <div
+                className="profile-membership-progress-track"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={profile?.membershipProgressPercent || 0}
+              >
+                <span
+                  style={{
+                    width: `${profile?.membershipProgressPercent || 0}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </section>
 
           {!editMode ? (
             <div className="profile-info-grid">

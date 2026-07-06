@@ -16,4 +16,11 @@ public class UserCreateResponse {
     // private String password;
     private Role role;
     private String status = "active";
+    private Integer loyaltyPoints;
+    private String membershipTierName;
+    private Integer membershipDiscountPercent;
+    private String nextMembershipTierName;
+    private Integer nextMembershipRequiredPoints;
+    private Integer pointsToNextTier;
+    private Integer membershipProgressPercent;
 }

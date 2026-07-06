@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   ChevronDown,
+  Heart,
   LayoutDashboard,
   LogIn,
   LogOut,
@@ -198,6 +199,10 @@ export default function Header() {
                     <CalendarDays size={17} />
                     Đặt sân của tôi
                   </Link>
+                  <Link to="/wishlist">
+                    <Heart size={17} />
+                    Sản phẩm yêu thích
+                  </Link>
 
                   {canAccessAdmin && (
                     <Link to="/admin" className="admin-link">
@@ -265,6 +270,10 @@ export default function Header() {
             <Link className="fs-mobile-link" to="/my-bookings">
               <CalendarDays size={18} />
               Đặt sân của tôi
+            </Link>
+            <Link className="fs-mobile-link" to="/wishlist">
+              <Heart size={18} />
+              Sản phẩm yêu thích
             </Link>
             {canAccessAdmin && (
               <Link className="fs-mobile-link" to="/admin">

@@ -20,8 +20,16 @@ import FootballField from "../pages/client/FootballField";
 import FootballFieldDetail from "../pages/client/FootballFieldDetail";
 import PaymentFootballField from "../pages/client/PaymentFootballField";
 import OrderPaymentPage from "../pages/client/OrderPaymentPage";
+import Wishlist from "../pages/client/Wishlist";
 
 import ReviewSection from "../components/review/ReviewSection";
+import ProtectedRoute from "./ProtectedRoute";
+
+const protectedClientPage = (page) => (
+  <ProtectedRoute>
+    <ClientLayout>{page}</ClientLayout>
+  </ProtectedRoute>
+);
 
 const ClientRoutes = (
   <>
@@ -72,20 +80,12 @@ const ClientRoutes = (
 
     <Route
       path="/profile"
-      element={
-        <ClientLayout>
-          <Profile />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<Profile />)}
     />
 
     <Route
       path="/cart"
-      element={
-        <ClientLayout>
-          <Cart />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<Cart />)}
     />
 
     <Route
@@ -108,47 +108,27 @@ const ClientRoutes = (
 
     <Route
       path="/my-orders"
-      element={
-        <ClientLayout>
-          <MyOrders />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<MyOrders />)}
     />
 
     <Route
       path="/my-bookings"
-      element={
-        <ClientLayout>
-          <MyBookings />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<MyBookings />)}
     />
 
     <Route
       path="/my-bookings/:bookingId"
-      element={
-        <ClientLayout>
-          <BookingDetailPage />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<BookingDetailPage />)}
     />
 
     <Route
       path="/cart/checkout"
-      element={
-        <ClientLayout>
-          <Checkout />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<Checkout />)}
     />
 
     <Route
       path="/orders/:orderId/review/:productId"
-      element={
-        <ClientLayout>
-          <ReviewSection />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<ReviewSection />)}
     />
 
     <Route
@@ -180,20 +160,17 @@ const ClientRoutes = (
 
     <Route
       path="/football-fields/:id/payment"
-      element={
-        <ClientLayout>
-          <PaymentFootballField />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<PaymentFootballField />)}
+    />
+
+    <Route
+      path="/wishlist"
+      element={protectedClientPage(<Wishlist />)}
     />
 
     <Route
       path="/orders/:id/payment"
-      element={
-        <ClientLayout>
-          <OrderPaymentPage />
-        </ClientLayout>
-      }
+      element={protectedClientPage(<OrderPaymentPage />)}
     />
 
   </>

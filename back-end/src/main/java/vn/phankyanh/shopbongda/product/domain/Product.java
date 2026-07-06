@@ -32,7 +32,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import vn.phankyanh.shopbongda.review.domain.Review;
-import vn.phankyanh.shopbongda.review.domain.WishList;
+import vn.phankyanh.shopbongda.wishlist.domain.WishlistItem;
 import vn.phankyanh.shopbongda.catalog.domain.PublicationStatus;
 
 @Entity
@@ -84,7 +84,7 @@ public class Product {
     private List<Review> review;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    private List<WishList> wishLists;
+    private List<WishlistItem> wishLists;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
