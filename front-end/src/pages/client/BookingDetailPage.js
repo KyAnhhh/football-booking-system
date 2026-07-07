@@ -12,6 +12,10 @@ import {
   Star,
 } from "lucide-react";
 import { cancelBooking, getMyBookingDetail } from "../../services/bookingService";
+import {
+  getMyRefunds,
+  submitRefundBankAccount,
+} from "../../services/refundService";
 import "../../assets/styles/BookingDetailPage.css";
 
 const statusLabel = {
@@ -28,7 +32,17 @@ const paymentStatusLabel = {
   PENDING: "Chờ admin xác nhận",
   PAID: "Đã thanh toán",
   FAILED: "Thanh toán lỗi",
+  REFUND_PENDING: "Đang chờ hoàn tiền",
   REFUNDED: "Đã hoàn tiền",
+};
+
+const refundStatusText = {
+  PAYMENT_REVIEW: "Admin đang kiểm tra giao dịch đã chuyển",
+  AWAITING_INFORMATION: "Cần cung cấp tài khoản nhận hoàn tiền",
+  PENDING: "Đang chờ admin hoàn tiền",
+  PROCESSING: "Admin đang xử lý hoàn tiền",
+  COMPLETED: "Đã hoàn tiền",
+  FAILED: "Thông tin hoàn tiền cần bổ sung",
 };
 
 const timelineSteps = ["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED"];
@@ -56,13 +70,18 @@ export default function BookingDetailPage() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
+  const [refund, setRefund] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadBooking = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getMyBookingDetail(bookingId);
+      const [data, refunds] = await Promise.all([
+        getMyBookingDetail(bookingId),
+        getMyRefunds().catch(() => []),
+      ]);
       setBooking(data);
+      setRefund((Array.isArray(refunds) ? refunds : []).find((item) => item.bookingId === Number(bookingId)) || null);
     } catch (error) {
       console.error(error);
       swal.fire("Lỗi", error.message || "Không thể tải chi tiết đặt sân.", "error");
@@ -109,6 +128,45 @@ export default function BookingDetailPage() {
       swal.fire("Đã hủy", "Lịch đặt sân đã được hủy.", "success");
     } catch (error) {
       swal.fire("Lỗi", error.message || "Không thể hủy lịch đặt sân.", "error");
+    }
+  };
+
+  const handleSubmitRefundInfo = async () => {
+    if (!refund?.id) return;
+
+    const result = await swal.fire({
+      title: "Tài khoản nhận hoàn tiền",
+      html: `
+        <input id="refund-bank-code" class="swal2-input" placeholder="Ngân hàng, ví dụ: Vietcombank">
+        <input id="refund-bank-number" class="swal2-input" placeholder="Số tài khoản">
+        <input id="refund-bank-name" class="swal2-input" placeholder="Tên chủ tài khoản">
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Gửi thông tin",
+      cancelButtonText: "Để sau",
+      preConfirm: () => {
+        const bankCode = document.getElementById("refund-bank-code")?.value?.trim();
+        const bankAccountNumber = document.getElementById("refund-bank-number")?.value?.trim();
+        const bankAccountName = document.getElementById("refund-bank-name")?.value?.trim();
+
+        if (!bankCode || !bankAccountNumber || !bankAccountName) {
+          swal.showValidationMessage("Vui lòng nhập đủ ngân hàng, số tài khoản và tên chủ tài khoản");
+          return false;
+        }
+
+        return { bankCode, bankAccountNumber, bankAccountName };
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const updatedRefund = await submitRefundBankAccount(refund.id, result.value);
+      setRefund(updatedRefund);
+      swal.fire("Đã gửi", "Thông tin tài khoản hoàn tiền đã được ghi nhận.", "success");
+    } catch (error) {
+      swal.fire("Lỗi", error.message || "Không thể gửi thông tin hoàn tiền.", "error");
     }
   };
 
@@ -241,6 +299,23 @@ export default function BookingDetailPage() {
                 <strong>{formatMoney(booking.finalPrice || booking.totalPrice)}</strong>
                 <small>{booking.paymentMethod || "Chưa chọn phương thức"}</small>
               </div>
+
+              {booking.status === "CANCELLED" && (refund || ["REFUND_PENDING", "REFUNDED"].includes(booking.paymentStatus)) && (
+                <div className="booking-refund-box">
+                  <span>Hoàn tiền</span>
+                  <strong>{refundStatusText[refund?.status] || booking.paymentStatus || "Đang cập nhật"}</strong>
+                  {refund?.bankAccountNumber && (
+                    <small>
+                      {refund.bankCode} · {refund.bankAccountNumber} · {refund.bankAccountName}
+                    </small>
+                  )}
+                  {["AWAITING_INFORMATION", "FAILED"].includes(refund?.status) && (
+                    <button type="button" onClick={handleSubmitRefundInfo}>
+                      Nhập tài khoản nhận hoàn
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="booking-detail-breakdown">
                 <div>

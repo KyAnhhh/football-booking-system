@@ -325,7 +325,8 @@ export default function AdminBookingDetailPage() {
               <small>{booking.paymentMethod || "Chưa chọn phương thức"}</small>
             </div>
 
-            {booking.paymentMethod === "VIETQR"
+            {booking.status === "PENDING"
+              && booking.paymentMethod === "VIETQR"
               && booking.paymentStatus === "PENDING" && (
               <Button
                 variant="success"
@@ -334,6 +335,14 @@ export default function AdminBookingDetailPage() {
               >
                 Xác nhận đã nhận tiền
               </Button>
+            )}
+
+            {booking.status !== "PENDING"
+              && booking.paymentMethod === "VIETQR"
+              && booking.paymentStatus === "PENDING" && (
+              <div className="admin-booking-payment-hint">
+                Booking không còn chờ xác nhận. Nếu khách đã chuyển khoản, hãy xử lý trong mục Yêu cầu hoàn tiền.
+              </div>
             )}
 
             <div className="admin-booking-breakdown">

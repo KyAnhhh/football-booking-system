@@ -35,7 +35,7 @@ public class Payment {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 40, columnDefinition = "varchar(40)")
     private PaymentStatus paymentStatus;
 
     @NotNull

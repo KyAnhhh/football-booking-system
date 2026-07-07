@@ -5,5 +5,6 @@ public enum PaymentStatus {
     PAID,          // Đã thanh toán thành công
     PENDING,       // Đang chờ xác nhận (online, shipper chưa báo)
     FAILED,        // Thanh toán thất bại
+    REFUND_PENDING,
     REFUNDED       // Đã hoàn tiền
 }

@@ -1,18 +1,24 @@
 import { useEffect, useState } from "react";
 import { getMyOrders } from "../../services/orderService";
+import { getMyRefunds } from "../../services/refundService";
 import OrderCard from "../../components/order/OrderCard";
 import "../../assets/styles/MyOrders.css";
 import { PackageCheck } from "lucide-react";
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
+  const [refunds, setRefunds] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const data = await getMyOrders();
+        const [data, refundData] = await Promise.all([
+          getMyOrders(),
+          getMyRefunds().catch(() => []),
+        ]);
         setOrders(Array.isArray(data) ? data : []);
+        setRefunds(Array.isArray(refundData) ? refundData : []);
       } catch (error) {
         console.error("Get my orders error:", error);
         setOrders([]);
@@ -45,7 +51,11 @@ export default function MyOrders() {
       ) : (
         <div className="my-orders-list">
           {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <OrderCard
+              key={order.id}
+              order={order}
+              refund={refunds.find((item) => item.orderId === order.id)}
+            />
           ))}
         </div>
       )}

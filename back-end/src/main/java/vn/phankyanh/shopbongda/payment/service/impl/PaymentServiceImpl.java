@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.order.domain.Order;
+import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 import vn.phankyanh.shopbongda.order.repository.OrderRepository;
 import vn.phankyanh.shopbongda.booking.domain.Booking;
 import vn.phankyanh.shopbongda.booking.domain.BookingStatus;
@@ -111,6 +112,11 @@ public class PaymentServiceImpl implements PaymentService {
                     "Chỉ có thể xác nhận giao dịch VietQR đang chờ"
             );
         }
+        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+            throw new IllegalStateException(
+                    "Đơn hàng đã hủy cần xử lý qua luồng hoàn tiền"
+            );
+        }
 
         payment.setPaymentStatus(PaymentStatus.PAID);
 
@@ -128,12 +134,26 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() ->
                         new RuntimeException("Booking not found"));
         Payment payment = booking.getPayment();
-        if (booking.getStatus() != BookingStatus.PENDING
-                || payment == null
-                || payment.getPaymentMethod() != PaymentMethod.VIETQR
-                || payment.getPaymentStatus() != PaymentStatus.PENDING) {
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException(
-                    "Booking không có giao dịch VietQR đang chờ"
+                    "Chỉ có thể xác nhận thanh toán khi booking còn ở trạng thái PENDING. Booking hiện tại: "
+                            + booking.getStatus()
+            );
+        }
+        if (payment == null) {
+            throw new IllegalStateException("Booking chưa có payment");
+        }
+        if (payment.getPaymentMethod() != PaymentMethod.VIETQR) {
+            throw new IllegalStateException(
+                    "Chỉ có thể xác nhận giao dịch VietQR. Phương thức hiện tại: "
+                            + payment.getPaymentMethod()
+            );
+        }
+        if (payment.getPaymentStatus() != PaymentStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Booking không có giao dịch VietQR đang chờ. Trạng thái payment hiện tại: "
+                            + payment.getPaymentStatus()
             );
         }
 

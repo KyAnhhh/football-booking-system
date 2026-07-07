@@ -46,6 +46,7 @@ import vn.phankyanh.shopbongda.notification.service.NotificationService;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
+import vn.phankyanh.shopbongda.payment.service.RefundService;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
 import vn.phankyanh.shopbongda.payment.service.PendingPaymentExpirationPolicy;
 import vn.phankyanh.shopbongda.shared.service.email.EmailService;
@@ -68,6 +69,7 @@ public class BookingServiceImpl implements BookingService {
     private final MaintenanceService maintenanceService;
     private final PricingService pricingService;
     private final MembershipService membershipService;
+    private final RefundService refundService;
     private final VoucherService voucherService;
     private final ExtraServiceRepository extraServiceRepository;
     private final BookingExtraServiceRepository bookingExtraServiceRepository;
@@ -824,14 +826,19 @@ public class BookingServiceImpl implements BookingService {
                         booking.getPayment();
 
                 if (payment != null
-                        && (payment.getPaymentStatus() == PaymentStatus.UNPAID
-                        || payment.getPaymentStatus()
-                        == PaymentStatus.PENDING)) {
+                        && payment.getPaymentStatus() == PaymentStatus.UNPAID) {
                         payment.setPaymentStatus(PaymentStatus.FAILED);
                         payment.setPaymentDate(LocalDateTime.now());
                 } else if (payment != null
-                        && payment.getPaymentStatus() == PaymentStatus.PAID) {
-                        payment.setPaymentStatus(PaymentStatus.REFUNDED);
+                        && (payment.getPaymentStatus() == PaymentStatus.PAID
+                        || payment.getPaymentStatus() == PaymentStatus.PENDING)) {
+                        refundService.createForCancellation(
+                                payment,
+                                booking.getUser(),
+                                null,
+                                booking.getId(),
+                                "Booking " + targetStatus.name().toLowerCase()
+                        );
                         payment.setPaymentDate(LocalDateTime.now());
                 }
 

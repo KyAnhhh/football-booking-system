@@ -78,6 +78,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/admin/holiday-pricing-rules/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/admin/holidays/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/admin/vouchers/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/admin/refunds/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/admin/products/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/admin/product-images/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/admin/product-variants/**").hasAnyRole("ADMIN", "MANAGER")

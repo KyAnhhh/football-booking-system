@@ -6,6 +6,10 @@ import {
   confirmReceived,
   getOrderById,
 } from "../../services/orderService";
+import {
+  getMyRefunds,
+  submitRefundBankAccount,
+} from "../../services/refundService";
 import { checkCanReview } from "../../services/reviewService";
 import Swal from "sweetalert2";
 import { CheckCircle2, CreditCard, Package, RotateCcw, Star } from "lucide-react";
@@ -25,7 +29,16 @@ const statusConfig = {
   CANCELLED: { label: "Đã hủy", className: "cancelled" },
 };
 
-export default function OrderCard({ order }) {
+const refundStatusText = {
+  PAYMENT_REVIEW: "Admin đang kiểm tra giao dịch đã chuyển",
+  AWAITING_INFORMATION: "Cần cung cấp tài khoản nhận hoàn tiền",
+  PENDING: "Đang chờ admin hoàn tiền",
+  PROCESSING: "Admin đang xử lý hoàn tiền",
+  COMPLETED: "Đã hoàn tiền",
+  FAILED: "Thông tin hoàn tiền cần bổ sung",
+};
+
+export default function OrderCard({ order, refund: initialRefund }) {
   const navigate = useNavigate();
   const items = useMemo(
     () => order.orderItems || order.items || [],
@@ -33,11 +46,18 @@ export default function OrderCard({ order }) {
   );
 
   const [status, setStatus] = useState(order.orderStatus);
+  const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus);
+  const [refund, setRefund] = useState(initialRefund);
   const [reviewedItems, setReviewedItems] = useState({});
 
   useEffect(() => {
     setStatus(order.orderStatus);
-  }, [order.orderStatus]);
+    setPaymentStatus(order.paymentStatus);
+  }, [order.orderStatus, order.paymentStatus]);
+
+  useEffect(() => {
+    setRefund(initialRefund);
+  }, [initialRefund]);
 
   useEffect(() => {
     if (status !== "COMPLETED") return;
@@ -118,13 +138,61 @@ export default function OrderCard({ order }) {
     try {
       await cancelOrder(order.id);
       setStatus("CANCELLED");
-      Swal.fire("Đã hủy", "Đơn hàng đã được hủy.", "success");
+      if (["PAID", "PENDING"].includes(paymentStatus)) {
+        setPaymentStatus(paymentStatus === "PAID" ? "REFUND_PENDING" : "PENDING");
+        const latestRefunds = await getMyRefunds().catch(() => []);
+        setRefund(latestRefunds.find((item) => item.orderId === order.id));
+      }
+      Swal.fire(
+        "Đã hủy",
+        "Đơn hàng đã được hủy. Nếu đã chuyển khoản, yêu cầu hoàn tiền sẽ được tạo.",
+        "success"
+      );
     } catch (error) {
       Swal.fire(
         "Không thể hủy",
         error.message || "Đơn hàng không còn ở trạng thái cho phép hủy.",
         "error"
       );
+    }
+  };
+
+  const handleSubmitRefundInfo = async () => {
+    if (!refund?.id) return;
+
+    const result = await Swal.fire({
+      title: "Tài khoản nhận hoàn tiền",
+      html: `
+        <input id="refund-bank-code" class="swal2-input" placeholder="Ngân hàng, ví dụ: Vietcombank">
+        <input id="refund-bank-number" class="swal2-input" placeholder="Số tài khoản">
+        <input id="refund-bank-name" class="swal2-input" placeholder="Tên chủ tài khoản">
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Gửi thông tin",
+      cancelButtonText: "Để sau",
+      preConfirm: () => {
+        const bankCode = document.getElementById("refund-bank-code")?.value?.trim();
+        const bankAccountNumber = document.getElementById("refund-bank-number")?.value?.trim();
+        const bankAccountName = document.getElementById("refund-bank-name")?.value?.trim();
+
+        if (!bankCode || !bankAccountNumber || !bankAccountName) {
+          Swal.showValidationMessage("Vui lòng nhập đủ ngân hàng, số tài khoản và tên chủ tài khoản");
+          return false;
+        }
+
+        return { bankCode, bankAccountNumber, bankAccountName };
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const updatedRefund = await submitRefundBankAccount(refund.id, result.value);
+      setRefund(updatedRefund);
+      Swal.fire("Đã gửi", "Thông tin tài khoản hoàn tiền đã được ghi nhận.", "success");
+    } catch (error) {
+      Swal.fire("Lỗi", error.message || "Không thể gửi thông tin hoàn tiền.", "error");
     }
   };
 
@@ -152,8 +220,28 @@ export default function OrderCard({ order }) {
         <div>
           <span>Thanh toán</span>
           <strong>{order.paymentMethod || "N/A"}</strong>
+          {paymentStatus && <small className="order-payment-status">{paymentStatus}</small>}
         </div>
       </div>
+
+      {status === "CANCELLED" && (refund || ["REFUND_PENDING", "REFUNDED"].includes(paymentStatus)) && (
+        <div className="order-refund-box">
+          <div>
+            <span>Hoàn tiền</span>
+            <strong>{refundStatusText[refund?.status] || paymentStatus || "Đang cập nhật"}</strong>
+            {refund?.bankAccountNumber && (
+              <small>
+                {refund.bankCode} · {refund.bankAccountNumber} · {refund.bankAccountName}
+              </small>
+            )}
+          </div>
+          {["AWAITING_INFORMATION", "FAILED"].includes(refund?.status) && (
+            <button type="button" onClick={handleSubmitRefundInfo}>
+              Nhập tài khoản
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="order-card-items">
         {items.map((item) => (
@@ -220,7 +308,7 @@ export default function OrderCard({ order }) {
         {status === "PENDING" && (
           <div className="order-card-footer-actions">
             {order.paymentMethod === "VIETQR"
-              && order.paymentStatus === "UNPAID" && (
+              && paymentStatus === "UNPAID" && (
               <button
                 type="button"
                 className="order-payment-btn"

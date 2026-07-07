@@ -40,6 +40,7 @@ import vn.phankyanh.shopbongda.order.service.OrderPriceCalculator;
 import vn.phankyanh.shopbongda.payment.domain.Payment;
 import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
 import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
+import vn.phankyanh.shopbongda.payment.service.RefundService;
 import vn.phankyanh.shopbongda.payment.domain.PaymentType;
 import vn.phankyanh.shopbongda.payment.service.PendingPaymentExpirationPolicy;
 import vn.phankyanh.shopbongda.product.domain.ProductVariant;
@@ -68,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
     private final EmailService emailService;
     private final InventoryService inventoryService;
     private final NotificationService notificationService;
+    private final RefundService refundService;
 
     @Override
     public Page<OrderResponse> getAllOrders(
@@ -326,7 +328,7 @@ public class OrderServiceImpl implements OrderService {
         returnStockForOrder(order, null);
         order.setOrderStatus(OrderStatus.CANCELLED);
         Payment payment = order.getPayment();
-        updatePaymentForCancellation(payment);
+        updatePaymentForCancellation(order, "Order cancelled");
     }
 
     @Override
@@ -526,7 +528,7 @@ public class OrderServiceImpl implements OrderService {
 
             Payment payment = order.getPayment();
 
-            updatePaymentForCancellation(payment);
+            updatePaymentForCancellation(order, "Order cancelled by status update");
 
             shouldSendEmail = true;
         }
@@ -571,7 +573,7 @@ public class OrderServiceImpl implements OrderService {
         returnStockForOrder(order, userId);
 
         Payment payment = order.getPayment();
-        updatePaymentForCancellation(payment);
+        updatePaymentForCancellation(order, "Customer cancelled order");
 
         orderRepository.save(order);
         notificationService.notifyUserOrderStatusChanged(order, previousStatus);
@@ -602,7 +604,7 @@ public class OrderServiceImpl implements OrderService {
             OrderStatus previousStatus = order.getOrderStatus();
             returnStockForOrder(order, null);
             order.setOrderStatus(OrderStatus.CANCELLED);
-            updatePaymentForCancellation(payment);
+            updatePaymentForCancellation(order, "VietQR order expired");
             notificationService.notifyUserOrderStatusChanged(
                     order,
                     previousStatus
@@ -824,14 +826,17 @@ public class OrderServiceImpl implements OrderService {
         return value == null ? 0 : value;
     }
 
-    private void updatePaymentForCancellation(Payment payment) {
+    private void updatePaymentForCancellation(Order order, String reason) {
+        Payment payment = order.getPayment();
         if (payment == null) {
             return;
         }
-        if (payment.getPaymentStatus() == PaymentStatus.PAID) {
-            payment.setPaymentStatus(PaymentStatus.REFUNDED);
-        } else if (payment.getPaymentStatus() == PaymentStatus.UNPAID
+        if (payment.getPaymentStatus() == PaymentStatus.PAID
                 || payment.getPaymentStatus() == PaymentStatus.PENDING) {
+            refundService.createForCancellation(
+                    payment, order.getUser(), order.getId(), null, reason
+            );
+        } else if (payment.getPaymentStatus() == PaymentStatus.UNPAID) {
             payment.setPaymentStatus(PaymentStatus.FAILED);
         }
         payment.setPaymentDate(LocalDateTime.now());
