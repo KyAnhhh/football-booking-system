@@ -16,14 +16,18 @@ public final class MonthlyRevenueAggregator {
 
     public static List<RevenueChartResponse> aggregate(
             List<Object[]> bookingRevenue,
+            List<Object[]> extraServiceRevenue,
             List<Object[]> orderRevenue
     ) {
         Map<YearMonth, BigDecimal> bookingTotals =
                 toMonthlyTotals(bookingRevenue);
+        Map<YearMonth, BigDecimal> extraServiceTotals =
+                toMonthlyTotals(extraServiceRevenue);
         Map<YearMonth, BigDecimal> orderTotals =
                 toMonthlyTotals(orderRevenue);
         TreeMap<YearMonth, Boolean> periods = new TreeMap<>();
         bookingTotals.keySet().forEach(period -> periods.put(period, true));
+        extraServiceTotals.keySet().forEach(period -> periods.put(period, true));
         orderTotals.keySet().forEach(period -> periods.put(period, true));
 
         if (periods.isEmpty()) {
@@ -45,14 +49,19 @@ public final class MonthlyRevenueAggregator {
                     cursor,
                     BigDecimal.ZERO
             );
+            BigDecimal extraService = extraServiceTotals.getOrDefault(
+                    cursor,
+                    BigDecimal.ZERO
+            );
             result.add(new RevenueChartResponse(
                     "%02d/%d".formatted(
                             cursor.getMonthValue(),
                             cursor.getYear()
                     ),
                     booking,
+                    extraService,
                     order,
-                    booking.add(order)
+                    booking.add(extraService).add(order)
             ));
             cursor = cursor.plusMonths(1);
         }

@@ -24,6 +24,24 @@ public interface BookingExtraServiceRepository
     BigDecimal sumRecognizedRevenue(List<BookingStatus> statuses);
 
     @Query("""
+            select coalesce(sum(bes.quantity), 0)
+            from BookingExtraService bes
+            where bes.booking.status in :statuses
+            """)
+    Long sumSoldQuantity(List<BookingStatus> statuses);
+
+    @Query("""
+            select year(bes.booking.createdAt),
+                   month(bes.booking.createdAt),
+                   coalesce(sum(bes.totalPrice), 0)
+            from BookingExtraService bes
+            where bes.booking.status = 'COMPLETED'
+            group by year(bes.booking.createdAt), month(bes.booking.createdAt)
+            order by year(bes.booking.createdAt), month(bes.booking.createdAt)
+            """)
+    List<Object[]> getMonthlyRevenue();
+
+    @Query("""
             select coalesce(sum(bes.totalCost), 0)
             from BookingExtraService bes
             where bes.booking.status in :statuses

@@ -12,6 +12,7 @@ import lombok.Setter;
 public class RevenueChartResponse  {
     private String month;
     private BigDecimal bookingRevenue;
+    private BigDecimal extraServiceRevenue;
     private BigDecimal orderRevenue;
     private BigDecimal revenue;
 }

@@ -15,13 +15,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdminOverviewResponse {
     private BigDecimal totalRevenue;
+    private BigDecimal bookingRevenue;
+    private BigDecimal extraServiceRevenue;
+    private BigDecimal orderRevenue;
     private BigDecimal todayBookingRevenue;
     private Long todayBookings;
     private Long activeMaintenances;
     private Long newOrders;
+    private Long pendingVietQrPayments;
+    private Long lowStockItems;
     private List<BookingItem> todayBookingItems;
     private List<MaintenanceItem> activeMaintenanceItems;
     private List<OrderItem> newOrderItems;
+    private List<PaymentItem> pendingPaymentItems;
+    private List<LowStockItem> lowStockItemList;
 
     @Data
     @Builder
@@ -62,5 +69,34 @@ public class AdminOverviewResponse {
         private String orderStatus;
         private String paymentMethod;
         private LocalDateTime orderDate;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PaymentItem {
+        private Long id;
+        private String targetType;
+        private Long targetId;
+        private String customerName;
+        private BigDecimal totalAmount;
+        private String paymentMethod;
+        private String paymentStatus;
+        private LocalDateTime updatedAt;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LowStockItem {
+        private Long id;
+        private String itemCode;
+        private String name;
+        private String itemType;
+        private Integer availableQuantity;
+        private Integer lowStockThreshold;
+        private String unit;
     }
 }

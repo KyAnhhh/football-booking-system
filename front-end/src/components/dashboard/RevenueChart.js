@@ -47,6 +47,11 @@ function RevenueTooltip({ active, payload, label }) {
         <strong>{formatMoney(row.bookingRevenue)}</strong>
       </div>
       <div>
+        <i className="extra" />
+        <p>Dịch vụ thêm</p>
+        <strong>{formatMoney(row.extraServiceRevenue)}</strong>
+      </div>
+      <div>
         <i className="shop" />
         <p>Sản phẩm</p>
         <strong>{formatMoney(row.orderRevenue)}</strong>
@@ -87,7 +92,7 @@ export default function RevenueChart({ data = [] }) {
         <div>
           <span className="revenue-chart-eyebrow">Nhịp kinh doanh</span>
           <h2>Doanh thu theo tháng</h2>
-          <p>So sánh nguồn thu từ sân bóng và cửa hàng.</p>
+          <p>So sánh nguồn thu từ sân, dịch vụ thêm và cửa hàng.</p>
         </div>
 
         <label className="revenue-period">
@@ -159,6 +164,14 @@ export default function RevenueChart({ data = [] }) {
                 stackId="revenue"
                 fill="#16a36a"
                 radius={[0, 0, 5, 5]}
+                maxBarSize={42}
+              />
+              <Bar
+                dataKey="extraServiceRevenue"
+                name="Dịch vụ thêm"
+                stackId="revenue"
+                fill="#7c3aed"
+                radius={[0, 0, 0, 0]}
                 maxBarSize={42}
               />
               <Bar

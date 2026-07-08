@@ -1,0 +1,316 @@
+erDiagram
+  %% Overall ERD for Football Booking System.
+
+  MEMBERSHIP_TIER ||--o{ USER : classifies
+  USER ||--o{ SHIPPING_ADDRESS : has
+  USER ||--o{ ORDERS : places
+  USER ||--o{ BOOKING : creates
+  USER ||--o{ BOOKING_REVIEW : writes
+  USER ||--o{ REVIEW : writes
+  USER ||--o{ VOUCHER_USAGE : uses
+  USER ||--o{ INVENTORY_TRANSACTION : creates
+  USER ||--o{ INVENTORY_RESERVATION : creates
+
+  CATEGORY ||--o{ PRODUCT : groups
+  BRAND ||--o{ PRODUCT : owns
+  PRODUCT ||--o{ PRODUCT_VARIANT : has
+  PRODUCT ||--o{ PRODUCT_IMAGE : has
+  PRODUCT ||--o{ REVIEW : receives
+  SIZE ||--o{ PRODUCT_VARIANT : sizes
+
+  USER ||--|| CART : owns
+  CART ||--o{ CART_ITEM : contains
+  PRODUCT_VARIANT ||--o{ CART_ITEM : selected
+
+  SHIPPING_ADDRESS ||--o{ ORDERS : ships_to
+  ORDERS ||--o{ ORDER_ITEM : contains
+  ORDERS ||--o| PAYMENT : paid_by
+  PRODUCT_VARIANT ||--o{ ORDER_ITEM : sold_as
+  ORDER_ITEM ||--o{ REVIEW : verifies
+
+  FOOTBALL_FIELD ||--o{ BOOKING : booked_for
+  FOOTBALL_FIELD ||--o{ FOOTBALL_FIELD_IMAGE : has
+  FOOTBALL_FIELD ||--o{ MAINTENANCE : blocks
+  FOOTBALL_FIELD ||--o{ FIELD_PRICING_RULE : priced_by
+  FOOTBALL_FIELD ||--o{ HOLIDAY_PRICING_RULE : holiday_priced
+  HOLIDAY ||--o{ HOLIDAY_PRICING_RULE : applies
+
+  BOOKING ||--o| PAYMENT : paid_by
+  BOOKING ||--o{ BOOKING_EXTRA_SERVICE : includes
+  BOOKING ||--o| BOOKING_REVIEW : reviewed
+  BOOKING ||--o{ BOOKING_STATUS_HISTORY : tracks
+  EXTRA_SERVICE ||--o{ BOOKING_EXTRA_SERVICE : selected
+
+  VOUCHER ||--o{ VOUCHER_USAGE : used_as
+  BOOKING ||--o{ VOUCHER_USAGE : applies
+
+  PAYMENT ||--o{ REFUND_REQUEST : refund_source
+  USER ||--o{ REFUND_REQUEST : requests
+
+  PRODUCT_VARIANT ||..o| INVENTORY_ITEM : linked_item
+  EXTRA_SERVICE ||..o| INVENTORY_ITEM : linked_item
+  INVENTORY_ITEM ||--|| INVENTORY_STOCK : has
+  INVENTORY_ITEM ||--o{ INVENTORY_TRANSACTION : moves
+  INVENTORY_ITEM ||--o{ INVENTORY_RESERVATION : reserves
+  SUPPLIER ||--o{ STOCK_IMPORT : supplies
+  STOCK_IMPORT ||--o{ STOCK_IMPORT_ITEM : contains
+  INVENTORY_ITEM ||--o{ STOCK_IMPORT_ITEM : imported
+  ORDER_ITEM ||..o| INVENTORY_RESERVATION : reserves_by_id
+  BOOKING_EXTRA_SERVICE ||..o| INVENTORY_RESERVATION : reserves_by_id
+
+  USER {
+    BIGINT id PK
+    STRING username
+    STRING email
+    STRING phone
+    STRING role
+    STRING status
+    INT loyaltyPoints
+    BIGINT membershipTierId FK
+  }
+
+  MEMBERSHIP_TIER {
+    BIGINT id PK
+    STRING name
+    INT requiredPoints
+    INT discountPercent
+    BOOLEAN isActive
+  }
+
+  SHIPPING_ADDRESS {
+    BIGINT id PK
+    BIGINT userId FK
+    STRING fullName
+    STRING phone
+    STRING city
+    STRING address
+  }
+
+  FOOTBALL_FIELD {
+    BIGINT id PK
+    STRING name
+    STRING type
+    STRING imageUrl
+    DECIMAL pricePerHour
+    STRING status
+    STRING address
+  }
+
+  BOOKING {
+    BIGINT id PK
+    BIGINT userId FK
+    BIGINT fieldId FK
+    BIGINT paymentId FK
+    DATETIME startTime
+    DATETIME endTime
+    DECIMAL totalPrice
+    DECIMAL originalPrice
+    DECIMAL extraServicePrice
+    DECIMAL membershipDiscount
+    DECIMAL voucherDiscount
+    STRING voucherCode
+    STRING status
+  }
+
+  PAYMENT {
+    BIGINT id PK
+    STRING paymentType
+    STRING paymentStatus
+    DECIMAL totalAmount
+    STRING paymentMethod
+    STRING transactionCode
+    DATETIME paymentDate
+  }
+
+  EXTRA_SERVICE {
+    BIGINT id PK
+    STRING name
+    DECIMAL price
+    BOOLEAN isActive
+    STRING publicationStatus
+    BOOLEAN trackStock
+    INT stockQuantity
+    INT remainingQuantity
+    BIGINT inventoryItemId
+  }
+
+  BOOKING_EXTRA_SERVICE {
+    BIGINT id PK
+    BIGINT bookingId FK
+    BIGINT extraServiceId FK
+    INT quantity
+    DECIMAL unitPrice
+    DECIMAL totalPrice
+    BOOLEAN stockDeducted
+    BOOLEAN stockReserved
+    BIGINT inventoryReservationId
+  }
+
+  BOOKING_REVIEW {
+    BIGINT id PK
+    BIGINT bookingId FK
+    BIGINT userId FK
+    INT rating
+    STRING comment
+    DATETIME createdAt
+  }
+
+  ORDERS {
+    BIGINT id PK
+    BIGINT userId FK
+    BIGINT paymentId FK
+    BIGINT shippingAddressId FK
+    DECIMAL totalAmount
+    STRING orderStatus
+    STRING paymentMethod
+    DECIMAL shippingCost
+    DATETIME orderDate
+  }
+
+  ORDER_ITEM {
+    BIGINT id PK
+    BIGINT orderId FK
+    BIGINT productVariantId FK
+    INT quantity
+    DECIMAL unitPrice
+    DECIMAL finalPrice
+    DECIMAL total
+    BOOLEAN stockDeducted
+    BOOLEAN stockReserved
+    BIGINT inventoryReservationId
+  }
+
+  PRODUCT {
+    BIGINT id PK
+    BIGINT categoryId FK
+    BIGINT brandId FK
+    STRING name
+    STRING description
+    INT discount
+    STRING publicationStatus
+  }
+
+  PRODUCT_VARIANT {
+    BIGINT id PK
+    BIGINT productId FK
+    BIGINT sizeId FK
+    DECIMAL price
+    INT stock
+    INT soldQuantity
+    BIGINT inventoryItemId
+  }
+
+  CATEGORY {
+    BIGINT id PK
+    STRING name
+  }
+
+  BRAND {
+    BIGINT id PK
+    STRING name
+  }
+
+  SIZE {
+    BIGINT id PK
+    STRING name
+  }
+
+  INVENTORY_ITEM {
+    BIGINT id PK
+    STRING itemCode
+    STRING name
+    STRING itemType
+    STRING inventoryBehavior
+    BIGINT referenceId
+    STRING unit
+    BOOLEAN active
+    INT lowStockThreshold
+  }
+
+  INVENTORY_STOCK {
+    BIGINT id PK
+    BIGINT inventoryItemId FK
+    INT quantityOnHand
+    INT reservedQuantity
+    INT availableQuantity
+    DECIMAL averageUnitCost
+    DECIMAL inventoryValue
+  }
+
+  INVENTORY_RESERVATION {
+    BIGINT id PK
+    BIGINT inventoryItemId FK
+    STRING referenceType
+    BIGINT referenceId
+    BIGINT referenceLineId
+    INT quantity
+    STRING status
+  }
+
+  INVENTORY_TRANSACTION {
+    BIGINT id PK
+    BIGINT inventoryItemId FK
+    STRING transactionType
+    INT quantity
+    INT beforeQuantity
+    INT afterQuantity
+    STRING referenceType
+    BIGINT referenceId
+  }
+
+  VOUCHER {
+    BIGINT id PK
+    STRING code
+    STRING description
+    STRING discountType
+    DECIMAL discountValue
+    INT quantity
+    BOOLEAN isActive
+    DATETIME startDate
+    DATETIME endDate
+  }
+
+  VOUCHER_USAGE {
+    BIGINT id PK
+    BIGINT voucherId FK
+    BIGINT userId FK
+    BIGINT bookingId FK
+    STRING voucherCode
+    DECIMAL discountAmount
+    BOOLEAN isRefunded
+  }
+
+  MAINTENANCE {
+    BIGINT id PK
+    BIGINT fieldId FK
+    DATETIME startTime
+    DATETIME endTime
+    STRING reason
+    STRING description
+  }
+
+  FIELD_PRICING_RULE {
+    BIGINT id PK
+    BIGINT fieldId FK
+    STRING dayOfWeek
+    TIME startTime
+    TIME endTime
+    DECIMAL pricePerSlot
+    INT slotDuration
+    BOOLEAN isActive
+  }
+
+  HOLIDAY {
+    BIGINT id PK
+    STRING name
+    DATE holidayDate
+  }
+
+  HOLIDAY_PRICING_RULE {
+    BIGINT id PK
+    BIGINT fieldId FK
+    BIGINT holidayId FK
+    TIME startTime
+    TIME endTime
+    DECIMAL pricePerSlot
+  }

@@ -20,13 +20,19 @@ import vn.phankyanh.shopbongda.dashboard.dto.response.DashboardSummaryResponse;
 import vn.phankyanh.shopbongda.dashboard.dto.response.RevenueChartResponse;
 import vn.phankyanh.shopbongda.dashboard.service.DashboardService;
 import vn.phankyanh.shopbongda.dashboard.service.MonthlyRevenueAggregator;
+import vn.phankyanh.shopbongda.extra.repository.BookingExtraServiceRepository;
 import vn.phankyanh.shopbongda.field.domain.FootballField;
 import vn.phankyanh.shopbongda.field.repository.FootballFieldRepository;
+import vn.phankyanh.shopbongda.inventory.repository.InventoryStockRepository;
 import vn.phankyanh.shopbongda.maintenance.domain.Maintenance;
 import vn.phankyanh.shopbongda.maintenance.repository.MaintenanceRepository;
 import vn.phankyanh.shopbongda.order.domain.OrderStatus;
 import vn.phankyanh.shopbongda.order.repository.OrderItemRepository;
 import vn.phankyanh.shopbongda.order.repository.OrderRepository;
+import vn.phankyanh.shopbongda.payment.domain.PaymentMethod;
+import vn.phankyanh.shopbongda.payment.domain.PaymentStatus;
+import vn.phankyanh.shopbongda.payment.domain.PaymentType;
+import vn.phankyanh.shopbongda.payment.repository.PaymentRepository;
 import vn.phankyanh.shopbongda.product.repository.ProductRepository;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
 
@@ -48,16 +54,26 @@ public class DashboardServiceImpl implements DashboardService  {
 
     private final FootballFieldRepository footballFieldRepository;
 
+    private final PaymentRepository paymentRepository;
+
+    private final InventoryStockRepository inventoryStockRepository;
+
+    private final BookingExtraServiceRepository bookingExtraServiceRepository;
+
     @Override
     @Transactional(readOnly = true)
     public DashboardSummaryResponse getDashboardSummary() {
 
-        BigDecimal revenue =
-                orderItemRepository.getTotalRevenue();
-
-        if (revenue == null) {
-            revenue = BigDecimal.ZERO;
-        }
+        BigDecimal orderRevenue = nullToZero(orderRepository.sumRevenue());
+        BigDecimal bookingRevenue = nullToZero(bookingRepository.sumCompletedFieldRevenue());
+        BigDecimal extraServiceRevenue = nullToZero(
+                bookingExtraServiceRepository.sumRecognizedRevenue(
+                        List.of(BookingStatus.COMPLETED)
+                )
+        );
+        BigDecimal revenue = bookingRevenue
+                .add(extraServiceRevenue)
+                .add(orderRevenue);
 
         Long sold =
                 orderItemRepository.sumProductsSold();
@@ -66,13 +82,24 @@ public class DashboardServiceImpl implements DashboardService  {
             sold = 0L;
         }
 
+        Long extraSold = bookingExtraServiceRepository.sumSoldQuantity(
+                List.of(BookingStatus.COMPLETED)
+        );
+        if (extraSold == null) {
+            extraSold = 0L;
+        }
+
         return DashboardSummaryResponse.builder()
                 .totalUsers(userRepository.count())
                 .totalOrders(orderRepository.count())
                 .totalProducts(productRepository.count())
                 .totalBooking(bookingRepository.count())
                 .totalRevenue(revenue)
+                .bookingRevenue(bookingRevenue)
+                .extraServiceRevenue(extraServiceRevenue)
+                .orderRevenue(orderRevenue)
                 .totalProductsSold(sold)
+                .totalExtraServicesSold(extraSold)
                 .build();
     }
 
@@ -82,6 +109,7 @@ public class DashboardServiceImpl implements DashboardService  {
 
         return MonthlyRevenueAggregator.aggregate(
                 bookingRepository.getMonthlyRevenue(),
+                bookingExtraServiceRepository.getMonthlyRevenue(),
                 orderRepository.getMonthlyRevenue()
         );
     }
@@ -98,10 +126,16 @@ public class DashboardServiceImpl implements DashboardService  {
         LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
         LocalDateTime now = LocalDateTime.now();
 
-        BigDecimal totalRevenue = orderRepository.sumRevenue();
-        if (totalRevenue == null) {
-            totalRevenue = BigDecimal.ZERO;
-        }
+        BigDecimal orderRevenue = nullToZero(orderRepository.sumRevenue());
+        BigDecimal bookingRevenue = nullToZero(bookingRepository.sumCompletedFieldRevenue());
+        BigDecimal extraServiceRevenue = nullToZero(
+                bookingExtraServiceRepository.sumRecognizedRevenue(
+                        List.of(BookingStatus.COMPLETED)
+                )
+        );
+        BigDecimal totalRevenue = bookingRevenue
+                .add(extraServiceRevenue)
+                .add(orderRevenue);
 
         BigDecimal todayBookingRevenue =
                 bookingRepository.sumTodayBookingRevenue(
@@ -192,8 +226,71 @@ public class DashboardServiceImpl implements DashboardService  {
                         )
                         .toList();
 
+        List<AdminOverviewResponse.PaymentItem> pendingPaymentItems =
+                paymentRepository.findDashboardPayments(
+                                PaymentStatus.PENDING,
+                                PaymentMethod.VIETQR,
+                                PageRequest.of(0, 6)
+                        )
+                        .stream()
+                        .map(payment -> {
+                            Long targetId = null;
+                            String customerName = "Khách hàng";
+
+                            if (payment.getPaymentType() == PaymentType.ORDER
+                                    && payment.getOrder() != null) {
+                                targetId = payment.getOrder().getId();
+                                if (payment.getOrder().getShippingAddress() != null) {
+                                    customerName = payment.getOrder()
+                                            .getShippingAddress()
+                                            .getFullName();
+                                }
+                            } else if (payment.getPaymentType() == PaymentType.BOOKING) {
+                                var booking = bookingRepository
+                                        .findByPaymentId(payment.getId());
+                                if (booking.isPresent()) {
+                                    targetId = booking.get().getId();
+                                    if (booking.get().getUser() != null) {
+                                        customerName = booking.get().getUser().getUsername();
+                                    }
+                                }
+                            }
+
+                            return AdminOverviewResponse.PaymentItem
+                                    .builder()
+                                    .id(payment.getId())
+                                    .targetType(payment.getPaymentType().name())
+                                    .targetId(targetId)
+                                    .customerName(customerName)
+                                    .totalAmount(payment.getTotalAmount())
+                                    .paymentMethod(payment.getPaymentMethod().name())
+                                    .paymentStatus(payment.getPaymentStatus().name())
+                                    .updatedAt(payment.getUpdatedAt())
+                                    .build();
+                        })
+                        .toList();
+
+        List<AdminOverviewResponse.LowStockItem> lowStockItems =
+                inventoryStockRepository.findDashboardLowStocks(PageRequest.of(0, 6))
+                        .stream()
+                        .map(stock -> AdminOverviewResponse.LowStockItem
+                                .builder()
+                                .id(stock.getInventoryItem().getId())
+                                .itemCode(stock.getInventoryItem().getItemCode())
+                                .name(stock.getInventoryItem().getName())
+                                .itemType(stock.getInventoryItem().getItemType().name())
+                                .availableQuantity(stock.getAvailableQuantity())
+                                .lowStockThreshold(stock.getInventoryItem().getLowStockThreshold())
+                                .unit(stock.getInventoryItem().getUnit())
+                                .build()
+                        )
+                        .toList();
+
         return AdminOverviewResponse.builder()
                 .totalRevenue(totalRevenue)
+                .bookingRevenue(bookingRevenue)
+                .extraServiceRevenue(extraServiceRevenue)
+                .orderRevenue(orderRevenue)
                 .todayBookingRevenue(todayBookingRevenue)
                 .todayBookings(
                         bookingRepository
@@ -204,9 +301,22 @@ public class DashboardServiceImpl implements DashboardService  {
                 )
                 .activeMaintenances((long) activeMaintenances.size())
                 .newOrders(orderRepository.countByOrderStatus(OrderStatus.PENDING))
+                .pendingVietQrPayments(
+                        paymentRepository.countByPaymentStatusAndPaymentMethod(
+                                PaymentStatus.PENDING,
+                                PaymentMethod.VIETQR
+                        )
+                )
+                .lowStockItems(inventoryStockRepository.countLowStocks())
                 .todayBookingItems(bookingItems)
                 .activeMaintenanceItems(maintenanceItems)
                 .newOrderItems(orderItems)
+                .pendingPaymentItems(pendingPaymentItems)
+                .lowStockItemList(lowStockItems)
                 .build();
+    }
+
+    private BigDecimal nullToZero(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

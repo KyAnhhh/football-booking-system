@@ -41,6 +41,25 @@ public interface InventoryStockRepository extends JpaRepository<InventoryStock, 
             Pageable pageable
     );
 
+    @Query("""
+            select s
+            from InventoryStock s
+            join fetch s.inventoryItem i
+            where i.lowStockThreshold > 0
+            and s.availableQuantity <= i.lowStockThreshold
+            order by s.availableQuantity asc, i.name asc
+            """)
+    java.util.List<InventoryStock> findDashboardLowStocks(Pageable pageable);
+
+    @Query("""
+            select count(s)
+            from InventoryStock s
+            join s.inventoryItem i
+            where i.lowStockThreshold > 0
+            and s.availableQuantity <= i.lowStockThreshold
+            """)
+    long countLowStocks();
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from InventoryStock s where s.inventoryItem.id = :inventoryItemId")
     Optional<InventoryStock> findByInventoryItemIdForUpdate(

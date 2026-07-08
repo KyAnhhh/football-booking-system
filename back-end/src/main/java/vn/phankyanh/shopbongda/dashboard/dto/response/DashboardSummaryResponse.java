@@ -17,5 +17,9 @@ public class DashboardSummaryResponse {
     private Long totalOrders;
     private Long totalBooking;
     private BigDecimal totalRevenue;
+    private BigDecimal bookingRevenue;
+    private BigDecimal extraServiceRevenue;
+    private BigDecimal orderRevenue;
     private Long totalProductsSold;
+    private Long totalExtraServicesSold;
 }

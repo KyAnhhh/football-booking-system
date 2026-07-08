@@ -1,0 +1,200 @@
+classDiagram
+direction LR
+
+class User {
+  +Long id
+  +String username
+  +String email
+  +String phone
+  +Role role
+  +String status
+  +Integer loyaltyPoints
+}
+
+class MembershipTier {
+  +Long id
+  +String name
+  +Integer requiredPoints
+  +Integer discountPercent
+  +Boolean isActive
+}
+
+class FootballField {
+  +Long id
+  +String name
+  +FieldType type
+  +BigDecimal pricePerHour
+  +FieldStatus status
+}
+
+class Booking {
+  +Long id
+  +LocalDateTime startTime
+  +LocalDateTime endTime
+  +BigDecimal totalPrice
+  +BookingStatus status
+  +String voucherCode
+}
+
+class Payment {
+  +Long id
+  +PaymentType paymentType
+  +PaymentStatus paymentStatus
+  +BigDecimal totalAmount
+  +PaymentMethod paymentMethod
+  +String transactionCode
+}
+
+class ExtraService {
+  +Long id
+  +String name
+  +BigDecimal price
+  +Boolean trackStock
+  +Long inventoryItemId
+}
+
+class BookingExtraService {
+  +Long id
+  +Integer quantity
+  +BigDecimal unitPrice
+  +BigDecimal totalPrice
+}
+
+class BookingReview {
+  +Long id
+  +Integer rating
+  +String comment
+}
+
+class Order {
+  +Long id
+  +BigDecimal totalAmount
+  +OrderStatus orderStatus
+  +PaymentMethod paymentMethod
+}
+
+class OrderItem {
+  +Long id
+  +Integer quantity
+  +BigDecimal finalPrice
+  +BigDecimal total
+  +Long inventoryReservationId
+}
+
+class Product {
+  +Long id
+  +String name
+  +Integer discount
+  +PublicationStatus publicationStatus
+}
+
+class ProductVariant {
+  +Long id
+  +BigDecimal price
+  +Integer stock
+  +Integer soldQuantity
+  +Long inventoryItemId
+}
+
+class Category {
+  +Long id
+  +String name
+}
+
+class Brand {
+  +Long id
+  +String name
+}
+
+class Size {
+  +Long id
+  +String name
+}
+
+class InventoryItem {
+  +Long id
+  +String itemCode
+  +String name
+  +InventoryItemType itemType
+  +Integer lowStockThreshold
+}
+
+class InventoryStock {
+  +Long id
+  +Integer quantityOnHand
+  +Integer reservedQuantity
+  +Integer availableQuantity
+}
+
+class InventoryReservation {
+  +Long id
+  +InventoryReferenceType referenceType
+  +Long referenceId
+  +Integer quantity
+  +InventoryReservationStatus status
+}
+
+class InventoryTransaction {
+  +Long id
+  +InventoryTransactionType transactionType
+  +Integer quantity
+  +Long referenceId
+}
+
+class Voucher {
+  +Long id
+  +String code
+  +DiscountType discountType
+  +BigDecimal discountValue
+  +Integer quantity
+  +Boolean isActive
+}
+
+class FieldPricingRule {
+  +Long id
+  +DayOfWeek dayOfWeek
+  +LocalTime startTime
+  +LocalTime endTime
+  +BigDecimal pricePerSlot
+}
+
+class Maintenance {
+  +Long id
+  +Long fieldId
+  +String reason
+  +LocalDateTime startTime
+  +LocalDateTime endTime
+}
+
+User "1" --> "0..*" Booking : creates
+User "1" --> "0..*" Order : places
+User "0..*" --> "0..1" MembershipTier : belongs_to
+User "1" --> "0..*" BookingReview : writes
+
+FootballField "1" --> "0..*" Booking : booked_by
+FootballField "1" --> "0..*" FieldPricingRule : priced_by
+FootballField "1" --> "0..*" Maintenance : maintained_by
+
+Booking "1" --> "1" Payment : paid_by
+Booking "1" --> "0..1" BookingReview : reviewed_by
+Booking "1" --> "0..*" BookingExtraService : includes
+ExtraService "1" --> "0..*" BookingExtraService : selected_as
+
+Order "1" --> "1" Payment : paid_by
+Order "1" --> "1..*" OrderItem : contains
+OrderItem "0..*" --> "1" ProductVariant : uses
+
+Product "1" --> "1..*" ProductVariant : has
+Product "0..*" --> "1" Category : categorized_as
+Product "0..*" --> "0..1" Brand : branded_as
+ProductVariant "0..*" --> "1" Size : sized_as
+
+InventoryItem "1" --> "1" InventoryStock : tracks
+InventoryItem "1" --> "0..*" InventoryReservation : reserves
+InventoryItem "1" --> "0..*" InventoryTransaction : logs
+ProductVariant ..> InventoryItem : inventoryItemId
+ExtraService ..> InventoryItem : inventoryItemId
+BookingExtraService ..> InventoryReservation : inventoryReservationId
+OrderItem ..> InventoryReservation : inventoryReservationId
+
+Booking ..> Voucher : voucherCode

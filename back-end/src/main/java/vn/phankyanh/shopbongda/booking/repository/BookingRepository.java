@@ -57,6 +57,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     boolean existsByPaymentId(Long paymentId);
 
+    Optional<Booking> findByPaymentId(Long paymentId);
+
     long countByStartTimeGreaterThanEqualAndStartTimeLessThan(
             LocalDateTime startTime,
             LocalDateTime endTime
@@ -130,6 +132,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     );
 
     @Query("""
+    SELECT COALESCE(SUM(b.totalPrice - COALESCE(b.extraServicePrice, 0)), 0)
+    FROM Booking b
+    WHERE b.status = 'COMPLETED'
+    """)
+    java.math.BigDecimal sumCompletedFieldRevenue();
+
+    @Query("""
     SELECT b FROM Booking b
     JOIN FETCH b.user u
     JOIN FETCH b.field f
@@ -163,7 +172,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
     SELECT YEAR(b.createdAt),
            MONTH(b.createdAt),
-           SUM(b.totalPrice)
+           SUM(b.totalPrice - COALESCE(b.extraServicePrice, 0))
     FROM Booking b
     WHERE b.status = 'COMPLETED'
     GROUP BY YEAR(b.createdAt), MONTH(b.createdAt)

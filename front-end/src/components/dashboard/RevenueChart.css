@@ -2,6 +2,7 @@
   --revenue-ink: #12243a;
   --revenue-muted: #64748b;
   --revenue-field: #16a36a;
+  --revenue-extra: #7c3aed;
   --revenue-shop: #f59e42;
   --revenue-line: #173f5f;
   background:
@@ -164,6 +165,10 @@
 
 .revenue-tooltip i.field {
   background: var(--revenue-field);
+}
+
+.revenue-tooltip i.extra {
+  background: var(--revenue-extra);
 }
 
 .revenue-tooltip i.shop {

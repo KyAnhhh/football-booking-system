@@ -18,11 +18,15 @@ class MonthlyRevenueAggregatorTest {
         List<Object[]> orders = List.<Object[]>of(
                 new Object[] {2026, 7, new BigDecimal("300000")}
         );
+        List<Object[]> extras = List.<Object[]>of(
+                new Object[] {2026, 7, new BigDecimal("50000")}
+        );
 
-        var result = MonthlyRevenueAggregator.aggregate(bookings, orders);
+        var result = MonthlyRevenueAggregator.aggregate(bookings, extras, orders);
 
         assertEquals("07/2025", result.get(0).getMonth());
         assertEquals(new BigDecimal("100000"), result.get(0).getBookingRevenue());
+        assertEquals(BigDecimal.ZERO, result.get(0).getExtraServiceRevenue());
         assertEquals(BigDecimal.ZERO, result.get(0).getOrderRevenue());
         assertEquals(new BigDecimal("100000"), result.get(0).getRevenue());
         var july2026 = result.stream()
@@ -30,7 +34,8 @@ class MonthlyRevenueAggregatorTest {
                 .findFirst()
                 .orElseThrow();
         assertEquals(new BigDecimal("200000"), july2026.getBookingRevenue());
+        assertEquals(new BigDecimal("50000"), july2026.getExtraServiceRevenue());
         assertEquals(new BigDecimal("300000"), july2026.getOrderRevenue());
-        assertEquals(new BigDecimal("500000"), july2026.getRevenue());
+        assertEquals(new BigDecimal("550000"), july2026.getRevenue());
     }
 }
