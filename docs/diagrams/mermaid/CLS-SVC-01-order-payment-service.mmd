@@ -1,0 +1,91 @@
+classDiagram
+  direction TB
+  %% A4-friendly service class diagram: order, cart, payment confirmation.
+
+  class CartService {
+    <<interface>>
+    +getCartByUser(Long userId) CartResponse
+    +addItemToCart(Long userId, CartItemRequest request) CartResponse
+    +removeItemFromCart(Long userId, Long cartItemId) void
+  }
+
+  class OrderService {
+    <<interface>>
+    +checkout(Long userId, CheckoutRequest request) OrderResponse
+    +createOrder(OrderRequest request, Long userId) OrderResponse
+    +getMyOrders(Long userId) List~OrderResponse~
+    +getOrderById(Long id, Long userId) OrderResponse
+    +markPaymentSubmitted(Long orderId, Long userId) OrderResponse
+    +updateOrderStatus(Long orderId, OrderStatus newStatus) OrderResponse
+    +cancelOrder(Long orderId, Long userId) void
+    +confirmReceive(Long orderId, Long userId) void
+  }
+
+  class PaymentService {
+    <<interface>>
+    +getPaymentByOrderId(Long orderId) Payment
+    +confirmPayment(Long orderId) Payment
+    +confirmBookingPayment(Long bookingId) Payment
+  }
+
+  class InventoryService {
+    <<interface>>
+    +reserveStock(Long inventoryItemId, int quantity, ...) InventoryReservationResponse
+    +commitReservation(Long reservationId, ...) InventoryReservationResponse
+    +releaseReservation(Long reservationId, ...) InventoryReservationResponse
+    +deductForOrder(Long inventoryItemId, int quantity, ...) InventoryTransactionResponse
+    +returnForOrder(Long inventoryItemId, int quantity, ...) InventoryTransactionResponse
+  }
+
+  class RefundService {
+    <<interface>>
+    +createForCancellation(Payment payment, User user, Long orderId, Long bookingId, String reason) RefundRequest
+  }
+
+  class Order {
+    Long id
+    BigDecimal totalAmount
+    OrderStatus orderStatus
+    PaymentMethod paymentMethod
+  }
+
+  class OrderItem {
+    Long id
+    Integer quantity
+    BigDecimal finalPrice
+    Boolean stockReserved
+    Boolean stockDeducted
+  }
+
+  class Cart {
+    Long id
+    BigDecimal totalAmount
+  }
+
+  class CartItem {
+    Long id
+    Integer totalQuantity
+    BigDecimal priceAtAddedTime
+  }
+
+  class Payment {
+    Long id
+    PaymentStatus paymentStatus
+    PaymentMethod paymentMethod
+    BigDecimal totalAmount
+  }
+
+  CartService ..> Cart : manages
+  CartService ..> CartItem : manages
+  OrderService ..> Cart : reads
+  OrderService ..> Order : creates_updates
+  OrderService ..> OrderItem : contains
+  OrderService ..> Payment : creates_updates
+  OrderService ..> InventoryService : reserves_returns_stock
+  OrderService ..> RefundService : opens_refund
+  PaymentService ..> Payment : confirms
+  PaymentService ..> Order : marks_paid
+  InventoryService ..> OrderItem : stock_flow
+  Order "1" --> "*" OrderItem : contains
+  Cart "1" --> "*" CartItem : contains
+  Order "1" --> "0..1" Payment : has

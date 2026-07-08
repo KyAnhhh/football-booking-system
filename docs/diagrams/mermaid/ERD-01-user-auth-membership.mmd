@@ -1,0 +1,59 @@
+erDiagram
+  %% A4-friendly ERD: user, profile, membership, notification, password reset.
+
+  USER ||--o{ SHIPPING_ADDRESS : has
+  USER ||--o{ PASSWORD_RESET_TOKEN : requests
+  MEMBERSHIP_TIER ||--o{ USER : classifies
+  USER ||--o{ NOTIFICATION : receives
+
+  USER {
+    BIGINT id PK
+    STRING username
+    STRING email
+    STRING password
+    STRING phone
+    STRING role
+    STRING status
+    INT loyaltyPoints
+    DATETIME createdAt
+    DATETIME updatedAt
+  }
+
+  MEMBERSHIP_TIER {
+    BIGINT id PK
+    STRING name
+    INT requiredPoints
+    INT discountPercent
+    BOOLEAN isActive
+  }
+
+  SHIPPING_ADDRESS {
+    BIGINT id PK
+    STRING fullName
+    STRING phone
+    STRING address
+    STRING addressLine
+    STRING ward
+    STRING district
+    STRING city
+    DATETIME createdAt
+    DATETIME updatedAt
+  }
+
+  PASSWORD_RESET_TOKEN {
+    BIGINT id PK
+    STRING token
+    DATETIME expiryTime
+  }
+
+  NOTIFICATION {
+    BIGINT id PK
+    STRING type
+    STRING title
+    STRING message
+    STRING referenceType
+    BIGINT referenceId
+    BOOLEAN isRead
+    DATETIME createdAt
+    DATETIME readAt
+  }

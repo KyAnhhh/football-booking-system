@@ -1,0 +1,122 @@
+classDiagram
+  direction TB
+  %% A4-friendly service class diagram: refund lifecycle and inventory operation.
+
+  class RefundService {
+    <<interface>>
+    +createForCancellation(Payment payment, User user, Long orderId, Long bookingId, String reason) RefundRequest
+    +getMine(Long userId) List~RefundResponse~
+    +getAll(RefundStatus status, Pageable pageable) Page~RefundResponse~
+    +submitBankAccount(Long id, Long userId, RefundBankAccountRequest request) RefundResponse
+    +reviewPayment(Long id, Long actorId, ReviewRefundPaymentRequest request) RefundResponse
+    +startProcessing(Long id, Long actorId) RefundResponse
+    +complete(Long id, Long actorId, CompleteRefundRequest request) RefundResponse
+    +fail(Long id, Long actorId, FailRefundRequest request) RefundResponse
+  }
+
+  class InventoryService {
+    <<interface>>
+    +createItem(InventoryItemRequest request) InventoryItemResponse
+    +updateItem(Long id, InventoryItemRequest request) InventoryItemResponse
+    +createSupplier(SupplierRequest request) SupplierResponse
+    +importStock(StockImportRequest request, Long actorId) StockImportResponse
+    +postStockImport(Long id, Long actorId) StockImportResponse
+    +cancelStockImport(Long id) StockImportResponse
+    +adjustStock(StockAdjustmentRequest request, Long actorId) InventoryTransactionResponse
+    +reserveStock(Long inventoryItemId, int quantity, ...) InventoryReservationResponse
+    +commitReservation(Long reservationId, ...) InventoryReservationResponse
+    +releaseReservation(Long reservationId, ...) InventoryReservationResponse
+    +checkConsistency() InventoryConsistencyResponse
+    +getProfitSummary() InventoryProfitSummaryResponse
+  }
+
+  class ProductVariantInventorySyncService {
+    <<interface>>
+    +previewSync() ProductVariantSyncPreviewResponse
+    +syncAll() ProductVariantSyncResultResponse
+  }
+
+  class RefundRequest {
+    Long id
+    Long orderId
+    Long bookingId
+    BigDecimal amount
+    RefundStatus status
+    String bankAccountNumber
+    String refundTransactionCode
+  }
+
+  class Payment {
+    Long id
+    PaymentStatus paymentStatus
+    PaymentMethod paymentMethod
+    BigDecimal totalAmount
+  }
+
+  class InventoryItem {
+    Long id
+    String itemCode
+    String name
+    InventoryItemType itemType
+    InventoryBehavior inventoryBehavior
+  }
+
+  class InventoryStock {
+    Long id
+    Integer quantityOnHand
+    Integer reservedQuantity
+    Integer availableQuantity
+    BigDecimal averageUnitCost
+  }
+
+  class InventoryTransaction {
+    Long id
+    InventoryTransactionType transactionType
+    Integer quantity
+    InventoryReferenceType referenceType
+    Long referenceId
+  }
+
+  class InventoryReservation {
+    Long id
+    InventoryReferenceType referenceType
+    Long referenceId
+    Integer quantity
+    InventoryReservationStatus status
+  }
+
+  class Supplier {
+    Long id
+    String name
+    Boolean active
+  }
+
+  class StockImport {
+    Long id
+    String importCode
+    BigDecimal totalAmount
+    StockImportStatus status
+  }
+
+  class StockImportItem {
+    Long id
+    Integer quantity
+    BigDecimal unitCost
+    BigDecimal totalCost
+  }
+
+  RefundService ..> RefundRequest : manages_lifecycle
+  RefundService ..> Payment : updates_status
+  InventoryService ..> InventoryItem : manages
+  InventoryService ..> InventoryStock : recalculates
+  InventoryService ..> InventoryTransaction : records
+  InventoryService ..> InventoryReservation : reserves_commits_releases
+  InventoryService ..> Supplier : manages
+  InventoryService ..> StockImport : imports
+  ProductVariantInventorySyncService ..> InventoryItem : creates_links
+  InventoryItem "1" --> "1" InventoryStock : has
+  InventoryItem "1" --> "*" InventoryTransaction : moves
+  InventoryItem "1" --> "*" InventoryReservation : reserves
+  Supplier "1" --> "*" StockImport : supplies
+  StockImport "1" --> "*" StockImportItem : contains
+  InventoryItem "1" --> "*" StockImportItem : imported

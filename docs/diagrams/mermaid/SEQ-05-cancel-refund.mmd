@@ -1,0 +1,44 @@
+sequenceDiagram
+  autonumber
+  actor Client
+  actor Admin
+  participant ClientFE as Order/Booking Page
+  participant DomainService as OrderServiceImpl or BookingServiceImpl
+  participant Inventory as InventoryService
+  participant Voucher as VoucherService
+  participant RefundService as RefundServiceImpl
+  participant DB as MySQL
+  participant AdminFE as Admin Payment Page
+
+  Client->>ClientFE: Cancel order or booking
+  ClientFE->>DomainService: cancelOrder() or cancelBooking()
+  DomainService->>DB: Lock order or booking
+  DomainService->>Inventory: Release reservation or return stock
+  DomainService->>Voucher: Refund voucher usage for booking
+
+  alt Payment status UNPAID
+    DomainService->>DB: Set payment FAILED, no refund
+  else Payment status PENDING
+    DomainService->>RefundService: createForCancellation()
+    RefundService->>DB: Create refund PAYMENT_REVIEW
+  else Payment status PAID
+    DomainService->>RefundService: createForCancellation()
+    RefundService->>DB: Set payment REFUND_PENDING and refund AWAITING_INFORMATION
+  end
+
+  Admin->>AdminFE: Open refund requests
+  AdminFE->>RefundService: reviewPayment(refundId, paymentReceived)
+  alt Admin received money
+    RefundService->>DB: payment REFUND_PENDING, refund AWAITING_INFORMATION
+    Client->>ClientFE: Submit refund bank account
+    ClientFE->>RefundService: submitBankAccount(refundId, bankInfo)
+    RefundService->>DB: refund PENDING
+    Admin->>AdminFE: Start processing
+    AdminFE->>RefundService: startProcessing(refundId)
+    RefundService->>DB: refund PROCESSING
+    Admin->>AdminFE: Complete refund with transaction code
+    AdminFE->>RefundService: complete(refundId, transactionCode)
+    RefundService->>DB: refund COMPLETED, payment REFUNDED
+  else Admin did not receive money
+    RefundService->>DB: payment FAILED, refund FAILED
+  end

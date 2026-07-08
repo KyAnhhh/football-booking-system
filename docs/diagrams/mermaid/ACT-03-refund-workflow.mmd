@@ -1,0 +1,24 @@
+flowchart TD
+  Start([Start]) --> Cancelled["Order or booking is cancelled"]
+  Cancelled --> PaymentStatus{"Payment status?"}
+  PaymentStatus -- UNPAID --> FailedPayment["Set payment = FAILED"]
+  FailedPayment --> NoRefund["No refund request is created"]
+  NoRefund --> EndNoRefund([End])
+
+  PaymentStatus -- PENDING --> CreateReview["Create refund request"]
+  CreateReview --> PaymentReview["Refund status = PAYMENT_REVIEW"]
+  PaymentReview --> AdminReceived{"Admin received money?"}
+  AdminReceived -- No --> FailAll["Set payment = FAILED\nRefund status = FAILED"]
+  FailAll --> EndFailed([End])
+  AdminReceived -- Yes --> AwaitingInfo["Set payment = REFUND_PENDING\nRefund status = AWAITING_INFORMATION"]
+
+  PaymentStatus -- PAID --> AwaitingInfo
+  AwaitingInfo --> BankInfo["Client submits bank account"]
+  BankInfo --> Pending["Refund status = PENDING"]
+  Pending --> Processing["Admin starts processing\nRefund status = PROCESSING"]
+  Processing --> TransferOk{"Manual transfer successful?"}
+  TransferOk -- Yes --> Completed["Admin enters transaction code\nRefund status = COMPLETED\nPayment status = REFUNDED"]
+  Completed --> EndCompleted([End])
+  TransferOk -- No --> Failed["Refund status = FAILED\nStore failure reason"]
+  Failed --> Retry["Client can update bank info again"]
+  Retry --> EndRetry([End])

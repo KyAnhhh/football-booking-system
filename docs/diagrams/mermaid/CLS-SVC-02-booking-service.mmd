@@ -1,0 +1,99 @@
+classDiagram
+  direction TB
+  %% A4-friendly service class diagram: booking, pricing, membership, voucher, field operation.
+
+  class BookingService {
+    <<interface>>
+    +createBooking(Long userId, BookingRequest request) BookingResponse
+    +createBookingForAdmin(AdminBookingRequest request) BookingResponse
+    +getAvailableSlots(Long fieldId, LocalDate date) List~SlotResponse~
+    +getBookingsByUserId(Long userId) List~BookingResponse~
+    +markPaymentSubmitted(Long bookingId, Long userId) BookingResponse
+    +confirmBooking(Long bookingId) void
+    +updateBookingStatus(Long id, UpdateBookingStatusRequest request) BookingResponse
+    +checkInBooking(Long id, Long actorId) BookingResponse
+    +checkOutBooking(Long id, Long actorId) BookingResponse
+    +cancelBooking(Long id, Long userId) void
+  }
+
+  class PricingService {
+    <<interface>>
+    +calculatePrice(Long fieldId, LocalDateTime startTime, LocalDateTime endTime) BigDecimal
+    +calculateSlotPrice(Long fieldId, LocalDateTime slotStartTime) BigDecimal
+    +generateSlotStartTimes(LocalDateTime startTime, LocalDateTime endTime, int minutes) List~LocalDateTime~
+  }
+
+  class VoucherService {
+    <<interface>>
+    +applyVoucher(String code, BigDecimal amount) BigDecimal
+    +consumeVoucher(String code, Long bookingId, Long userId, BigDecimal amount) VoucherApplicationResult
+    +recordUsage(Voucher voucher, Booking booking, User user, BigDecimal discount) void
+    +refundVoucherForBooking(Long bookingId) void
+  }
+
+  class MembershipService {
+    <<interface>>
+    +addPoints(User user, BigDecimal amount) void
+    +updateMembershipTier(User user) void
+    +applyMembershipDiscount(User user, BigDecimal amount) BigDecimal
+  }
+
+  class PaymentService {
+    <<interface>>
+    +confirmBookingPayment(Long bookingId) Payment
+  }
+
+  class RefundService {
+    <<interface>>
+    +createForCancellation(Payment payment, User user, Long orderId, Long bookingId, String reason) RefundRequest
+  }
+
+  class Booking {
+    Long id
+    LocalDateTime startTime
+    LocalDateTime endTime
+    BigDecimal totalPrice
+    BookingStatus status
+  }
+
+  class FootballField {
+    Long id
+    String name
+    FieldType type
+    FieldStatus status
+    BigDecimal pricePerHour
+  }
+
+  class BookingExtraService {
+    Long id
+    Integer quantity
+    BigDecimal totalPrice
+    Boolean stockReserved
+  }
+
+  class ExtraService {
+    Long id
+    String name
+    BigDecimal price
+    Boolean trackStock
+  }
+
+  class BookingStatusHistory {
+    Long id
+    BookingStatus oldStatus
+    BookingStatus newStatus
+    String changedByRole
+  }
+
+  BookingService ..> Booking : creates_updates
+  BookingService ..> FootballField : validates_slot
+  BookingService ..> BookingExtraService : attaches
+  BookingService ..> PricingService : calculates_price
+  BookingService ..> VoucherService : applies_voucher
+  BookingService ..> MembershipService : applies_discount_points
+  BookingService ..> PaymentService : confirms_payment
+  BookingService ..> RefundService : opens_refund
+  BookingService ..> BookingStatusHistory : records_status
+  Booking "1" --> "*" BookingExtraService : includes
+  ExtraService "1" --> "*" BookingExtraService : selected
+  FootballField "1" --> "*" Booking : booked

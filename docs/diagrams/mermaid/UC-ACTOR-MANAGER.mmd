@@ -1,0 +1,74 @@
+flowchart LR
+  Manager([MANAGER])
+
+  subgraph System["Football E-commerce + Booking System"]
+    subgraph Dashboard["Dashboard"]
+      M_DASH["View dashboard"]
+      M_STATS["View operation statistics"]
+    end
+
+    subgraph UserManagement["User Management"]
+      M_USERS["View users"]
+      M_CREATE_USER["Create limited users"]
+      M_UPDATE_USER["Update user information"]
+      M_STATUS["Lock or unlock user"]
+      M_ROLE["Change allowed roles: CLIENT or STAFF"]
+    end
+
+    subgraph Catalog["Product Catalog"]
+      M_PRODUCTS["Manage products"]
+      M_VARIANTS["Manage product variants"]
+      M_IMAGES["Manage product images"]
+      M_CATEGORIES["Manage categories"]
+      M_BRANDS["Manage brands"]
+      M_SIZES["Manage sizes"]
+      M_REVIEWS["Manage reviews"]
+    end
+
+    subgraph OrderPayment["Order, Payment and Refund"]
+      M_ORDERS["Manage orders"]
+      M_ORDER_STATUS["Update order status"]
+      M_PAY["Confirm VietQR payment"]
+      M_PAYMENTS["Manage payments"]
+      M_REFUND_REVIEW["Review refund request"]
+      M_REFUND_PROCESS["Process manual refund"]
+    end
+
+    subgraph FieldBooking["Field and Booking Operation"]
+      M_FIELDS["Manage football fields"]
+      M_CALENDAR["View field calendar"]
+      M_BOOKINGS["Manage bookings"]
+      M_BOOKING_PAY["Confirm booking payment"]
+      M_CHECK["Check-in and check-out booking"]
+      M_MAINT["Manage maintenance"]
+    end
+
+    subgraph PricingPromotion["Pricing and Promotion"]
+      M_PRICE["Manage pricing rules"]
+      M_HOLIDAY_PRICE["Manage holiday pricing"]
+      M_HOLIDAY["Manage holidays"]
+      M_VOUCHER["Manage vouchers"]
+      M_EXTRA["Manage extra services"]
+    end
+
+    subgraph InventoryImport["Inventory and Import"]
+      M_INVENTORY["Manage inventory"]
+      M_SUPPLIERS["Manage suppliers"]
+      M_STOCK_IMPORT["Manage stock imports"]
+      M_STOCK_TX["View stock transactions"]
+      M_IMPORT["Import CSV data"]
+    end
+  end
+
+  Manager --> Dashboard
+  Manager --> UserManagement
+  Manager --> Catalog
+  Manager --> OrderPayment
+  Manager --> FieldBooking
+  Manager --> PricingPromotion
+  Manager --> InventoryImport
+
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#ffffff,font-weight:bold
+  classDef usecase fill:#ffffff,stroke:#64748b,color:#0f172a
+  class Manager actor
+  class M_DASH,M_STATS,M_USERS,M_CREATE_USER,M_UPDATE_USER,M_STATUS,M_ROLE,M_PRODUCTS,M_VARIANTS,M_IMAGES,M_CATEGORIES,M_BRANDS,M_SIZES,M_REVIEWS,M_ORDERS,M_ORDER_STATUS,M_PAY,M_PAYMENTS,M_REFUND_REVIEW,M_REFUND_PROCESS,M_FIELDS,M_CALENDAR,M_BOOKINGS,M_BOOKING_PAY,M_CHECK,M_MAINT,M_PRICE,M_HOLIDAY_PRICE,M_HOLIDAY,M_VOUCHER,M_EXTRA,M_INVENTORY,M_SUPPLIERS,M_STOCK_IMPORT,M_STOCK_TX,M_IMPORT usecase

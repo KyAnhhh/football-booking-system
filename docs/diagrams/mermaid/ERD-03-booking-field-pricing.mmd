@@ -1,0 +1,156 @@
+erDiagram
+  %% A4-friendly ERD: field booking, pricing, maintenance, voucher, booking review.
+
+  USER ||--o{ BOOKING : creates
+  FOOTBALL_FIELD ||--o{ BOOKING : booked_for
+  FOOTBALL_FIELD ||--o{ FOOTBALL_FIELD_IMAGE : has
+  FOOTBALL_FIELD ||--o{ MAINTENANCE : blocks
+  FOOTBALL_FIELD ||--o{ FIELD_PRICING_RULE : priced_by
+  FOOTBALL_FIELD ||--o{ HOLIDAY_PRICING_RULE : holiday_priced_by
+  HOLIDAY ||--o{ HOLIDAY_PRICING_RULE : applies
+  BOOKING ||--o{ BOOKING_EXTRA_SERVICE : includes
+  EXTRA_SERVICE ||--o{ BOOKING_EXTRA_SERVICE : selected
+  BOOKING ||--o{ BOOKING_STATUS_HISTORY : tracks
+  USER ||--o{ BOOKING_STATUS_HISTORY : changes
+  BOOKING ||--o| BOOKING_REVIEW : reviewed_by
+  USER ||--o{ BOOKING_REVIEW : writes
+  VOUCHER ||--o{ VOUCHER_USAGE : consumed
+  BOOKING ||--o{ VOUCHER_USAGE : uses
+  USER ||--o{ VOUCHER_USAGE : owns
+
+  USER {
+    BIGINT id PK
+    STRING username
+    STRING email
+    STRING role
+  }
+
+  FOOTBALL_FIELD {
+    BIGINT id PK
+    STRING name
+    STRING type
+    STRING imageUrl
+    DECIMAL pricePerHour
+    STRING status
+    STRING address
+    DATETIME createdAt
+    DATETIME updatedAt
+  }
+
+  FOOTBALL_FIELD_IMAGE {
+    BIGINT id PK
+    STRING imageUrl
+    BOOLEAN isPrimary
+    INT sortOrder
+  }
+
+  BOOKING {
+    BIGINT id PK
+    DATETIME startTime
+    DATETIME endTime
+    DECIMAL totalPrice
+    DECIMAL originalPrice
+    DECIMAL membershipDiscount
+    DECIMAL voucherDiscount
+    STRING voucherCode
+    STRING status
+    STRING contactPhone
+    DATETIME createdAt
+  }
+
+  BOOKING_EXTRA_SERVICE {
+    BIGINT id PK
+    INT quantity
+    DECIMAL unitPrice
+    DECIMAL totalPrice
+    BOOLEAN stockDeducted
+    BOOLEAN stockReserved
+    BOOLEAN stockReturned
+    BIGINT inventoryReservationId
+  }
+
+  EXTRA_SERVICE {
+    BIGINT id PK
+    STRING name
+    DECIMAL price
+    BOOLEAN isActive
+    STRING publicationStatus
+    BOOLEAN trackStock
+    INT stockQuantity
+    INT remainingQuantity
+    STRING unit
+    BIGINT inventoryItemId
+  }
+
+  MAINTENANCE {
+    BIGINT id PK
+    DATETIME startTime
+    DATETIME endTime
+    STRING reason
+    STRING description
+    DATETIME createdAt
+    DATETIME updatedAt
+  }
+
+  FIELD_PRICING_RULE {
+    BIGINT id PK
+    STRING dayOfWeek
+    TIME startTime
+    TIME endTime
+    DECIMAL pricePerSlot
+    INT slotDuration
+    BOOLEAN isActive
+  }
+
+  HOLIDAY {
+    BIGINT id PK
+    STRING name
+    DATE holidayDate
+    BOOLEAN isActive
+  }
+
+  HOLIDAY_PRICING_RULE {
+    BIGINT id PK
+    TIME startTime
+    TIME endTime
+    DECIMAL pricePerSlot
+    INT slotDuration
+    BOOLEAN isActive
+  }
+
+  VOUCHER {
+    BIGINT id PK
+    STRING code
+    STRING discountType
+    DECIMAL discountValue
+    INT quantity
+    BOOLEAN isActive
+    DATETIME startDate
+    DATETIME endDate
+  }
+
+  VOUCHER_USAGE {
+    BIGINT id PK
+    STRING voucherCode
+    DECIMAL discountAmount
+    DATETIME usedAt
+    BOOLEAN isRefunded
+    DATETIME refundedAt
+  }
+
+  BOOKING_REVIEW {
+    BIGINT id PK
+    INT rating
+    STRING comment
+    DATETIME createdAt
+  }
+
+  BOOKING_STATUS_HISTORY {
+    BIGINT id PK
+    STRING oldStatus
+    STRING newStatus
+    STRING changedByName
+    STRING changedByRole
+    STRING note
+    DATETIME createdAt
+  }

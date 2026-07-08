@@ -1,0 +1,75 @@
+flowchart LR
+  Admin([ADMIN])
+
+  subgraph System["Football E-commerce + Booking System"]
+    subgraph Dashboard["Dashboard"]
+      AD_DASH["View admin dashboard"]
+      AD_STATS["View revenue and operation statistics"]
+    end
+
+    subgraph UserPermission["User and Permission"]
+      AD_USERS["Manage users"]
+      AD_CREATE_USER["Create admin, staff and client user"]
+      AD_ROLE["Change user role"]
+      AD_STATUS["Lock or unlock user"]
+      AD_MEMBERSHIP["Manage membership tiers"]
+    end
+
+    subgraph Catalog["Product Catalog"]
+      AD_PRODUCTS["Manage products"]
+      AD_VARIANTS["Manage product variants"]
+      AD_IMAGES["Manage product images"]
+      AD_CATEGORIES["Manage categories"]
+      AD_BRANDS["Manage brands"]
+      AD_SIZES["Manage sizes"]
+      AD_REVIEWS["Manage reviews"]
+    end
+
+    subgraph OrderPayment["Order and Payment"]
+      AD_ORDERS["Manage orders"]
+      AD_ORDER_STATUS["Update order status"]
+      AD_ORDER_PAY["Confirm VietQR order payment"]
+      AD_PAYMENTS["Manage payments"]
+      AD_REFUNDS["Manage refund requests"]
+      AD_REFUND_DONE["Complete manual refund"]
+    end
+
+    subgraph FieldBooking["Football Field and Booking"]
+      AD_FIELDS["Manage football fields"]
+      AD_CALENDAR["Manage field calendar"]
+      AD_BOOKINGS["Manage bookings"]
+      AD_BOOKING_PAY["Confirm booking payment"]
+      AD_CHECK["Check-in and check-out booking"]
+      AD_MAINT["Manage maintenance"]
+    end
+
+    subgraph PricingPromotion["Pricing and Promotion"]
+      AD_PRICE["Manage pricing rules"]
+      AD_HOLIDAY["Manage holidays"]
+      AD_HOLIDAY_PRICE["Manage holiday pricing"]
+      AD_VOUCHER["Manage vouchers"]
+      AD_EXTRA["Manage extra services"]
+    end
+
+    subgraph InventoryImport["Inventory and Import"]
+      AD_INVENTORY["Manage inventory"]
+      AD_SUPPLIERS["Manage suppliers"]
+      AD_STOCK_IMPORT["Manage stock imports"]
+      AD_STOCK_TX["View stock transactions"]
+      AD_IMPORT["Import CSV data"]
+    end
+  end
+
+  Admin --> Dashboard
+  Admin --> UserPermission
+  Admin --> Catalog
+  Admin --> OrderPayment
+  Admin --> FieldBooking
+  Admin --> PricingPromotion
+  Admin --> InventoryImport
+
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#ffffff,font-weight:bold
+  classDef group fill:#f8fafc,stroke:#cbd5e1,color:#0f172a
+  classDef usecase fill:#ffffff,stroke:#64748b,color:#0f172a
+  class Admin actor
+  class AD_DASH,AD_STATS,AD_USERS,AD_CREATE_USER,AD_ROLE,AD_STATUS,AD_MEMBERSHIP,AD_PRODUCTS,AD_VARIANTS,AD_IMAGES,AD_CATEGORIES,AD_BRANDS,AD_SIZES,AD_REVIEWS,AD_ORDERS,AD_ORDER_STATUS,AD_ORDER_PAY,AD_PAYMENTS,AD_REFUNDS,AD_REFUND_DONE,AD_FIELDS,AD_CALENDAR,AD_BOOKINGS,AD_BOOKING_PAY,AD_CHECK,AD_MAINT,AD_PRICE,AD_HOLIDAY,AD_HOLIDAY_PRICE,AD_VOUCHER,AD_EXTRA,AD_INVENTORY,AD_SUPPLIERS,AD_STOCK_IMPORT,AD_STOCK_TX,AD_IMPORT usecase

@@ -1,0 +1,67 @@
+flowchart LR
+  Client([CLIENT])
+
+  subgraph System["Football E-commerce + Booking System"]
+    subgraph AuthProfile["Authentication and Profile"]
+      C_REGISTER["Register account"]
+      C_LOGIN["Login and logout"]
+      C_PASSWORD["Forgot or reset password"]
+      C_PROFILE["View and update profile"]
+      C_ADDRESS["Manage shipping addresses"]
+      C_MEMBERSHIP["View membership tier and loyalty points"]
+      C_NOTIFY["View notifications"]
+    end
+
+    subgraph ProductShopping["Product Shopping"]
+      C_PRODUCTS["Browse products"]
+      C_SEARCH["Search or filter products"]
+      C_PRODUCT_DETAIL["View product detail"]
+      C_WISHLIST["Add or remove wishlist item"]
+      C_CART_ADD["Add product to cart"]
+      C_CART["Manage cart"]
+      C_CHECKOUT["Checkout order"]
+      C_ORDER_PAY["Pay order by COD or VietQR"]
+      C_ORDER_SUBMIT_PAY["Submit order payment proof"]
+      C_MY_ORDERS["Track my orders"]
+      C_CANCEL_ORDER["Cancel order"]
+      C_RECEIVE["Confirm received order"]
+      C_REVIEW_PRODUCT["Review purchased product"]
+    end
+
+    subgraph FieldBooking["Football Field Booking"]
+      C_FIELDS["Browse football fields"]
+      C_FIELD_DETAIL["View field detail"]
+      C_SLOTS["View available slots"]
+      C_EXTRA["Select extra services"]
+      C_DISCOUNT["Apply voucher or membership discount"]
+      C_BOOKING["Create booking"]
+      C_BOOKING_PAY["Pay booking by VietQR"]
+      C_BOOKING_SUBMIT_PAY["Submit booking payment proof"]
+      C_MY_BOOKINGS["Track my bookings"]
+      C_CANCEL_BOOKING["Cancel booking"]
+      C_REVIEW_BOOKING["Review completed booking"]
+    end
+
+    subgraph Refund["Refund"]
+      C_REFUND_VIEW["View my refund requests"]
+      C_REFUND_BANK["Submit refund bank account"]
+    end
+
+    subgraph PublicPages["Public Pages"]
+      C_HOME["View home page"]
+      C_COLLECTION["View collections"]
+      C_SERVICE["View services"]
+      C_ABOUT["View about and contact"]
+    end
+  end
+
+  Client --> AuthProfile
+  Client --> ProductShopping
+  Client --> FieldBooking
+  Client --> Refund
+  Client --> PublicPages
+
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#ffffff,font-weight:bold
+  classDef usecase fill:#ffffff,stroke:#64748b,color:#0f172a
+  class Client actor
+  class C_REGISTER,C_LOGIN,C_PASSWORD,C_PROFILE,C_ADDRESS,C_MEMBERSHIP,C_NOTIFY,C_PRODUCTS,C_SEARCH,C_PRODUCT_DETAIL,C_WISHLIST,C_CART_ADD,C_CART,C_CHECKOUT,C_ORDER_PAY,C_ORDER_SUBMIT_PAY,C_MY_ORDERS,C_CANCEL_ORDER,C_RECEIVE,C_REVIEW_PRODUCT,C_FIELDS,C_FIELD_DETAIL,C_SLOTS,C_EXTRA,C_DISCOUNT,C_BOOKING,C_BOOKING_PAY,C_BOOKING_SUBMIT_PAY,C_MY_BOOKINGS,C_CANCEL_BOOKING,C_REVIEW_BOOKING,C_REFUND_VIEW,C_REFUND_BANK,C_HOME,C_COLLECTION,C_SERVICE,C_ABOUT usecase
