@@ -1,0 +1,47 @@
+sequenceDiagram
+  autonumber
+  actor Khach as Khách hàng
+  participant FE as Trang đặt sân React
+  participant Controller as UserBookingController
+  participant BookingService as BookingServiceImpl
+  participant Pricing as PricingService
+  participant Membership as MembershipService
+  participant Voucher as VoucherService
+  participant Inventory as InventoryService
+  participant DB as CSDL MySQL
+  participant Payment as Payment
+
+  Khach->>FE: Chọn sân, slot, dịch vụ và voucher
+  FE->>Controller: POST /api/user/bookings
+  Controller->>BookingService: Tạo booking theo request
+  BookingService->>DB: Lấy thông tin user và sân bóng
+  BookingService->>BookingService: Kiểm tra thời gian, trùng lịch, bảo trì
+  BookingService->>Pricing: Tính giá thuê sân
+  Pricing-->>BookingService: Trả tiền sân
+  BookingService->>DB: Lấy dịch vụ bổ sung đã chọn
+
+  loop Mỗi dịch vụ bổ sung
+    BookingService->>Inventory: Giữ chỗ tồn kho dịch vụ
+    Inventory->>DB: Cập nhật tồn giữ chỗ nếu có quản lý kho
+  end
+
+  BookingService->>Membership: Áp dụng ưu đãi thành viên
+  Membership-->>BookingService: Giá sau ưu đãi
+
+  alt Có mã voucher
+    BookingService->>Voucher: Kiểm tra và sử dụng voucher
+    Voucher-->>BookingService: Giá cuối cùng và tiền giảm
+  end
+
+  BookingService->>Payment: Tạo payment trạng thái UNPAID
+  BookingService->>DB: Lưu booking, payment và dịch vụ đi kèm
+  BookingService->>Voucher: Ghi nhận lượt dùng voucher
+  BookingService-->>Controller: BookingResponse
+  Controller-->>FE: Trả kết quả tạo booking
+
+  alt Thanh toán VietQR
+    Khach->>FE: Bấm đã chuyển khoản
+    FE->>Controller: PATCH /api/user/bookings/{id}/payment-submitted
+    Controller->>BookingService: Cập nhật trạng thái chờ xác nhận tiền
+    BookingService->>DB: Payment = PENDING
+  end

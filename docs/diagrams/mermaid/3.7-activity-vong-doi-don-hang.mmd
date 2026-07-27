@@ -1,0 +1,30 @@
+flowchart TD
+  BatDau([Bắt đầu]) --> Checkout["Khách hàng thanh toán giỏ hàng"]
+  Checkout --> TaoDon["Tạo đơn hàng và chi tiết đơn hàng"]
+  TaoDon --> GiuTon["Giữ chỗ tồn kho sản phẩm"]
+  GiuTon --> TaoThanhToan["Tạo thông tin thanh toán"]
+  TaoThanhToan --> PhuongThuc{"Phương thức thanh toán?"}
+
+  PhuongThuc -- COD --> ChoXuLy["Trạng thái đơn hàng = PENDING"]
+  PhuongThuc -- VietQR --> HienQR["Hiển thị mã VietQR"]
+  HienQR --> KhachBao["Khách báo đã chuyển khoản"]
+  KhachBao --> ChoXacNhanTien["Trạng thái thanh toán = PENDING"]
+  ChoXacNhanTien --> AdminXacNhanTien{"Admin xác nhận tiền?"}
+  AdminXacNhanTien -- Có --> DaThanhToan["Trạng thái thanh toán = PAID"]
+  AdminXacNhanTien -- Không --> HuyQuaHan["Hủy hoặc hết hạn thanh toán"]
+
+  DaThanhToan --> ChoXuLy
+  ChoXuLy --> AdminXacNhanDon{"Admin xác nhận đơn?"}
+  AdminXacNhanDon -- Có --> DaXacNhan["Đơn hàng = CONFIRMED"]
+  AdminXacNhanDon -- Không --> DaHuy["Đơn hàng = CANCELLED"]
+  DaXacNhan --> TruTon["Commit tồn kho đã giữ"]
+  TruTon --> DangGiao["Đơn hàng = SHIPPING"]
+  DangGiao --> DaGiao["Đơn hàng = DELIVERED"]
+  DaGiao --> KhachNhan["Khách xác nhận đã nhận hàng"]
+  KhachNhan --> HoanTat["Đơn hàng = COMPLETED"]
+  HoanTat --> CongDiem["Cộng điểm thành viên"]
+  CongDiem --> KetThuc([Kết thúc])
+
+  HuyQuaHan --> GiaiPhongTon["Giải phóng tồn kho đã giữ"]
+  DaHuy --> GiaiPhongTon
+  GiaiPhongTon --> KetThucHuy([Kết thúc])

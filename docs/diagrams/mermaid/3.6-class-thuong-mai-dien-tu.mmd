@@ -1,0 +1,93 @@
+classDiagram
+  direction LR
+
+  class User {
+    +id
+    +tenDangNhap
+    +email
+    +vaiTro
+  }
+
+  class Category {
+    +id
+    +tenDanhMuc
+  }
+
+  class Brand {
+    +id
+    +tenThuongHieu
+  }
+
+  class Product {
+    +id
+    +tenSanPham
+    +moTa
+    +trangThaiXuatBan
+  }
+
+  class ProductVariant {
+    +id
+    +giaBan
+    +soLuongTon
+  }
+
+  class Size {
+    +id
+    +tenSize
+  }
+
+  class ProductImage {
+    +id
+    +duongDanAnh
+    +anhChinh
+  }
+
+  class Cart {
+    +id
+    +ngayTao
+  }
+
+  class CartItem {
+    +id
+    +soLuong
+  }
+
+  class Order {
+    +id
+    +tongTien
+    +trangThai
+  }
+
+  class OrderItem {
+    +id
+    +tenSanPhamSnapshot
+    +giaSnapshot
+    +soLuong
+  }
+
+  class WishlistItem {
+    +id
+    +ngayThem
+  }
+
+  class Review {
+    +id
+    +soSao
+    +noiDung
+  }
+
+  Category "1" --> "n" Product : phân loại
+  Brand "1" --> "n" Product : thương hiệu
+  Product "1" --> "n" ProductVariant : có biến thể
+  Size "1" --> "n" ProductVariant : theo size
+  Product "1" --> "n" ProductImage : có hình ảnh
+  User "1" --> "1" Cart : sở hữu
+  Cart "1" --> "n" CartItem : chứa
+  CartItem "n" --> "1" ProductVariant : chọn mua
+  User "1" --> "n" Order : đặt
+  Order "1" --> "n" OrderItem : gồm
+  OrderItem "n" --> "1" ProductVariant : snapshot từ
+  User "1" --> "n" WishlistItem : yêu thích
+  WishlistItem "n" --> "1" Product : sản phẩm
+  User "1" --> "n" Review : viết
+  Review "n" --> "1" Product : đánh giá

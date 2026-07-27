@@ -1,0 +1,191 @@
+classDiagram
+  direction TB
+  %% UML-style class diagram: Booking + Field + Payment + Refund.
+
+  class User {
+    -Long id
+    -String username
+    -String email
+    -Role role
+  }
+
+  class FootballField {
+    -Long id
+    -String name
+    -FieldType type
+    -FieldStatus status
+    -BigDecimal pricePerHour
+  }
+
+  class FootballFieldImage {
+    -Long id
+    -String imageUrl
+    -Boolean isPrimary
+  }
+
+  class Booking {
+    -Long id
+    -LocalDateTime startTime
+    -LocalDateTime endTime
+    -BigDecimal totalPrice
+    -BookingStatus status
+    -String voucherCode
+  }
+
+  class BookingExtraService {
+    -Long id
+    -Integer quantity
+    -BigDecimal unitPrice
+    -BigDecimal totalPrice
+  }
+
+  class ExtraService {
+    -Long id
+    -String name
+    -BigDecimal price
+    -Boolean trackStock
+  }
+
+  class Maintenance {
+    -Long id
+    -LocalDateTime startTime
+    -LocalDateTime endTime
+    -String reason
+  }
+
+  class FieldPricingRule {
+    -Long id
+    -DayOfWeek dayOfWeek
+    -LocalTime startTime
+    -LocalTime endTime
+    -BigDecimal pricePerSlot
+  }
+
+  class Holiday {
+    -Long id
+    -String name
+    -LocalDate holidayDate
+  }
+
+  class HolidayPricingRule {
+    -Long id
+    -LocalTime startTime
+    -LocalTime endTime
+    -BigDecimal pricePerSlot
+  }
+
+  class Voucher {
+    -Long id
+    -String code
+    -DiscountType discountType
+    -BigDecimal discountValue
+    -Integer quantity
+  }
+
+  class VoucherUsage {
+    -Long id
+    -String voucherCode
+    -BigDecimal discountAmount
+    -Boolean isRefunded
+  }
+
+  class Payment {
+    -Long id
+    -PaymentType paymentType
+    -PaymentStatus paymentStatus
+    -BigDecimal totalAmount
+    -PaymentMethod paymentMethod
+  }
+
+  class RefundRequest {
+    -Long id
+    -BigDecimal amount
+    -RefundStatus status
+    -String bankAccountNumber
+  }
+
+  class BookingReview {
+    -Long id
+    -Integer rating
+    -String comment
+  }
+
+  class BookingStatusHistory {
+    -Long id
+    -BookingStatus oldStatus
+    -BookingStatus newStatus
+    -String changedByRole
+  }
+
+  class BookingService {
+    <<service>>
+    +createBooking(userId, request) BookingResponse
+    +getAvailableSlots(fieldId, date) List
+    +markPaymentSubmitted(bookingId, userId) BookingResponse
+    +confirmBooking(bookingId) void
+    +checkInBooking(id, actorId) BookingResponse
+    +checkOutBooking(id, actorId) BookingResponse
+    +cancelBooking(id, userId) void
+  }
+
+  class PricingService {
+    <<service>>
+    +calculatePrice(fieldId, startTime, endTime) BigDecimal
+    +calculateSlotPrice(fieldId, slotStartTime) BigDecimal
+    +generateSlotStartTimes(startTime, endTime, minutes) List
+  }
+
+  class VoucherService {
+    <<service>>
+    +applyVoucher(code, amount) BigDecimal
+    +consumeVoucher(code, bookingId, userId, amount) VoucherApplicationResult
+    +refundVoucherForBooking(bookingId) void
+  }
+
+  class PaymentService {
+    <<service>>
+    +confirmPayment(orderId) Payment
+    +confirmBookingPayment(bookingId) Payment
+    +getPaymentByOrderId(orderId) Payment
+  }
+
+  class RefundService {
+    <<service>>
+    +createForCancellation(payment, user, orderId, bookingId, reason) RefundRequest
+    +submitBankAccount(id, userId, request) RefundResponse
+    +reviewPayment(id, actorId, request) RefundResponse
+    +complete(id, actorId, request) RefundResponse
+    +fail(id, actorId, request) RefundResponse
+  }
+
+  User "1" --> "*" Booking : creates
+  FootballField "1" *-- "*" FootballFieldImage : has
+  FootballField "1" --> "*" Booking : booked
+  FootballField "1" --> "*" Maintenance : blocks
+  FootballField "1" --> "*" FieldPricingRule : priced_by
+  FootballField "1" --> "*" HolidayPricingRule : holiday_priced
+  Holiday "1" --> "*" HolidayPricingRule : applies
+
+  Booking "1" *-- "*" BookingExtraService : includes
+  ExtraService "1" --> "*" BookingExtraService : selected
+  Booking "1" o-- "0..1" Payment : paid_by
+  Booking "1" --> "0..1" BookingReview : reviewed
+  Booking "1" *-- "*" BookingStatusHistory : tracks
+  User "1" --> "*" BookingReview : writes
+
+  Voucher "1" --> "*" VoucherUsage : used
+  Booking "1" --> "*" VoucherUsage : applies
+  User "1" --> "*" VoucherUsage : uses
+  Payment "1" --> "*" RefundRequest : refund_source
+  User "1" --> "*" RefundRequest : requests
+
+  BookingService ..> Booking : manages
+  BookingService ..> PricingService : calculates
+  BookingService ..> VoucherService : applies
+  BookingService ..> PaymentService : confirms
+  BookingService ..> RefundService : opens_refund
+  PricingService ..> FieldPricingRule : reads
+  PricingService ..> HolidayPricingRule : reads
+  VoucherService ..> Voucher : manages
+  PaymentService ..> Payment : manages
+  RefundService ..> RefundRequest : manages

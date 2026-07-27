@@ -1,0 +1,45 @@
+flowchart LR
+  %% Simple Use Case Preview - Staff.
+
+  Staff((Nhân viên))
+
+  subgraph System["Football E-commerce + Booking System"]
+    direction TB
+
+    subgraph Col1[""]
+      direction TB
+      S_DASH(["Xem dashboard"])
+      S_BOOKING(["Xem booking"])
+      S_UPDATE_BOOKING(["Cập nhật booking"])
+      S_CHECKIN(["Check-in"])
+    end
+
+    subgraph Col2[""]
+      direction TB
+      S_CHECKOUT(["Check-out"])
+      S_CALENDAR(["Xem lịch sân"])
+      S_ORDER(["Xem đơn hàng"])
+      S_UPDATE_ORDER(["Cập nhật đơn hàng"])
+    end
+  end
+
+  Staff --> S_DASH
+  Staff --> S_BOOKING
+  Staff --> S_UPDATE_BOOKING
+  Staff --> S_CHECKIN
+  Staff --> S_CHECKOUT
+  Staff --> S_CALENDAR
+  Staff --> S_ORDER
+  Staff --> S_UPDATE_ORDER
+
+  S_BOOKING -. "<<include>>" .-> S_CALENDAR
+  S_UPDATE_BOOKING -. "<<extend>>" .-> S_CHECKIN
+  S_UPDATE_BOOKING -. "<<extend>>" .-> S_CHECKOUT
+
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#ffffff,font-weight:bold
+  classDef usecase fill:#ffffff,stroke:#475569,color:#0f172a
+  class Staff actor
+  class S_DASH,S_BOOKING,S_UPDATE_BOOKING,S_CHECKIN,S_CHECKOUT,S_CALENDAR,S_ORDER,S_UPDATE_ORDER usecase
+  style System fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+  style Col1 fill:#f8fafc,stroke:#f8fafc
+  style Col2 fill:#f8fafc,stroke:#f8fafc

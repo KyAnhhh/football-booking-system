@@ -1,0 +1,330 @@
+classDiagram
+  direction LR
+  %% Overall UML-style class diagram.
+  %% One-page summary for Word A4: key domain classes + main business services.
+
+  class User {
+    -Long id
+    -String username
+    -String email
+    -Role role
+    -String status
+    -Integer loyaltyPoints
+    +updateProfile()
+    +changeStatus()
+    +updateMembership()
+  }
+
+  class MembershipTier {
+    -Long id
+    -String name
+    -Integer requiredPoints
+    -Integer discountPercent
+  }
+
+  class Product {
+    -Long id
+    -String name
+    -PublicationStatus publicationStatus
+    -Integer discount
+    +publish()
+    +updateInfo()
+    +applyDiscount()
+  }
+
+  class ProductVariant {
+    -Long id
+    -BigDecimal price
+    -Integer stock
+    -Long inventoryItemId
+    +updatePrice()
+    +updateStock()
+  }
+
+  class Cart {
+    -Long id
+    -BigDecimal totalAmount
+    +addItem()
+    +removeItem()
+    +calculateTotal()
+  }
+
+  class Order {
+    -Long id
+    -BigDecimal totalAmount
+    -OrderStatus orderStatus
+    -PaymentMethod paymentMethod
+    +markPaymentSubmitted()
+    +updateStatus()
+    +cancel()
+    +confirmReceived()
+  }
+
+  class OrderItem {
+    -Long id
+    -Integer quantity
+    -BigDecimal total
+    -Long inventoryReservationId
+    +calculateLineTotal()
+    +reserveStock()
+    +returnStock()
+  }
+
+  class Review {
+    -Long id
+    -Integer rating
+    -String comment
+    +updateComment()
+    +validateRating()
+  }
+
+  class WishlistItem {
+    -Long id
+    -LocalDateTime createdAt
+    +add()
+    +remove()
+  }
+
+  class FootballField {
+    -Long id
+    -String name
+    -FieldType type
+    -FieldStatus status
+    -BigDecimal pricePerHour
+    +updateStatus()
+    +updatePrice()
+    +checkAvailability()
+  }
+
+  class Booking {
+    -Long id
+    -LocalDateTime startTime
+    -LocalDateTime endTime
+    -BigDecimal totalPrice
+    -BookingStatus status
+    +markPaymentSubmitted()
+    +checkIn()
+    +checkOut()
+    +cancel()
+  }
+
+  class BookingExtraService {
+    -Long id
+    -Integer quantity
+    -BigDecimal totalPrice
+    -Long inventoryReservationId
+    +calculateTotal()
+    +reserveStock()
+    +returnStock()
+  }
+
+  class ExtraService {
+    -Long id
+    -String name
+    -BigDecimal price
+    -Boolean trackStock
+    -Long inventoryItemId
+    +updatePrice()
+    +activate()
+    +deactivate()
+  }
+
+  class Voucher {
+    -Long id
+    -String code
+    -DiscountType discountType
+    -BigDecimal discountValue
+    +validate()
+    +applyDiscount()
+    +refundUsage()
+  }
+
+  class Payment {
+    -Long id
+    -PaymentType paymentType
+    -PaymentStatus paymentStatus
+    -PaymentMethod paymentMethod
+    -BigDecimal totalAmount
+    +confirm()
+    +markRefundPending()
+    +markRefunded()
+  }
+
+  class RefundRequest {
+    -Long id
+    -BigDecimal amount
+    -RefundStatus status
+    -String bankAccountNumber
+    +submitBankAccount()
+    +approve()
+    +complete()
+    +fail()
+  }
+
+  class InventoryItem {
+    -Long id
+    -String itemCode
+    -String name
+    -InventoryItemType itemType
+    +activate()
+    +deactivate()
+    +linkReference()
+  }
+
+  class InventoryStock {
+    -Long id
+    -Integer quantityOnHand
+    -Integer reservedQuantity
+    -Integer availableQuantity
+    +increase()
+    +reserve()
+    +release()
+    +commit()
+  }
+
+  class InventoryReservation {
+    -Long id
+    -InventoryReferenceType referenceType
+    -Integer quantity
+    -InventoryReservationStatus status
+    +commit()
+    +release()
+    +expire()
+  }
+
+  class StockImport {
+    -Long id
+    -String importCode
+    -BigDecimal totalAmount
+    -StockImportStatus status
+    +post()
+    +cancel()
+    +calculateTotal()
+  }
+
+  class Supplier {
+    -Long id
+    -String name
+    -Boolean active
+    +activate()
+    +deactivate()
+  }
+
+  class UserService {
+    <<service>>
+    +getProfile(userId)
+    +updateProfile(userId, request)
+    +updateUserRole(userId, role)
+    +updateUserStatus(userId, status)
+  }
+
+  class ProductService {
+    <<service>>
+    +getProductById(id)
+    +createProduct(request)
+    +updateProduct(id, request)
+    +deleteProduct(id)
+  }
+
+  class CartService {
+    <<service>>
+    +getCartByUser(userId)
+    +addItemToCart(userId, request)
+    +removeItemFromCart(userId, itemId)
+  }
+
+  class OrderService {
+    <<service>>
+    +checkout(userId, request)
+    +markPaymentSubmitted(orderId, userId)
+    +updateOrderStatus(orderId, status)
+    +cancelOrder(orderId, userId)
+    +confirmReceive(orderId, userId)
+  }
+
+  class BookingService {
+    <<service>>
+    +createBooking(userId, request)
+    +getAvailableSlots(fieldId, date)
+    +markPaymentSubmitted(bookingId, userId)
+    +checkInBooking(id, actorId)
+    +checkOutBooking(id, actorId)
+    +cancelBooking(id, userId)
+  }
+
+  class PaymentService {
+    <<service>>
+    +confirmPayment(orderId)
+    +confirmBookingPayment(bookingId)
+    +getPaymentByOrderId(orderId)
+  }
+
+  class RefundService {
+    <<service>>
+    +createForCancellation(payment, user, orderId, bookingId, reason)
+    +submitBankAccount(id, userId, request)
+    +reviewPayment(id, actorId, request)
+    +complete(id, actorId, request)
+    +fail(id, actorId, request)
+  }
+
+  class InventoryService {
+    <<service>>
+    +createItem(request)
+    +importStock(request, actorId)
+    +postStockImport(id, actorId)
+    +reserveStock(...)
+    +commitReservation(...)
+    +releaseReservation(...)
+    +adjustStock(request, actorId)
+  }
+
+  MembershipTier "1" o-- "*" User : classifies
+  User "1" *-- "1" Cart : owns
+  User "1" --> "*" Order : places
+  User "1" --> "*" Booking : creates
+  User "1" --> "*" WishlistItem : saves
+  User "1" --> "*" Review : writes
+  User "1" --> "*" RefundRequest : requests
+
+  Product "1" *-- "*" ProductVariant : has
+  Product "1" --> "*" WishlistItem : saved
+  Product "1" --> "*" Review : receives
+  Cart "1" *-- "*" ProductVariant : contains
+  Order "1" *-- "*" OrderItem : contains
+  ProductVariant "1" --> "*" OrderItem : sold
+  Order "1" o-- "0..1" Payment : paid_by
+
+  FootballField "1" --> "*" Booking : booked
+  Booking "1" *-- "*" BookingExtraService : includes
+  ExtraService "1" --> "*" BookingExtraService : selected
+  Booking "1" o-- "0..1" Payment : paid_by
+  Voucher "1" ..> "*" Booking : discounts
+
+  Payment "1" --> "*" RefundRequest : refund_source
+
+  ProductVariant "0..1" ..> "1" InventoryItem : inventoryItemId
+  ExtraService "0..1" ..> "1" InventoryItem : inventoryItemId
+  InventoryItem "1" *-- "1" InventoryStock : has
+  InventoryItem "1" *-- "*" InventoryReservation : reserves
+  Supplier "1" o-- "*" StockImport : supplies
+  OrderItem "0..1" ..> "1" InventoryReservation : reservationId
+  BookingExtraService "0..1" ..> "1" InventoryReservation : reservationId
+
+  UserService ..> User : manages
+  ProductService ..> Product : manages
+  ProductService ..> ProductVariant : manages
+  CartService ..> Cart : manages
+  OrderService ..> Order : manages
+  OrderService ..> Payment : creates
+  OrderService ..> InventoryService : reserves_stock
+  BookingService ..> Booking : manages
+  BookingService ..> FootballField : checks_slots
+  BookingService ..> Payment : creates
+  BookingService ..> InventoryService : reserves_services
+  PaymentService ..> Payment : confirms
+  RefundService ..> RefundRequest : manages
+  RefundService ..> Payment : updates
+  InventoryService ..> InventoryItem : manages
+  InventoryService ..> InventoryReservation : controls
+  InventoryService ..> StockImport : posts

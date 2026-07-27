@@ -1,0 +1,53 @@
+flowchart LR
+  %% Simple Use Case Preview - Manager.
+
+  Manager((Quản lý))
+
+  subgraph System["Football E-commerce + Booking System"]
+    direction TB
+
+    subgraph Col1[""]
+      direction TB
+      M_DASH(["Xem dashboard"])
+      M_USER(["Quản lý người dùng"])
+      M_PRODUCT(["Quản lý sản phẩm"])
+      M_ORDER(["Quản lý đơn hàng"])
+      M_PAYMENT(["Xác nhận thanh toán"])
+    end
+
+    subgraph Col2[""]
+      direction TB
+      M_BOOKING(["Quản lý booking"])
+      M_FIELD(["Quản lý sân bóng"])
+      M_PROMO(["Quản lý ưu đãi"])
+      M_INVENTORY(["Quản lý kho"])
+      M_REFUND(["Xử lý hoàn tiền"])
+    end
+
+    M_IMPORT(["Import CSV"])
+    M_PRICE(["Cấu hình giá"])
+  end
+
+  Manager --> M_DASH
+  Manager --> M_USER
+  Manager --> M_PRODUCT
+  Manager --> M_ORDER
+  Manager --> M_PAYMENT
+  Manager --> M_BOOKING
+  Manager --> M_FIELD
+  Manager --> M_PROMO
+  Manager --> M_INVENTORY
+  Manager --> M_REFUND
+
+  M_PRODUCT -. "<<include>>" .-> M_IMPORT
+  M_FIELD -. "<<include>>" .-> M_PRICE
+  M_BOOKING -. "<<include>>" .-> M_PAYMENT
+  M_ORDER -. "<<extend>>" .-> M_REFUND
+
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#ffffff,font-weight:bold
+  classDef usecase fill:#ffffff,stroke:#475569,color:#0f172a
+  class Manager actor
+  class M_DASH,M_USER,M_PRODUCT,M_ORDER,M_PAYMENT,M_BOOKING,M_FIELD,M_PROMO,M_INVENTORY,M_REFUND,M_IMPORT,M_PRICE usecase
+  style System fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+  style Col1 fill:#f8fafc,stroke:#f8fafc
+  style Col2 fill:#f8fafc,stroke:#f8fafc

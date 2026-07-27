@@ -1,0 +1,46 @@
+erDiagram
+  MEMBERSHIP_TIERS ||--o{ USERS : "phân hạng"
+  USERS ||--o{ SHIPPING_ADDRESSES : "có địa chỉ"
+  USERS ||--o{ PASSWORD_RESET_TOKENS : "có token đặt lại mật khẩu"
+  USERS ||--o{ REDIS_TOKENS : "thu hồi token"
+  USERS ||--o{ NOTIFICATIONS : "nhận thông báo"
+
+  MEMBERSHIP_TIERS {
+    bigint id PK
+    varchar name
+    int required_points
+    int discount_percent
+    boolean active
+  }
+  USERS {
+    bigint id PK
+    varchar username
+    varchar password
+    varchar email
+    varchar phone
+    varchar role
+    int loyalty_points
+  }
+  SHIPPING_ADDRESSES {
+    bigint id PK
+    bigint user_id FK
+    varchar receiver_name
+    varchar phone
+    varchar address
+  }
+  PASSWORD_RESET_TOKENS {
+    bigint id PK
+    bigint user_id FK
+    varchar token
+    datetime expired_at
+  }
+  REDIS_TOKENS {
+    varchar jwt_id PK
+    datetime expired_at
+  }
+  NOTIFICATIONS {
+    bigint id PK
+    bigint user_id FK
+    varchar title
+    boolean read
+  }

@@ -1,0 +1,59 @@
+flowchart LR
+  %% Simple Use Case Preview - Admin.
+
+  Admin((Quản trị viên))
+
+  subgraph System["Football E-commerce + Booking System"]
+    direction TB
+
+    subgraph Col1[""]
+      direction TB
+      A_DASH(["Xem dashboard"])
+      A_USER(["Quản lý người dùng"])
+      A_ROLE(["Phân quyền"])
+      A_PRODUCT(["Quản lý sản phẩm"])
+      A_ORDER(["Quản lý đơn hàng"])
+      A_PAYMENT(["Quản lý thanh toán"])
+    end
+
+    subgraph Col2[""]
+      direction TB
+      A_BOOKING(["Quản lý booking"])
+      A_FIELD(["Quản lý sân bóng"])
+      A_CONFIG(["Cấu hình giá/ưu đãi"])
+      A_INVENTORY(["Quản lý kho"])
+      A_REFUND(["Quản lý hoàn tiền"])
+      A_IMPORT(["Import dữ liệu"])
+    end
+
+    A_MEMBER(["Quản lý hạng thành viên"])
+    A_MAINT(["Quản lý bảo trì"])
+  end
+
+  Admin --> A_DASH
+  Admin --> A_USER
+  Admin --> A_ROLE
+  Admin --> A_PRODUCT
+  Admin --> A_ORDER
+  Admin --> A_PAYMENT
+  Admin --> A_BOOKING
+  Admin --> A_FIELD
+  Admin --> A_CONFIG
+  Admin --> A_INVENTORY
+  Admin --> A_REFUND
+  Admin --> A_IMPORT
+
+  A_USER -. "<<include>>" .-> A_ROLE
+  A_USER -. "<<include>>" .-> A_MEMBER
+  A_FIELD -. "<<include>>" .-> A_MAINT
+  A_ORDER -. "<<include>>" .-> A_PAYMENT
+  A_BOOKING -. "<<include>>" .-> A_PAYMENT
+  A_PAYMENT -. "<<extend>>" .-> A_REFUND
+
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#ffffff,font-weight:bold
+  classDef usecase fill:#ffffff,stroke:#475569,color:#0f172a
+  class Admin actor
+  class A_DASH,A_USER,A_ROLE,A_PRODUCT,A_ORDER,A_PAYMENT,A_BOOKING,A_FIELD,A_CONFIG,A_INVENTORY,A_REFUND,A_IMPORT,A_MEMBER,A_MAINT usecase
+  style System fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+  style Col1 fill:#f8fafc,stroke:#f8fafc
+  style Col2 fill:#f8fafc,stroke:#f8fafc

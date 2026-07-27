@@ -1,0 +1,28 @@
+flowchart LR
+  Trang["Trang React / Component"]
+  FEservice["Frontend Service\nfetchWithAuth"]
+  Controller["Controller Spring Boot"]
+  RequestDTO["Request DTO\nKiểm tra dữ liệu"]
+  Service["Service Layer\nXử lý nghiệp vụ"]
+  Mapper["Mapper\nChuyển Entity - DTO"]
+  Repository["Repository JPA"]
+  DB[("Cơ sở dữ liệu MySQL")]
+  ResponseDTO["Response DTO"]
+  Error["GlobalExceptionHandler\nChuẩn hóa lỗi"]
+
+  Trang --> FEservice
+  FEservice -->|"HTTP request\nJSON + JWT"| Controller
+  Controller --> RequestDTO
+  RequestDTO --> Service
+  Service --> Repository
+  Repository --> DB
+  DB --> Repository
+  Repository --> Service
+  Service --> Mapper
+  Mapper --> ResponseDTO
+  ResponseDTO --> Controller
+  Controller -->|"HTTP response\nJSON"| FEservice
+  FEservice --> Trang
+
+  Service -. "ném lỗi nghiệp vụ" .-> Error
+  Error -. "trả lỗi JSON" .-> Controller

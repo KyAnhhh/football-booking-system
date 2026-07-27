@@ -1,0 +1,82 @@
+classDiagram
+  direction TB
+
+  namespace TangGiaoDien {
+    class ReactPage {
+      +hienThiDuLieu()
+      +guiYeuCauNguoiDung()
+    }
+    class FrontendService {
+      +fetchWithAuth()
+      +goiApiBackend()
+    }
+  }
+
+  namespace TangAPI {
+    class Controller {
+      +nhanRequest()
+      +traResponse()
+    }
+    class RequestDTO {
+      +duLieuDauVao
+      +kiemTraValidation()
+    }
+    class ResponseDTO {
+      +duLieuTraVe
+    }
+  }
+
+  namespace TangNghiepVu {
+    class UserService {
+      +dangNhap()
+      +capNhatHoSo()
+    }
+    class BookingService {
+      +taoBooking()
+      +xacNhanBooking()
+      +huyBooking()
+    }
+    class OrderService {
+      +checkout()
+      +capNhatTrangThai()
+    }
+    class InventoryService {
+      +giuChoTonKho()
+      +truTonKho()
+      +hoanTonKho()
+    }
+    class PaymentService {
+      +xacNhanThanhToan()
+    }
+  }
+
+  namespace TangDuLieu {
+    class Repository {
+      +timKiem()
+      +luu()
+      +capNhat()
+    }
+    class Entity {
+      +duLieuBang
+    }
+    class MySQL {
+      +luuTruDuLieu
+    }
+  }
+
+  ReactPage --> FrontendService : gọi service
+  FrontendService --> Controller : gửi HTTP request
+  Controller --> RequestDTO : nhận dữ liệu
+  Controller --> BookingService : gọi nghiệp vụ
+  Controller --> OrderService : gọi nghiệp vụ
+  Controller --> UserService : gọi nghiệp vụ
+  BookingService --> InventoryService : giữ/trả tồn
+  OrderService --> InventoryService : giữ/trừ tồn
+  BookingService --> PaymentService : tạo/xác nhận thanh toán
+  OrderService --> PaymentService : tạo/xác nhận thanh toán
+  UserService --> Repository : truy xuất dữ liệu
+  BookingService --> Repository : truy xuất dữ liệu
+  OrderService --> Repository : truy xuất dữ liệu
+  Repository --> Entity : ánh xạ
+  Entity --> MySQL : lưu bảng
+  Controller --> ResponseDTO : trả kết quả

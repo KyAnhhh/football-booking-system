@@ -1,0 +1,58 @@
+flowchart LR
+  %% Simple Use Case Preview - Client.
+  %% Short labels + oval nodes for A4 report and draw.io import.
+
+  Client((Khách hàng))
+
+  subgraph System["Football E-commerce + Booking System"]
+    direction TB
+
+    subgraph Col1[""]
+      direction TB
+      C_AUTH(["Quản lý tài khoản"])
+      C_PRODUCT(["Mua sắm sản phẩm"])
+      C_CART(["Quản lý giỏ hàng"])
+      C_ORDER(["Đặt hàng"])
+      C_FIELD(["Đặt sân bóng"])
+    end
+
+    subgraph Col2[""]
+      direction TB
+      C_PAYMENT(["Thanh toán"])
+      C_TRACK(["Theo dõi đơn/booking"])
+      C_CANCEL(["Hủy đơn/booking"])
+      C_REFUND(["Yêu cầu hoàn tiền"])
+      C_REVIEW(["Đánh giá"])
+    end
+
+    C_RESET(["Quên mật khẩu"])
+    C_WISHLIST(["Wishlist"])
+    C_EXTRA(["Chọn dịch vụ thêm"])
+    C_DISCOUNT(["Áp dụng ưu đãi"])
+  end
+
+  Client --> C_AUTH
+  Client --> C_PRODUCT
+  Client --> C_CART
+  Client --> C_ORDER
+  Client --> C_FIELD
+  Client --> C_PAYMENT
+  Client --> C_TRACK
+  Client --> C_CANCEL
+  Client --> C_REFUND
+  Client --> C_REVIEW
+
+  C_AUTH -. "<<extend>>" .-> C_RESET
+  C_PRODUCT -. "<<include>>" .-> C_WISHLIST
+  C_FIELD -. "<<include>>" .-> C_EXTRA
+  C_ORDER -. "<<include>>" .-> C_PAYMENT
+  C_FIELD -. "<<include>>" .-> C_DISCOUNT
+  C_CANCEL -. "<<extend>>" .-> C_REFUND
+
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#ffffff,font-weight:bold
+  classDef usecase fill:#ffffff,stroke:#475569,color:#0f172a
+  class Client actor
+  class C_AUTH,C_PRODUCT,C_CART,C_ORDER,C_FIELD,C_PAYMENT,C_TRACK,C_CANCEL,C_REFUND,C_REVIEW,C_RESET,C_WISHLIST,C_EXTRA,C_DISCOUNT usecase
+  style System fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+  style Col1 fill:#f8fafc,stroke:#f8fafc
+  style Col2 fill:#f8fafc,stroke:#f8fafc

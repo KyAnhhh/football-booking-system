@@ -1,0 +1,57 @@
+erDiagram
+  USERS ||--o{ BOOKINGS : "tạo đặt sân"
+  USERS ||--o{ ORDERS : "tạo đơn hàng"
+  USERS ||--o{ NOTIFICATIONS : "nhận thông báo"
+  USERS }o--|| MEMBERSHIP_TIERS : "thuộc hạng"
+
+  FOOTBALL_FIELDS ||--o{ BOOKINGS : "được đặt"
+  BOOKINGS ||--|| PAYMENTS : "có thanh toán"
+  ORDERS ||--|| PAYMENTS : "có thanh toán"
+
+  PRODUCTS ||--o{ PRODUCT_VARIANTS : "có biến thể"
+  PRODUCTS ||--o{ PRODUCT_IMAGES : "có hình ảnh"
+  PRODUCT_VARIANTS ||--o{ ORDER_ITEMS : "được mua"
+  ORDERS ||--o{ ORDER_ITEMS : "gồm chi tiết"
+
+  INVENTORY_ITEMS ||--|| INVENTORY_STOCKS : "có tồn kho"
+  INVENTORY_ITEMS ||--o{ INVENTORY_TRANSACTIONS : "phát sinh giao dịch"
+  INVENTORY_ITEMS ||--o{ INVENTORY_RESERVATIONS : "được giữ chỗ"
+
+  VOUCHERS ||--o{ VOUCHER_USAGES : "ghi nhận lượt dùng"
+  BOOKINGS ||--o{ VOUCHER_USAGES : "dùng voucher"
+  ORDERS ||--o{ VOUCHER_USAGES : "dùng voucher"
+
+  USERS {
+    bigint id PK
+    varchar username
+    varchar email
+    varchar role
+  }
+  BOOKINGS {
+    bigint id PK
+    datetime start_time
+    datetime end_time
+    decimal total_price
+    varchar status
+  }
+  ORDERS {
+    bigint id PK
+    decimal total_amount
+    varchar status
+  }
+  PAYMENTS {
+    bigint id PK
+    varchar payment_method
+    varchar payment_status
+    decimal total_amount
+  }
+  PRODUCTS {
+    bigint id PK
+    varchar name
+    varchar publication_status
+  }
+  INVENTORY_ITEMS {
+    bigint id PK
+    varchar item_code
+    varchar item_type
+  }

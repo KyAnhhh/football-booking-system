@@ -1,0 +1,16 @@
+flowchart TD
+  BatDau([Bắt đầu]) --> NhapLich["Admin nhập lịch bảo trì"]
+  NhapLich --> KiemSan["Kiểm tra sân bóng tồn tại"]
+  KiemSan --> KiemGio["Kiểm tra thời gian bắt đầu và kết thúc"]
+  KiemGio --> HopLe{"Khoảng thời gian hợp lệ?"}
+  HopLe -- Không --> LoiThoiGian["Trả lỗi thời gian không hợp lệ"]
+  HopLe -- Có --> KiemTrung["Kiểm tra trùng lịch bảo trì"]
+  KiemTrung --> BiTrung{"Có bị trùng lịch?"}
+  BiTrung -- Có --> LoiTrung["Trả lỗi trùng lịch bảo trì"]
+  BiTrung -- Không --> KiemBooking["Kiểm tra slot booking bị ảnh hưởng"]
+  KiemBooking --> LuuLich["Lưu lịch bảo trì"]
+  LuuLich --> KhoaSlot["Ẩn/khóa slot trong thời gian bảo trì"]
+  KhoaSlot --> TraKetQua["Trả kết quả cho admin"]
+  TraKetQua --> KetThuc([Kết thúc])
+  LoiThoiGian --> KetThucLoi([Kết thúc])
+  LoiTrung --> KetThucLoi

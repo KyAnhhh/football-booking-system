@@ -1,0 +1,39 @@
+sequenceDiagram
+  autonumber
+  actor Khach as Khách hàng
+  participant FE as Trang checkout React
+  participant Controller as UserOrderController
+  participant OrderService as OrderServiceImpl
+  participant DB as CSDL MySQL
+  participant Inventory as InventoryService
+  participant Payment as Payment
+  participant Notify as NotificationService
+
+  Khach->>FE: Xác nhận thanh toán giỏ hàng
+  FE->>Controller: POST /api/user/orders/checkout-cart
+  Controller->>OrderService: Checkout theo user và request
+  OrderService->>DB: Lấy user, giỏ hàng và địa chỉ giao hàng
+  OrderService->>OrderService: Kiểm tra phương thức COD hoặc VietQR
+  OrderService->>DB: Tạo order và order item snapshot
+  OrderService->>Payment: Tạo payment trạng thái UNPAID
+  OrderService->>DB: Lưu đơn hàng và payment
+
+  loop Mỗi sản phẩm có liên kết kho
+    OrderService->>Inventory: Giữ chỗ tồn kho sản phẩm
+    Inventory->>DB: Tạo reservation và cập nhật tồn kho
+  end
+
+  OrderService->>DB: Lưu reservation và xóa item đã checkout khỏi giỏ
+  OrderService->>Notify: Tạo thông báo đơn hàng mới
+  OrderService-->>Controller: OrderResponse
+  Controller-->>FE: Trả kết quả checkout
+
+  alt Thanh toán VietQR
+    Khach->>FE: Mở trang thanh toán đơn hàng
+    FE->>Controller: PUT /api/user/orders/{id}/payment-submitted
+    Controller->>OrderService: Đánh dấu khách đã chuyển khoản
+    OrderService->>DB: Payment = PENDING
+    OrderService->>Notify: Thông báo admin xác nhận tiền
+  else Thanh toán COD
+    Note over Khach,Payment: Payment giữ trạng thái UNPAID đến khi giao/nhận hàng
+  end

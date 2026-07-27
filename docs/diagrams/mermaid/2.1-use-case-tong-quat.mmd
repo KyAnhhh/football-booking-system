@@ -1,0 +1,78 @@
+flowchart LR
+  Guest((Khách chưa đăng nhập))
+  Client((Khách hàng))
+  Staff((Nhân viên))
+  Manager((Quản lý))
+  Admin((Quản trị viên))
+
+  subgraph System["Hệ thống quản lý đặt sân bóng và bán sản phẩm thể thao"]
+    direction TB
+
+    UC_Public(["Tra cứu thông tin công khai"])
+    UC_Auth(["Đăng ký / Đăng nhập"])
+    UC_Booking(["Đặt sân bóng"])
+    UC_Shopping(["Mua sản phẩm thể thao"])
+    UC_Payment(["Thanh toán"])
+    UC_Tracking(["Theo dõi đơn hàng / booking"])
+    UC_ReviewNotify(["Đánh giá và nhận thông báo"])
+
+    UC_OperateBooking(["Xử lý booking và lịch sân"])
+    UC_OperateOrder(["Xử lý đơn hàng"])
+    UC_CheckInOut(["Check-in / Check-out"])
+
+    UC_ManageCatalog(["Quản lý sân bóng và sản phẩm"])
+    UC_ManagePricePromo(["Quản lý giá, voucher, ngày lễ"])
+    UC_ManagePaymentRefund(["Quản lý thanh toán và hoàn tiền"])
+    UC_ManageInventory(["Quản lý kho hàng và nhập kho"])
+    UC_Report(["Xem dashboard và thống kê"])
+
+    UC_ManageUser(["Quản lý người dùng"])
+    UC_Role(["Phân quyền"])
+    UC_Membership(["Quản lý hạng thành viên"])
+  end
+
+  Guest --> UC_Public
+  Guest --> UC_Auth
+
+  Client --> UC_Public
+  Client --> UC_Auth
+  Client --> UC_Booking
+  Client --> UC_Shopping
+  Client --> UC_Payment
+  Client --> UC_Tracking
+  Client --> UC_ReviewNotify
+
+  Staff --> UC_Report
+  Staff --> UC_OperateBooking
+  Staff --> UC_OperateOrder
+  Staff --> UC_CheckInOut
+
+  Manager --> UC_Report
+  Manager --> UC_OperateBooking
+  Manager --> UC_OperateOrder
+  Manager --> UC_ManageCatalog
+  Manager --> UC_ManagePricePromo
+  Manager --> UC_ManagePaymentRefund
+  Manager --> UC_ManageInventory
+  Manager --> UC_ManageUser
+
+  Admin --> UC_Report
+  Admin --> UC_ManageUser
+  Admin --> UC_Role
+  Admin --> UC_Membership
+  Admin --> UC_ManageCatalog
+  Admin --> UC_ManagePricePromo
+  Admin --> UC_ManagePaymentRefund
+  Admin --> UC_ManageInventory
+
+  UC_Booking -. "bao gồm" .-> UC_Payment
+  UC_Shopping -. "bao gồm" .-> UC_Payment
+  UC_OperateBooking -. "mở rộng" .-> UC_CheckInOut
+  UC_ManageUser -. "bao gồm" .-> UC_Role
+  UC_ManagePricePromo -. "bao gồm" .-> UC_Membership
+
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#ffffff,font-weight:bold
+  classDef usecase fill:#ffffff,stroke:#475569,color:#0f172a
+  class Guest,Client,Staff,Manager,Admin actor
+  class UC_Public,UC_Auth,UC_Booking,UC_Shopping,UC_Payment,UC_Tracking,UC_ReviewNotify,UC_OperateBooking,UC_OperateOrder,UC_CheckInOut,UC_ManageCatalog,UC_ManagePricePromo,UC_ManagePaymentRefund,UC_ManageInventory,UC_Report,UC_ManageUser,UC_Role,UC_Membership usecase
+  style System fill:#f8fafc,stroke:#94a3b8,color:#0f172a
