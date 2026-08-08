@@ -1,0 +1,21 @@
+flowchart LR
+  SystemActor((System\nScheduler / Service))
+  subgraph S[Football Booking System]
+    direction TB
+    X1([Tự hết hạn booking PENDING sau 15 phút khi payment UNPAID/PENDING])
+    X2([Tự hủy order VietQR PENDING sau 30 phút khi payment UNPAID/PENDING])
+    X3([Giải phóng reservation hoặc hoàn tồn khi hủy / hết hạn])
+    X4([Hoàn voucher usage cho booking bị hủy / hết hạn])
+    X5([Tạo refund request hoặc đánh dấu payment FAILED theo trạng thái payment])
+    X6([Gửi notification khi tạo hoặc đổi trạng thái booking / order])
+    X7([Gửi email khi trạng thái booking / order thay đổi])
+    X8([Đồng bộ tồn kho sang product variant / extra service liên kết])
+    X9([Tổng hợp doanh thu dashboard từ booking / order COMPLETED])
+  end
+  SystemActor --- X1 & X2 & X3 & X4 & X5 & X6 & X7 & X8 & X9
+  X1 --> X3 & X4 & X5
+  X2 --> X3 & X5
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#fff,font-weight:bold
+  classDef uc fill:#fff,stroke:#475569,color:#0f172a
+  class SystemActor actor
+  class X1,X2,X3,X4,X5,X6,X7,X8,X9 uc

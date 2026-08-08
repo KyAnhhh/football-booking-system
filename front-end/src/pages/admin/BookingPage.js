@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   checkInBooking,
@@ -28,6 +28,8 @@ export default function BookingPage() {
 
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState("");
+  const [updatingBookingId, setUpdatingBookingId] = useState(null);
+  const updatingBookingRef = useRef(false);
 
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -93,7 +95,10 @@ export default function BookingPage() {
   }, []);
 
   const handleUpdateStatus = async (id, status) => {
+    if (updatingBookingRef.current) return;
+    updatingBookingRef.current = true;
     try {
+      setUpdatingBookingId(id);
       await updateBookingStatus(id, status);
       await loadBookings();
     } catch (err) {
@@ -103,11 +108,17 @@ export default function BookingPage() {
         err.message || "Không thể cập nhật trạng thái booking.",
         "error"
       );
+    } finally {
+      setUpdatingBookingId(null);
+      updatingBookingRef.current = false;
     }
   };
 
   const handleConfirmPayment = async (id) => {
+    if (updatingBookingRef.current) return;
+    updatingBookingRef.current = true;
     try {
+      setUpdatingBookingId(id);
       await confirmBookingPayment(id);
       await loadBookings();
       swal(
@@ -122,24 +133,39 @@ export default function BookingPage() {
         err.message || "Không thể xác nhận thanh toán VietQR.",
         "error"
       );
+    } finally {
+      setUpdatingBookingId(null);
+      updatingBookingRef.current = false;
     }
   };
 
   const handleCheckIn = async (id) => {
+    if (updatingBookingRef.current) return;
+    updatingBookingRef.current = true;
     try {
+      setUpdatingBookingId(id);
       await checkInBooking(id);
       await loadBookings();
     } catch (err) {
       console.error("Check-in failed:", err);
+    } finally {
+      setUpdatingBookingId(null);
+      updatingBookingRef.current = false;
     }
   };
 
   const handleCheckOut = async (id) => {
+    if (updatingBookingRef.current) return;
+    updatingBookingRef.current = true;
     try {
+      setUpdatingBookingId(id);
       await checkOutBooking(id);
       await loadBookings();
     } catch (err) {
       console.error("Check-out failed:", err);
+    } finally {
+      setUpdatingBookingId(null);
+      updatingBookingRef.current = false;
     }
   };
 
@@ -306,8 +332,9 @@ export default function BookingPage() {
                         size="sm"
                         variant="success"
                         onClick={() => handleConfirmPayment(b.id)}
+                        disabled={updatingBookingId !== null}
                       >
-                        Xác nhận đã nhận tiền
+                        {updatingBookingId === b.id ? "Đang cập nhật..." : "Xác nhận đã nhận tiền"}
                       </Button>
                     )}
 
@@ -319,8 +346,9 @@ export default function BookingPage() {
                         onClick={() =>
                           handleUpdateStatus(b.id, "CONFIRMED")
                         }
+                        disabled={updatingBookingId !== null}
                       >
-                        Xác nhận
+                        {updatingBookingId === b.id ? "Đang cập nhật..." : "Xác nhận"}
                       </Button>
                     )}
 
@@ -337,8 +365,9 @@ export default function BookingPage() {
                       onClick={() =>
                         handleUpdateStatus(b.id, "CANCELLED")
                       }
+                      disabled={updatingBookingId !== null}
                     >
-                      Hủy
+                      {updatingBookingId === b.id ? "Đang cập nhật..." : "Hủy"}
                     </Button>
 
                     <Button
@@ -347,8 +376,9 @@ export default function BookingPage() {
                       onClick={() =>
                         handleUpdateStatus(b.id, "EXPIRED")
                       }
+                      disabled={updatingBookingId !== null}
                     >
-                      Hết hạn
+                      {updatingBookingId === b.id ? "Đang cập nhật..." : "Hết hạn"}
                     </Button>
                   </>
                 )}
@@ -360,8 +390,9 @@ export default function BookingPage() {
                       size="sm"
                       variant="primary"
                       onClick={() => handleCheckIn(b.id)}
+                      disabled={updatingBookingId !== null}
                     >
-                      Check-in
+                      {updatingBookingId === b.id ? "Đang cập nhật..." : "Check-in"}
                     </Button>
 
                     <Button
@@ -370,8 +401,9 @@ export default function BookingPage() {
                       onClick={() =>
                         handleUpdateStatus(b.id, "CANCELLED")
                       }
+                      disabled={updatingBookingId !== null}
                     >
-                      Hủy
+                      {updatingBookingId === b.id ? "Đang cập nhật..." : "Hủy"}
                     </Button>
                   </>
                 )}
@@ -381,8 +413,9 @@ export default function BookingPage() {
                     size="sm"
                     variant="success"
                     onClick={() => handleCheckOut(b.id)}
+                    disabled={updatingBookingId !== null}
                   >
-                    Check-out
+                    {updatingBookingId === b.id ? "Đang cập nhật..." : "Check-out"}
                   </Button>
                 )}
 

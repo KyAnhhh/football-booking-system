@@ -21,6 +21,7 @@ import HolidayPage from "../pages/admin/HolidayPage";
 import ImportPage from "../pages/admin/ImportPage";
 import InventoryPage from "../pages/admin/InventoryPage";
 import MembershipTierPage from "../pages/admin/MembershipTierPage";
+import ReviewManagementPage from "../pages/admin/ReviewManagementPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
@@ -64,6 +65,7 @@ const AdminRoutes = (
     <Route path="holidays" element={allow(<HolidayPage />, ADMIN_MANAGER)} />
     <Route path="inventory" element={allow(<InventoryPage />, ADMIN_MANAGER)} />
     <Route path="imports" element={allow(<ImportPage />, ADMIN_MANAGER)} />
+    <Route path="reviews" element={allow(<ReviewManagementPage />, ADMIN_MANAGER)} />
   </Route>
 );
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -86,6 +86,7 @@ export default function AdminBookingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [pendingAction, setPendingAction] = useState(null);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
 
   const loadBooking = useCallback(async () => {
     try {
@@ -121,7 +122,8 @@ export default function AdminBookingDetailPage() {
   const terminalStatus = ["CANCELLED", "EXPIRED"].includes(booking?.status);
 
   const handleConfirmStatus = async () => {
-    if (!pendingAction || !booking) return;
+    if (!pendingAction || !booking || savingRef.current) return;
+    savingRef.current = true;
 
     try {
       setSaving(true);
@@ -140,10 +142,13 @@ export default function AdminBookingDetailPage() {
       swal.fire("Lỗi", error.message || "Không thể cập nhật trạng thái.", "error");
     } finally {
       setSaving(false);
+      savingRef.current = false;
     }
   };
 
   const handleConfirmPayment = async () => {
+    if (!booking || savingRef.current) return;
+    savingRef.current = true;
     try {
       setSaving(true);
       await confirmBookingPayment(booking.id);
@@ -161,6 +166,7 @@ export default function AdminBookingDetailPage() {
       );
     } finally {
       setSaving(false);
+      savingRef.current = false;
     }
   };
 
@@ -333,7 +339,7 @@ export default function AdminBookingDetailPage() {
                 onClick={handleConfirmPayment}
                 disabled={saving}
               >
-                Xác nhận đã nhận tiền
+                {saving ? "Đang cập nhật..." : "Xác nhận đã nhận tiền"}
               </Button>
             )}
 
@@ -383,6 +389,7 @@ export default function AdminBookingDetailPage() {
                     key={action.status}
                     variant={action.variant}
                     onClick={() => setPendingAction(action)}
+                    disabled={saving}
                   >
                     {action.label}
                   </Button>
@@ -395,8 +402,8 @@ export default function AdminBookingDetailPage() {
         </aside>
       </div>
 
-      <Modal show={!!pendingAction} onHide={() => setPendingAction(null)} centered>
-        <Modal.Header closeButton>
+      <Modal show={!!pendingAction} onHide={() => !saving && setPendingAction(null)} centered>
+        <Modal.Header closeButton={!saving}>
           <Modal.Title>Xác nhận đổi trạng thái</Modal.Title>
         </Modal.Header>
         <Modal.Body>

@@ -1,0 +1,24 @@
+flowchart LR
+  Admin((Admin\nQuản trị viên))
+  subgraph S[Football Booking System]
+    direction TB
+    A1([Thực hiện toàn bộ nghiệp vụ Manager])
+    A2([Tạo, xem, sửa, xóa Membership Tier])
+    A3([Quản lý người dùng và role])
+    A4([Quản lý catalog sản phẩm và dịch vụ thêm])
+    A5([Quản lý sân, bảo trì, ngày lễ và bảng giá])
+    A6([Quản lý booking, order, payment và refund])
+    A7([Quản lý kho, supplier, phiếu nhập và điều chỉnh tồn])
+    A8([Import dữ liệu CSV])
+    A9([Xem dashboard, doanh thu và cảnh báo tồn thấp])
+  end
+  Admin --- A1 & A2 & A3 & A4 & A5 & A6 & A7 & A8 & A9
+  A1 -. include .-> A3
+  A1 -. include .-> A4
+  A1 -. include .-> A5
+  A1 -. include .-> A6
+  A1 -. include .-> A7
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#fff,font-weight:bold
+  classDef uc fill:#fff,stroke:#475569,color:#0f172a
+  class Admin actor
+  class A1,A2,A3,A4,A5,A6,A7,A8,A9 uc

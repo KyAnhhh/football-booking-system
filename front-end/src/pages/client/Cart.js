@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getMyCart, removeCartItem } from "../../services/cartService";
+import { getMyCart, removeCartItem, updateCartItemQuantity } from "../../services/cartService";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../assets/styles/Cart.css";
@@ -24,6 +24,7 @@ export default function Cart() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [updatingItemIds, setUpdatingItemIds] = useState([]);
   const navigate = useNavigate();
   const { updateCartCountFromCart, refreshCartCount } = useCart();
 
@@ -98,6 +99,20 @@ export default function Cart() {
     Swal.fire("Đã xóa", "Sản phẩm đã được xóa khỏi giỏ hàng.", "success");
     await refreshCartCount();
     loadCart();
+  };
+
+  const handleQuantityChange = async (item, nextQuantity) => {
+    if (nextQuantity < 1 || updatingItemIds.includes(item.id)) return;
+    try {
+      setUpdatingItemIds((current) => [...current, item.id]);
+      const updatedCart = await updateCartItemQuantity(item.id, nextQuantity);
+      setCart(updatedCart);
+      updateCartCountFromCart(updatedCart);
+    } catch (error) {
+      Swal.fire("Không thể cập nhật", error.message || "Số lượng vượt quá tồn kho.", "error");
+    } finally {
+      setUpdatingItemIds((current) => current.filter((id) => id !== item.id));
+    }
   };
 
   const handleCheckout = () => {
@@ -188,7 +203,13 @@ export default function Cart() {
                     </div>
                   </div>
 
-                  <div className="cart-item-quantity">x{item.totalQuantity}</div>
+                  <div className="cart-item-quantity" aria-label={`Số lượng ${item.productName}`}>
+                    <button type="button" onClick={() => handleQuantityChange(item, Number(item.totalQuantity) - 1)}
+                      disabled={Number(item.totalQuantity) <= 1 || updatingItemIds.includes(item.id)}>−</button>
+                    <strong>{item.totalQuantity}</strong>
+                    <button type="button" onClick={() => handleQuantityChange(item, Number(item.totalQuantity) + 1)}
+                      disabled={updatingItemIds.includes(item.id)}>+</button>
+                  </div>
 
                   <div className="cart-item-total">
                     <span>Tạm tính</span>

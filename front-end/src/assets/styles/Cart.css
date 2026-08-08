@@ -166,12 +166,31 @@
 }
 
 .cart-item-quantity {
-  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
   background: #e2e8f0;
   color: #334155;
-  padding: 7px 11px;
+  padding: 5px;
   font-size: 13px;
   font-weight: 950;
+}
+
+.cart-item-quantity button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cart-item-quantity button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .cart-item-total {

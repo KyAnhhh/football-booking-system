@@ -1,0 +1,21 @@
+flowchart LR
+  Staff((Staff\nNhân viên))
+  subgraph S[Football Booking System]
+    direction TB
+    S1([Xem dashboard vận hành])
+    S2([Xem lịch sân quản trị])
+    S3([Xem danh sách, chi tiết và lịch sử booking])
+    S4([Tạo booking thay khách tại quầy])
+    S5([Xác nhận / cập nhật trạng thái booking])
+    S6([Check-in booking sang IN_PROGRESS])
+    S7([Check-out booking sang COMPLETED])
+    S8([Xem, cập nhật trạng thái và hủy đơn hàng])
+    S9([Xem dịch vụ bổ sung ở chế độ chỉ đọc])
+  end
+  Staff --- S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9
+  S5 -. extend .-> S6
+  S5 -. extend .-> S7
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#fff,font-weight:bold
+  classDef uc fill:#fff,stroke:#475569,color:#0f172a
+  class Staff actor
+  class S1,S2,S3,S4,S5,S6,S7,S8,S9 uc

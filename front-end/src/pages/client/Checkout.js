@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal } from "react-bootstrap";
-import { getMyCart } from "../../services/cartService";
+import { getMyCart, updateCartItemQuantity } from "../../services/cartService";
 import {
   checkout,
   createOrder,
@@ -57,7 +57,7 @@ const getItemPrice = (item) => {
 
 const getItemQuantity = (item) => Number(item.quantity || item.totalQuantity || 0);
 
-function CheckoutItems({ items, selectedItemIds, toggleItem, checkoutMode }) {
+function CheckoutItems({ items, selectedItemIds, toggleItem, checkoutMode, onQuantityChange, updatingItemId }) {
   return (
     <section className="checkout-panel">
       <div className="checkout-panel-title">
@@ -99,7 +99,15 @@ function CheckoutItems({ items, selectedItemIds, toggleItem, checkoutMode }) {
                   {discount > 0 && <em>-{discount}%</em>}
                 </div>
               </div>
-              <div className="checkout-item-qty">x{getItemQuantity(item)}</div>
+              {checkoutMode === "BUY_NOW" ? <div className="checkout-item-qty">x{getItemQuantity(item)}</div> : (
+                <div className="checkout-item-qty checkout-item-qty-controls">
+                  <button type="button" disabled={getItemQuantity(item) <= 1 || updatingItemId === itemId}
+                    onClick={(event) => { event.preventDefault(); event.stopPropagation(); onQuantityChange(item, getItemQuantity(item) - 1); }}>−</button>
+                  <strong>{getItemQuantity(item)}</strong>
+                  <button type="button" disabled={updatingItemId === itemId}
+                    onClick={(event) => { event.preventDefault(); event.stopPropagation(); onQuantityChange(item, getItemQuantity(item) + 1); }}>+</button>
+                </div>
+              )}
             </label>
           );
         })}
@@ -309,6 +317,7 @@ export default function Checkout() {
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [orderTotal, setOrderTotal] = useState(0);
   const [submittingTransfer, setSubmittingTransfer] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState(null);
   const [newAddress, setNewAddress] = useState({
     receiverName: "",
     phone: "",
@@ -319,7 +328,7 @@ export default function Checkout() {
   });
 
   const location = useLocation();
-  const { refreshCartCount } = useCart();
+  const { refreshCartCount, updateCartCountFromCart } = useCart();
   const checkoutMode = location.state?.mode || "CART";
   const buyNowProduct = location.state?.product || null;
 
@@ -398,6 +407,21 @@ export default function Checkout() {
     setSelectedItemIds((prev) =>
       prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
+  };
+
+  const handleQuantityChange = async (item, nextQuantity) => {
+    if (nextQuantity < 1 || updatingItemId) return;
+    try {
+      setUpdatingItemId(getItemId(item));
+      const updatedCart = await updateCartItemQuantity(getItemId(item), nextQuantity);
+      const selectedIds = new Set(selectedItemIds);
+      setCartItems((updatedCart?.items || []).filter((cartItem) => selectedIds.has(getItemId(cartItem))));
+      updateCartCountFromCart(updatedCart);
+    } catch (error) {
+      Swal("Không thể cập nhật", error.message || "Số lượng vượt quá tồn kho.", "error");
+    } finally {
+      setUpdatingItemId(null);
+    }
   };
 
   const validateCheckout = () => {
@@ -526,6 +550,8 @@ export default function Checkout() {
             selectedItemIds={selectedItemIds}
             toggleItem={toggleItem}
             checkoutMode={checkoutMode}
+            onQuantityChange={handleQuantityChange}
+            updatingItemId={updatingItemId}
           />
 
           <CheckoutAddress

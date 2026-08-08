@@ -3,6 +3,7 @@ package vn.phankyanh.shopbongda.review.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.order.domain.OrderItem;
@@ -12,10 +13,12 @@ import vn.phankyanh.shopbongda.review.domain.Review;
 import vn.phankyanh.shopbongda.review.dto.request.ReviewRequest;
 import vn.phankyanh.shopbongda.review.dto.response.RatingResponse;
 import vn.phankyanh.shopbongda.review.dto.response.ReviewResponse;
+import vn.phankyanh.shopbongda.review.dto.response.AdminReviewResponse;
 import vn.phankyanh.shopbongda.review.mapper.ReviewMapper;
 import vn.phankyanh.shopbongda.review.repository.ReviewRepository;
 import vn.phankyanh.shopbongda.review.service.ReviewService;
 import vn.phankyanh.shopbongda.user.domain.User;
+import vn.phankyanh.shopbongda.user.domain.Role;
 import vn.phankyanh.shopbongda.user.repository.UserRepository;
 
 @Service
@@ -118,14 +121,32 @@ public class ReviewServiceImpl implements ReviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        boolean isAdmin = "ROLE_ADMIN".equals(user.getRole());
+        boolean isModerator = user.getRole() == Role.ROLE_ADMIN
+                || user.getRole() == Role.ROLE_MANAGER;
 
         boolean isOwner = review.getUser().getId().equals(userId);
 
-        if (!isOwner && !isAdmin) {
+        if (!isOwner && !isModerator) {
             throw new RuntimeException("Không có quyền xóa review");
         }
 
         reviewRepository.delete(review);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdminReviewResponse> getAdminReviews() {
+        return reviewRepository.findAll().stream()
+                .map(review -> AdminReviewResponse.builder()
+                        .id(review.getId())
+                        .reviewType("PRODUCT")
+                        .sourceId(review.getOrderItem().getId())
+                        .subjectName(review.getProduct().getName())
+                        .userName(review.getUser().getUsername())
+                        .rating(review.getRating())
+                        .comment(review.getComment())
+                        .createdAt(review.getCreatedAt())
+                        .build())
+                .toList();
     }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import vn.phankyanh.shopbongda.review.dto.request.ReviewRequest;
 import vn.phankyanh.shopbongda.review.dto.response.RatingResponse;
 import vn.phankyanh.shopbongda.review.dto.response.ReviewResponse;
+import vn.phankyanh.shopbongda.review.dto.response.AdminReviewResponse;
 
 public interface ReviewService {
 
@@ -21,4 +22,6 @@ public interface ReviewService {
     boolean canUserReview(Long userId, Long orderItemId);
 
     void deleteReview(Long reviewId, Long userId);
+
+    List<AdminReviewResponse> getAdminReviews();
 }

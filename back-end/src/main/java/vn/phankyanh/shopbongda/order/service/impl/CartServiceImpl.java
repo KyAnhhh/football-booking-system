@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import vn.phankyanh.shopbongda.order.domain.Cart;
 import vn.phankyanh.shopbongda.order.domain.CartItem;
 import vn.phankyanh.shopbongda.order.dto.request.CartItemRequest;
+import vn.phankyanh.shopbongda.order.dto.request.UpdateCartItemQuantityRequest;
 import vn.phankyanh.shopbongda.order.dto.response.CartResponse;
 import vn.phankyanh.shopbongda.order.mapper.CartMapper;
 import vn.phankyanh.shopbongda.order.repository.CartItemRepository;
@@ -101,6 +102,35 @@ public class CartServiceImpl implements CartService {
 
         cartRepository.save(cart);
 
+        return cartMapper.toCartResponse(cart);
+    }
+
+    @Override
+    public CartResponse updateItemQuantity(
+            Long userId,
+            Long cartItemId,
+            UpdateCartItemQuantityRequest request
+    ) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+
+        if (!cartItem.getCart().getId().equals(cart.getId())) {
+            throw new RuntimeException("Cart item does not belong to this cart");
+        }
+
+        ProductVariant variant = productVariantRepository
+                .findByIdForUpdate(cartItem.getProductVariant().getId())
+                .orElseThrow(() -> new RuntimeException("Product variant not found"));
+        if (variant.getStock() == null || variant.getStock() < request.getQuantity()) {
+            throw new RuntimeException("Not enough stock");
+        }
+
+        cartItem.setTotalQuantity(request.getQuantity());
+        cartItemRepository.save(cartItem);
+        recalculateCartTotal(cart);
+        cartRepository.save(cart);
         return cartMapper.toCartResponse(cart);
     }
 

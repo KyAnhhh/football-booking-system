@@ -189,6 +189,29 @@
   font-size: 13px;
 }
 
+.checkout-item-qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px;
+}
+
+.checkout-item-qty-controls button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fff;
+  color: #991b1b;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.checkout-item-qty-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .checkout-address-list {
   display: grid;
   gap: 10px;

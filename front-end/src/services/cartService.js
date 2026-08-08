@@ -69,3 +69,12 @@ export const removeCartItem = async (cartItemId) => {
 
   return await handleResponse(response);
 }
+
+export const updateCartItemQuantity = async (cartItemId, quantity) => {
+  const response = await fetchWithAuth(`${API_URL_USER}/items/${cartItemId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getAuthHeader() },
+    body: JSON.stringify({ quantity }),
+  });
+  return handleResponse(response);
+};

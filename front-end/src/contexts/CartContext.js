@@ -5,11 +5,7 @@ const CartContext = createContext(null);
 
 const calculateCartCount = (cart) => {
   const items = cart?.items || [];
-
-  return items.reduce((total, item) => {
-    const quantity = Number(item.totalQuantity ?? item.quantity ?? 1);
-    return total + Math.max(quantity, 0);
-  }, 0);
+  return items.length;
 };
 
 export function CartProvider({ children }) {

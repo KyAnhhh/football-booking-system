@@ -1,0 +1,30 @@
+flowchart LR
+  Manager((Manager\nQuản lý))
+  subgraph S[Football Booking System]
+    direction TB
+    M1([Thực hiện toàn bộ nghiệp vụ Staff])
+    M2([Quản lý người dùng và vai trò])
+    M3([Quản lý category, brand, size, sản phẩm, variant và ảnh])
+    M4([Kiểm tra điều kiện và publish / unpublish sản phẩm, dịch vụ thêm])
+    M5([Quản lý sân, ảnh sân, lịch sân và bảo trì])
+    M6([Quản lý bảng giá theo khung giờ, ngày lễ và giá ngày lễ])
+    M7([Quản lý voucher])
+    M8([Xem payment và xác nhận thanh toán VietQR của order / booking])
+    M9([Xử lý refund: review tiền, processing, complete hoặc fail])
+    M10([Quản lý item kho, tồn kho, ngưỡng tồn thấp và hành vi kho])
+    M11([Quản lý supplier và phiếu nhập: DRAFT, POSTED, CANCELLED])
+    M12([Điều chỉnh tồn, xem transaction, reservation, consistency và profit summary])
+    M13([Import CSV dữ liệu danh mục, sân, giá, dịch vụ, supplier và inventory])
+    M14([Quản lý / xóa review])
+    M15([Xem dashboard vận hành và doanh thu])
+  end
+  Manager --- M1 & M2 & M3 & M4 & M5 & M6 & M7 & M8 & M9 & M10 & M11 & M12 & M13 & M14 & M15
+  M3 -. include .-> M4
+  M5 -. include .-> M6
+  M8 -. extend .-> M9
+  M10 -. include .-> M11
+  M10 -. include .-> M12
+  classDef actor fill:#0f172a,stroke:#0f172a,color:#fff,font-weight:bold
+  classDef uc fill:#fff,stroke:#475569,color:#0f172a
+  class Manager actor
+  class M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13,M14,M15 uc

@@ -15,6 +15,7 @@ import Service from "../pages/client/Service";
 import MyOrders from "../pages/client/MyOrders";
 import MyBookings from "../pages/client/MyBookings";
 import BookingDetailPage from "../pages/client/BookingDetailPage";
+import BookingReviewPage from "../pages/client/BookingReviewPage";
 import Review from "../pages/client/Review";
 import FootballField from "../pages/client/FootballField";
 import FootballFieldDetail from "../pages/client/FootballFieldDetail";
@@ -119,6 +120,10 @@ const ClientRoutes = (
     <Route
       path="/my-bookings/:bookingId"
       element={protectedClientPage(<BookingDetailPage />)}
+    />
+    <Route
+      path="/my-bookings/:bookingId/review"
+      element={protectedClientPage(<BookingReviewPage />)}
     />
 
     <Route

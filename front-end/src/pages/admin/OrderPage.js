@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getOrders,
   updateOrderStatus,
@@ -26,6 +26,8 @@ export default function OrderPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [status, setStatus] = useState("");
   const [confirmOrder, setConfirmOrder] = useState(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const updatingOrderRef = useRef(false);
 
   const orderStatusColor = {
     PENDING: "bg-secondary",
@@ -131,8 +133,10 @@ export default function OrderPage() {
 
   const handleUpdateStatus = async (e) => {
     e.preventDefault();
-    if (!selectedOrder) return;
+    if (!selectedOrder || updatingOrderRef.current) return;
+    updatingOrderRef.current = true;
     try {
+      setUpdatingOrderId(selectedOrder.id);
       await updateOrderStatus(selectedOrder.id, status);
       await loadOrders();
       setShow(false);
@@ -142,11 +146,17 @@ export default function OrderPage() {
         title: "Không thể cập nhật trạng thái",
         text: err.message || "Không thể cập nhật trạng thái đơn hàng.",
       });
+    } finally {
+      setUpdatingOrderId(null);
+      updatingOrderRef.current = false;
     }
   };
 
   const handleConfirmPayment = async (order) => {
+    if (updatingOrderRef.current) return;
+    updatingOrderRef.current = true;
     try {
+      setUpdatingOrderId(order.id);
       await confirmOrderPayment(order.id);
       await loadOrders();
       Swal.fire({
@@ -160,6 +170,9 @@ export default function OrderPage() {
         title: "Không thể xác nhận thanh toán",
         text: err.message || "Giao dịch VietQR chưa ở trạng thái chờ xác nhận.",
       });
+    } finally {
+      setUpdatingOrderId(null);
+      updatingOrderRef.current = false;
     }
   };
 
@@ -250,11 +263,9 @@ export default function OrderPage() {
                 {o.orderStatus === "PENDING"
                   && o.paymentMethod === "VIETQR"
                   && o.paymentStatus === "PENDING" && (
-                  <span
-                    className="badge bg-success action-badge"
-                    onClick={() => handleConfirmPayment(o)}
-                  >
-                    Xác nhận tiền
+                  <span className={`badge bg-success action-badge ${updatingOrderId ? "disabled" : ""}`}
+                    onClick={() => !updatingOrderId && handleConfirmPayment(o)}>
+                    {updatingOrderId === o.id ? "Đang cập nhật..." : "Xác nhận tiền"}
                   </span>
                 )}
 
@@ -268,10 +279,10 @@ export default function OrderPage() {
 
                 <span
                   className={`badge bg-warning action-badge ${
-                    getAllowedStatuses(o).length === 0 ? "disabled" : ""
+                    getAllowedStatuses(o).length === 0 || updatingOrderId ? "disabled" : ""
                   }`}
                   onClick={() => {
-                    if (getAllowedStatuses(o).length > 0) {
+                    if (getAllowedStatuses(o).length > 0 && !updatingOrderId) {
                       openStatusModal(o);
                     }
                   }}
@@ -281,8 +292,8 @@ export default function OrderPage() {
 
                 {o.orderStatus === "PENDING" && (
                   <span
-                    className="badge bg-danger action-badge"
-                    onClick={() => setConfirmOrder(o)}
+                    className={`badge bg-danger action-badge ${updatingOrderId ? "disabled" : ""}`}
+                    onClick={() => !updatingOrderId && setConfirmOrder(o)}
                   >
                     Hủy đơn
                   </span>
@@ -316,8 +327,8 @@ export default function OrderPage() {
         </div>
       )}
 
-      <Modal show={show} onHide={() => setShow(false)}>
-        <Modal.Header closeButton>
+      <Modal show={show} onHide={() => !updatingOrderId && setShow(false)}>
+        <Modal.Header closeButton={!updatingOrderId}>
           <Modal.Title>Cập nhật trạng thái đơn hàng</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -328,6 +339,7 @@ export default function OrderPage() {
             <Form.Select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
+              disabled={updatingOrderId !== null}
             >
               {getAllowedStatuses(selectedOrder).map((nextStatus) => (
                 <option key={nextStatus} value={nextStatus}>
@@ -335,8 +347,8 @@ export default function OrderPage() {
                 </option>
               ))}
             </Form.Select>
-            <Button type="submit" className="mt-3" variant="success">
-              Cập nhật
+            <Button type="submit" className="mt-3" variant="success" disabled={updatingOrderId !== null}>
+              {updatingOrderId ? "Đang cập nhật..." : "Cập nhật"}
             </Button>
           </Form>
         </Modal.Body>

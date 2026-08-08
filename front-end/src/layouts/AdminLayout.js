@@ -21,6 +21,7 @@ import {
   BsList,
   BsCalendar2Plus,
   BsUpload,
+  BsStar,
 } from "react-icons/bs";
 
 import "../assets/styles/AdminLayout.css";
@@ -53,6 +54,7 @@ const navItems = [
   { to: "/admin/payments", label: "Thanh toán", icon: BsReceipt, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin/users", label: "Người dùng", icon: BsPeople, roles: ["ADMIN", "MANAGER"] },
   { to: "/admin/membership-tiers", label: "Hạng thành viên", icon: BsPeople, roles: ["ADMIN"] },
+  { to: "/admin/reviews", label: "Đánh giá", icon: BsStar, roles: ["ADMIN", "MANAGER"] },
 ];
 
 export default function AdminLayout() {

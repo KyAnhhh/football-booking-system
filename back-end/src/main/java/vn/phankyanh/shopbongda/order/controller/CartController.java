@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
 import vn.phankyanh.shopbongda.order.dto.request.CartItemRequest;
+import vn.phankyanh.shopbongda.order.dto.request.UpdateCartItemQuantityRequest;
 import vn.phankyanh.shopbongda.order.dto.response.CartResponse;
 import vn.phankyanh.shopbongda.order.service.CartService;
 import vn.phankyanh.shopbongda.shared.dto.response.ApiResponse;
@@ -38,6 +40,17 @@ public class CartController {
         ApiResponse<CartResponse> apiResponse = new ApiResponse<>();
         apiResponse.setData(this.cartService.getCartByUser(userId));
         return apiResponse;
+    }
+
+    @PutMapping("/user/carts/items/{cartItemId}")
+    public ApiResponse<CartResponse> updateItemQuantity(
+            @PathVariable Long cartItemId,
+            @Valid @RequestBody UpdateCartItemQuantityRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        ApiResponse<CartResponse> response = new ApiResponse<>();
+        response.setData(cartService.updateItemQuantity(jwt.getClaim("id"), cartItemId, request));
+        return response;
     }
 
     @DeleteMapping("/user/carts/items/{cartItemId}")

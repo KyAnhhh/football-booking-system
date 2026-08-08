@@ -14,6 +14,7 @@ import vn.phankyanh.shopbongda.review.domain.BookingReview;
 import vn.phankyanh.shopbongda.review.dto.request.BookingReviewRequest;
 import vn.phankyanh.shopbongda.review.dto.response.BookingReviewResponse;
 import vn.phankyanh.shopbongda.review.dto.response.BookingReviewSummaryResponse;
+import vn.phankyanh.shopbongda.review.dto.response.AdminReviewResponse;
 import vn.phankyanh.shopbongda.review.mapper.BookingReviewMapper;
 import vn.phankyanh.shopbongda.review.repository.BookingReviewRepository;
 import vn.phankyanh.shopbongda.review.service.BookingReviewService;
@@ -113,5 +114,30 @@ public class BookingReviewServiceImpl implements BookingReviewService {
                 .stream()
                 .map(bookingReviewMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<AdminReviewResponse> getAdminReviews() {
+        return bookingReviewRepository.findAll().stream()
+                .map(review -> AdminReviewResponse.builder()
+                        .id(review.getId())
+                        .reviewType("BOOKING")
+                        .sourceId(review.getBooking().getId())
+                        .subjectName(review.getBooking().getField().getName())
+                        .userName(review.getUser().getUsername())
+                        .rating(review.getRating())
+                        .comment(review.getComment())
+                        .createdAt(review.getCreatedAt())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteReviewByAdmin(Long reviewId) {
+        BookingReview review = bookingReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Booking review not found"));
+        bookingReviewRepository.delete(review);
     }
 }

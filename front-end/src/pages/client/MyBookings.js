@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Modal, Button, Form } from "react-bootstrap";
 import swal from "sweetalert2";
 import { cancelBooking, getMyBookings } from "../../services/bookingService";
-import {
-  createBookingReview,
-  getMyReviews,
-} from "../../services/bookingReviewService";
+import { getMyReviews } from "../../services/bookingReviewService";
 import "../../assets/styles/MyBookings.css";
 import { CalendarDays, Clock, MapPin, Star } from "lucide-react";
 
@@ -24,15 +20,10 @@ const statusLabel = {
   EXPIRED: "Đã hết hạn",
 };
 
-const REVIEW_RATINGS = [5, 4, 3, 2, 1];
-
 export default function MyBookings() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
-  const [reviewModal, setReviewModal] = useState(null);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -66,30 +57,6 @@ export default function MyBookings() {
     myReviews.some(
       (review) => review.bookingId === bookingId || review.booking?.id === bookingId
     );
-
-  const closeReviewModal = () => {
-    setReviewModal(null);
-    setRating(5);
-    setComment("");
-  };
-
-  const handleCreateReview = async () => {
-    if (comment.trim().length < 10) {
-      swal.fire("Thiếu nội dung", "Vui lòng nhập đánh giá tối thiểu 10 ký tự.", "warning");
-      return;
-    }
-
-    try {
-      await createBookingReview(reviewModal.id, { rating, comment: comment.trim() });
-      await load();
-      await loadMyReviews();
-      swal.fire("Thành công", "Đánh giá sân bóng thành công.", "success");
-      closeReviewModal();
-    } catch (err) {
-      console.error(err);
-      swal.fire("Lỗi", "Không thể gửi đánh giá.", "error");
-    }
-  };
 
   const handleCancel = async (id) => {
     const result = await swal.fire({
@@ -235,7 +202,7 @@ export default function MyBookings() {
                   )}
 
                   {booking.status === "COMPLETED" && !hasReviewed(booking.id) && (
-                    <button type="button" className="review" onClick={() => setReviewModal(booking)}>
+                    <button type="button" className="review" onClick={() => navigate(`/my-bookings/${booking.id}/review`)}>
                       <Star size={16} />
                       Đánh giá
                     </button>
@@ -253,61 +220,6 @@ export default function MyBookings() {
         </section>
       )}
 
-      <Modal show={!!reviewModal} onHide={closeReviewModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Đánh giá sân bóng</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="review-modal-body">
-          {reviewModal && (
-            <div className="review-modal-field">
-              <span>Sân đã đặt</span>
-              <strong>{reviewModal.fieldName || "Sân bóng"}</strong>
-              <small>
-                {formatDate(reviewModal.startTime)} · {formatTime(reviewModal.startTime)} -{" "}
-                {formatTime(reviewModal.endTime)}
-              </small>
-            </div>
-          )}
-
-          <Form.Group className="mb-3">
-            <Form.Label>Số sao</Form.Label>
-            <div className="review-rating-picker" role="radiogroup" aria-label="Chọn số sao">
-              {REVIEW_RATINGS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={rating === value ? "active" : ""}
-                  onClick={() => setRating(value)}
-                  aria-pressed={rating === value}
-                >
-                  <Star size={17} fill="currentColor" />
-                  {value}
-                </button>
-              ))}
-            </div>
-          </Form.Group>
-
-          <Form.Group>
-            <Form.Label>Nội dung đánh giá</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={4}
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              placeholder="Ví dụ: mặt sân, ánh sáng, thái độ phục vụ, dịch vụ thêm..."
-            />
-            <small className="review-modal-hint">{comment.trim().length}/10 ký tự tối thiểu</small>
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={closeReviewModal}>
-            Đóng
-          </Button>
-          <Button variant="warning" onClick={handleCreateReview} disabled={comment.trim().length < 10}>
-            Gửi đánh giá
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   );
 }
