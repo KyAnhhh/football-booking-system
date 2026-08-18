@@ -333,7 +333,7 @@ export default function Product() {
                           type="button"
                           className="shop-secondary-btn"
                           onClick={() =>
-                            checkLogin() &&
+                            // checkLogin() &&
                             navigate(`/products/product-details/${product.id}`)
                           }
                         >
